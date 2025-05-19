@@ -1,0 +1,103 @@
+body {
+    font-family: sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f4f4;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.container {
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    width: 90%;
+    max-width: 700px;
+}
+
+h1 {
+    color: #333;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+h2 {
+    color: #555;
+    margin-top: 20px;
+    margin-bottom: 15px;
+}
+
+.intro, .outro {
+    text-align: center;
+    font-style: italic;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+#progress-indicator {
+    text-align: right;
+    font-size: 0.9em;
+    color: #777;
+    margin-bottom: 15px;
+}
+
+#options-container label {
+    display: block;
+    margin-bottom: 12px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+
+#options-container label:hover {
+    background-color: #e9e9e9;
+}
+
+#options-container input[type="radio"] {
+    margin-right: 10px;
+    vertical-align: middle;
+}
+
+#next-button {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background-color: #5cb85c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1em;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background-color 0.2s;
+}
+
+#next-button:hover {
+    background-color: #4cae4c;
+}
+
+#results-area p {
+    margin-bottom: 10px;
+}
+
+#raw-scores, #normalized-scores {
+    font-weight: bold;
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #eef;
+    border-left: 3px solid #77a;
+}
+
+/* Ensure plot div has space */
+#plot-div {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}

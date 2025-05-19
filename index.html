@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Sarcastic Political Ternary Test</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>The (Probably Flawed) Sarcastic Political Ternary Test</h1>
+        <p class="intro">Answer as the "least worst" or "most tolerable caricature." Good luck, you'll need it.</p>
+
+        <div id="quiz-area">
+            <div id="progress-indicator">Question 1 of 24</div>
+            <h2 id="question-text">Question text will load here...</h2>
+            <div id="options-container">
+                <!-- Options will be dynamically inserted here -->
+            </div>
+            <button id="next-button">Next</button>
+        </div>
+
+        <div id="results-area" style="display:none;">
+            <h2>Your Gloriously Flawed Results:</h2>
+            <p>Remember, this is mostly for amusement. Or despair.</p>
+            <div id="raw-scores"></div>
+            <div id="normalized-scores"></div>
+            <div id="plot-div" style="width: 600px; height: 550px;"></div>
+            <p class="outro">Consider your life choices. Or don't. We're not your dad.</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="questions.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
