@@ -135,7 +135,7 @@ const questions = [
         text: "Healthcare. How do we ensure people don't just, you know, die avoidably (without it being *too* inconvenient for the system)?",
         type: 'forcedChoice4',
         options: [
-            { text: "(A) The State Emergency Ward Model: Everyone queues for the same, slightly rusty, government-approved care. It's 'free' (paid for by your soul-crushing taxes)! Everyone gets the same level of indifferent care!", scores: { c: 1, m: 1, p: -1 } },
+            { text: "(A) The State Emergency Ward Model: Everyone queues for the same, slightly rusty, government-approved care. It's 'universally accessible' (if you don't mind the wait and the distinct aroma of institutional despair)! Everyone gets the same level of indifferent care!", scores: { c: 1, m: 1, p: -1 } },
             { text: "(B) The \"Wellness Yurt\" Approach: Local healers, poultices, and positive affirmations for all! Major surgery? Maybe try a different yurt.", scores: { c: -0.5, m: 1.5, p: -0.5 } },
             { text: "(C) The 'Pay-to-Live' Subscription Service: Got gold-plated insurance? Welcome to the VIP recovery suite! No? Here's an aspirin and a pamphlet on 'positive thinking'.", scores: { c: -0.5, m: -0.5, p: 1.5 } },
             { text: "(D) The Bureaucratic Labyrinth of Mixed Provision: A confusing maze of public options, private plans, and endless forms, where you *might* get what you need if you're persistent and lucky.", scores: { c: 0.4, m: 0.3, p: 0.8 } } // P-Leaning Centrist
