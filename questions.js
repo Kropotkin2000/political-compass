@@ -150,7 +150,7 @@ const questions = [
             { text: "(A) Appoint a Ministry of Absolutely Everything, which will issue stern directives and five-color charts on sustainable dodo farming. Problem solved!", scores: { c: 1.5, m: -0.5, p: -0.5 } },
             { text: "(B) Form a Global Dodo Preservation Commune where everyone takes turns guarding the last dodo with love and interpretive dance. What could go wrong?", scores: { c: -0.5, m: 1.5, p: -0.5 } },
             { text: "(C) Auction off the broadcasting rights to the last dodo's extinction. The market provides! (Also, dodo nuggets, limited time only!)", scores: { c: -0.5, m: -0.5, p: 1.5 } },
-            { text: "(D) A complicated mess of international treaties, national regulations, corporate \"greenwashing\" initiatives, and local conservation efforts that are all well-intentioned and probably not enough.", scores: { c: 0.5, m: 0.5, p: 0.5 } } // Balanced Centrist
+            { text: "(D) The 'Let's Try Everything and Hope Something Sticks' approach: Forming endless committees to draft toothless regulations, while also 'incentivizing' corporations to 'be green' (wink, wink) and funding a few understaffed conservation groups. It's a masterclass in looking busy!", scores: { c: 0.5, m: 0.5, p: 0.5 } } // Balanced Centrist
         ]
     },
     {
@@ -186,7 +186,7 @@ const questions = [
             { text: "(A) One World Government (Probably Run by Lizards): Finally, a single authority to mismanage the entire planet with breathtaking efficiency!", scores: { c: 1.5, m: -0.5, p: -0.5 } },
             { text: "(B) A Federation of Autonomous Communes: Where every tiny self-governing region tries to 'coexist peacefully' while secretly suspecting their neighbors are hoarding the good compost.", scores: { c: -0.5, m: 1.5, p: -0.5 } },
             { text: "(C) Global Corporate Feudalism: Nations are just brands, citizens are consumers, and a few mega-corps pull all the strings. At least the quarterly reports are good!", scores: { c: -0.5, m: -0.5, p: 1.5 } },
-            { text: "(D) The Usual Mess of Alliances, Trade Wars, and Occasional Summit Selfies: Powerful nations bullying weaker ones, everyone spying on each other, but mostly avoiding nuclear armageddon. Mostly.", scores: { c: 0.5, m: 0.5, p: 0.5 } } // Balanced Centrist
+            { text: "(D) The 'Cautious Diplomat's Two-Step': Issuing strongly worded condemnations, signing vague international accords that everyone ignores, and generally trying to keep the global applecart from completely tipping over through a delicate balance of threats and tea parties.", scores: { c: 0.5, m: 0.5, p: 0.5 } } // Balanced Centrist
         ]
     },
     {
@@ -198,7 +198,7 @@ const questions = [
             { text: "(A) Some stern, far-sighted (or just plain bossy) state figures drag society kicking and screaming into a 'better' future they've designed.", scores: { c: 1.5, m: -0.5, p: -0.5 } },
             { text: "(B) Grassroots movements of well-meaning (and often Birkenstock-clad) activists tirelessly campaign for change, annoying everyone into submission eventually.", scores: { c: -0.5, m: 1.5, p: -0.5 } },
             { text: "(C) Some clever individual invents a new widget or business model that accidentally makes things better (or worse, but differently!) for everyone, while making themselves rich.", scores: { c: -0.5, m: -0.5, p: 1.5 } },
-            { text: "(D) A messy combination of all the above, plus luck, and it takes forever, and no one is ever really happy with the outcome. Hooray for 'progress'!", scores: { c: 0.5, m: 0.5, p: 0.5 } } // Balanced Centrist
+            { text: "(D) The 'Incremental Muddle-Through' Method: Progress happens via slow, painful compromises, a bit of reluctant state action here, some hesitant market reform there, and a vague hope that it all adds up to something slightly less awful over several decades.", scores: { c: 0.5, m: 0.5, p: 0.5 } } // Balanced Centrist
         ]
     },
     {
