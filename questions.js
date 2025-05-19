@@ -11,7 +11,7 @@ const questions = [
         type: 'forcedChoice3',
         options: [
             { text: "(A) \"Someone really important and official should sort this out. Where's the manager of the universe?!\"", scores: { c: 2, m: -1, p: -1 } },
-            { text: "(B) \"Ugh, why can't we all just get along and share our artisanal bread? This wouldn't happen if we had more drum circles.\"", scores: { c: -1, m: 2, p: -1 } },
+            { text: "(B) \"Ugh, if only we could form a thousand sub-committees to 'dialogue' this problem into submission! Surely a perfectly 'inclusive' process will magically yield a perfect solution, eventually\"", scores: { c: -1, m: 2, p: -1 } },
             { text: "(C) \"Not my circus, not my monkeys. Unless there's a way to profit from this chaos, then it's *very much* my circus.\"", scores: { c: -1, m: -1, p: 2 } }
         ]
     },
@@ -100,7 +100,7 @@ const questions = [
         type: 'forcedChoice4',
         options: [
             { text: "(A) The State's All-Knowing Wisdom: Central planners heroically assigning production quotas for artisanal pickles and novelty socks. Maximum efficiency!", scores: { c: 1.5, m: 0.5, p: -1 } },
-            { text: "(B) The Magic of 'Community': Everyone bartering their homemade kombucha for ethically knitted yurt cozies. Totally scalable.", scores: { c: -0.5, m: 1.5, p: -0.5 } },
+            { text: "(B) Ugh, if only we could form a thousand sub-committees to 'dialogue' this problem into submission! Surely a perfectly 'inclusive' process will magically yield a perfect solution, eventually", scores: { c: -0.5, m: 1.5, p: -0.5 } },
             { text: "(C) The 'Invisible Hand's' Slightly Sticky Fingers: Let the market decide who gets rich and who gets to eat ramen for eternity. It's 'natural'!", scores: { c: -0.5, m: -0.5, p: 1.5 } },
             { text: "(D) The 'Sensible Shoes' Model: A bit of market 'dynamism,' a lot of government 'oversight,' and some 'social responsibility.' It's boring, but it vaguely functions.", scores: { c: 0.4, m: 0.3, p: 0.8 } } // P-Leaning Centrist
         ]
@@ -136,7 +136,7 @@ const questions = [
         type: 'forcedChoice4',
         options: [
             { text: "(A) The State Emergency Ward Model: Everyone queues for the same, slightly rusty, government-approved care. It's 'universally accessible' (if you don't mind the wait and the distinct aroma of institutional despair)! Everyone gets the same level of indifferent care!", scores: { c: 1, m: 1, p: -1 } },
-            { text: "(B) The \"Wellness Yurt\" Approach: Local healers, poultices, and positive affirmations for all! Major surgery? Maybe try a different yurt.", scores: { c: -0.5, m: 1.5, p: -0.5 } },
+            { text: "(B) The 'Holistic Community Care Collective': Where access is 'guaranteed' through a network of underfunded local clinics run by passionate-but-overwhelmed volunteers, offering 'empowerment' and maybe some actual medicine if they haven't run out.", scores: { c: -0.5, m: 1.5, p: -0.5 } },
             { text: "(C) The 'Pay-to-Live' Subscription Service: Got gold-plated insurance? Welcome to the VIP recovery suite! No? Here's an aspirin and a pamphlet on 'positive thinking'.", scores: { c: -0.5, m: -0.5, p: 1.5 } },
             { text: "(D) The Bureaucratic Labyrinth of Mixed Provision: A confusing maze of public options, private plans, and endless forms, where you *might* get what you need if you're persistent and lucky.", scores: { c: 0.4, m: 0.3, p: 0.8 } } // P-Leaning Centrist
         ]
@@ -148,7 +148,7 @@ const questions = [
         type: 'forcedChoice4',
         options: [
             { text: "(A) Appoint a Ministry of Absolutely Everything, which will issue stern directives and five-color charts on sustainable dodo farming. Problem solved!", scores: { c: 1.5, m: -0.5, p: -0.5 } },
-            { text: "(B) Form a Global Dodo Preservation Commune where everyone takes turns guarding the last dodo with love and interpretive dance. What could go wrong?", scores: { c: -0.5, m: 1.5, p: -0.5 } },
+            { text: "(B) Establish an 'International People's Resource Stewardship Council' with representatives from every conceivable affinity group, to 'democratically allocate' resources through endless debate and the power of strongly worded resolutions.", scores: { c: -0.5, m: 1.5, p: -0.5 } },
             { text: "(C) Auction off the broadcasting rights to the last dodo's extinction. The market provides! (Also, dodo nuggets, limited time only!)", scores: { c: -0.5, m: -0.5, p: 1.5 } },
             { text: "(D) The 'Let's Try Everything and Hope Something Sticks' approach: Forming endless committees to draft toothless regulations, while also 'incentivizing' corporations to 'be green' (wink, wink) and funding a few understaffed conservation groups. It's a masterclass in looking busy!", scores: { c: 0.5, m: 0.5, p: 0.5 } } // Balanced Centrist
         ]
@@ -184,7 +184,7 @@ const questions = [
         type: 'forcedChoice4',
         options: [
             { text: "(A) One World Government (Probably Run by Lizards): Finally, a single authority to mismanage the entire planet with breathtaking efficiency!", scores: { c: 1.5, m: -0.5, p: -0.5 } },
-            { text: "(B) A Federation of Autonomous Communes: Where every tiny self-governing region tries to 'coexist peacefully' while secretly suspecting their neighbors are hoarding the good compost.", scores: { c: -0.5, m: 1.5, p: -0.5 } },
+            { text: "(B) A 'Global Federation of Sovereign Peoples' where everyone agrees to 'peace, love, and mutual understanding' via international Zoom calls, blissfully ignoring power politics until someone actually wants a valuable resource.", scores: { c: -0.5, m: 1.5, p: -0.5 } },
             { text: "(C) Global Corporate Feudalism: Nations are just brands, citizens are consumers, and a few mega-corps pull all the strings. At least the quarterly reports are good!", scores: { c: -0.5, m: -0.5, p: 1.5 } },
             { text: "(D) The 'Cautious Diplomat's Two-Step': Issuing strongly worded condemnations, signing vague international accords that everyone ignores, and generally trying to keep the global applecart from completely tipping over through a delicate balance of threats and tea parties.", scores: { c: 0.5, m: 0.5, p: 0.5 } } // Balanced Centrist
         ]
