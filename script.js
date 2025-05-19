@@ -161,7 +161,6 @@ function drawPlot(normalized, ideologyLabel = "Your Position") {
     const plotData = [{
         type: 'scatterternary',
         mode: 'markers',
-        // CORRECTED MAPPING:
         a: [normalized.c],     // Centralism data for 'a' (typically top)
         b: [normalized.m],     // Communalism data for 'b' (typically bottom-left)
         c: [normalized.p],     // Privatism data for 'c' (typically bottom-right)
@@ -181,21 +180,23 @@ function drawPlot(normalized, ideologyLabel = "Your Position") {
         title: `Your Political Caricature: ${ideologyLabel}`,
         ternary: {
             sum: 100,
-            // Titles MUST match the data mapping above:
             aaxis: { 
-                title: '<b>Centralism</b> (Big Brother is Watching)', 
+                // Centralism Axis (typically 'a' if data is C,M,P)
+                title: '<b>Centralism</b><br>(Big Brother is Watching)', // Added <br>
                 min: 0, 
                 linewidth: 2, 
                 ticks: 'outside' 
             },
             baxis: { 
-                title: '<b>Communalism</b> (Endless Group Hugs)', 
+                // Communalism Axis (typically 'b')
+                title: '<b>Communalism</b><br>(Endless Group Hugs)', // Added <br>
                 min: 0, 
                 linewidth: 2, 
                 ticks: 'outside' 
             },
             caxis: { 
-                title: '<b>Privatism</b> (Every Man for Himself)',   
+                // Privatism Axis (typically 'c')
+                title: '<b>Privatism</b><br>(Every Man for Himself)', // Added <br>  
                 min: 0, 
                 linewidth: 2, 
                 ticks: 'outside' 
@@ -206,7 +207,7 @@ function drawPlot(normalized, ideologyLabel = "Your Position") {
             showarrow: false,
             text: '*Not actually scientific. At all.',
             x: 0.5,
-            y: -0.15, // Adjusted y to give more space for bottom labels
+            y: -0.15, 
             xref: 'paper',
             yref: 'paper',
             font: { size: 10, color: 'grey' }
@@ -216,8 +217,10 @@ function drawPlot(normalized, ideologyLabel = "Your Position") {
         margin: { 
             l: 70, 
             r: 50, 
-            b: 90, // Increased bottom margin for annotation and axis titles
-            t: 90, 
+            // You might need to increase bottom and top margins slightly 
+            // if the new lines make the titles taller and they get cut off.
+            b: 100, // Potentially increased bottom margin
+            t: 100, // Potentially increased top margin for the Centralism title
             pad: 4
         }
     };
@@ -225,127 +228,150 @@ function drawPlot(normalized, ideologyLabel = "Your Position") {
     Plotly.newPlot('plot-div', plotData, layout);
 }
     
+       
     // In script.js
-    
-    function getIdeologyLabelAndSarcasm(normC, normM, normP) {
-        let result = {
-            umbrella: "Unclassifiable Political Profile", 
-            specific: "Unique Political Outlook (Uncategorized)", 
-            summary: "Your unique blend of views is so avant-garde, our sarcasm-matrix is still rebooting. You're either a visionary or you broke the quiz. Bravo!"
-        };
+function getIdeologyLabelAndSarcasm(normC, normM, normP) {
+    let result = { /* ... */ }; // Default result
 
-        // --- Tier 1: EXTREME CORNERS ---
-        if (normC >= 80 && normM <= 20 && normP <= 20) {
-            result = { umbrella: "Statism", specific: "Totalitarianism / Absolutism", summary: "..." };
+    // --- Tier 1: EXTREME CORNERS ---
+    if (normC >= 80 && normM <= 20 && normP <= 20) {
+        result = { umbrella: "Statism", specific: "Totalitarianism / Absolutism", summary: "..." };
+    } 
+    else if (normM >= 80 && normC <= 20 && normP <= 20) {
+        result = { umbrella: "Libertarian Socialism", specific: "Anarcho-Communism", summary: "..." };
+    } 
+    else if (normP >= 80 && normC <= 20 && normM <= 20) {
+        result = { umbrella: "Propertarianism", specific: "Anarcho-Capitalism (Rothbardian)", summary: "..." };
+    }
+
+    // --- Tier 2: DISTINCT HIGH-C IDEOLOGIES ---
+    else if (normC >= 65 && normP > normM && normP >= 15 && normM < 35 && normC > (normM + normP) && (normM + normP) < 40) { 
+        result = { umbrella: "Statism", specific: "Fascism", summary: "..." };
+    }
+    else if (normC >= 60 && normM > normP && normM >= 15 && normP < 30 && normC > normP && (normM+normP) < 50) { 
+        result = { umbrella: "Statism", specific: "Marxism-Leninism", summary: "..." };
+        if (normC >= 55 && normC < 70 && normM >= 45 && normM > normP + 10) { 
+            result.specific = "Authoritarian Socialism (e.g., Castroism, Titoism)"; summary: "..." 
+        }
+    }
+
+    // --- Tier 3: LOW-C BASE (Anarchist Spectrum & Agorism moved) ---
+    else if (normC < 25 && (normM + normP > 55) && !(normP >= 55 && normC < 20) ) { 
+        result.umbrella = "Individualist Anarchism"; 
+        if (normM >= 38 && normP >= 38 && Math.abs(normM - normP) < 10) { 
+            result.specific = "Mutualism"; summary: "..." 
         } 
-        else if (normM >= 80 && normC <= 20 && normP <= 20) {
-            result = { umbrella: "Libertarian Socialism", specific: "Anarcho-Communism", summary: "..." };
+        else if (normP >= normM + 8 && normP >= 35 && normP < 55 && normM < 40) { 
+            result.specific = "Market Individualist Anarchism"; summary: "..."
         } 
-        else if (normP >= 80 && normC <= 20 && normM <= 20) {
-            result = { umbrella: "Propertarianism", specific: "Anarcho-Capitalism (Rothbardian)", summary: "..." };
+        else if (normM >= normP + 8 && normM >= 35 && normP < 40) { 
+            result.specific = "Communal Individualist Anarchism"; summary: "..."
+        } 
+        else { result.specific = "Individualist Anarchism (General)"; summary: "..." }
+    }
+    else if (normC < 30 && normM >= 50 && normP < 35 && normM > normP + 15 && !(normM >= 80 && normC <= 20 && normP <= 20)) { 
+        result = { umbrella: "Libertarian Socialism", specific: "Anarcho-Syndicalism", summary: "..." };
+        if (normC >= 15 && normC < 30) { 
+            result.specific = "Council Communism"; summary: "..." 
         }
+    }
 
-        // --- Tier 2: DISTINCT HIGH-C IDEOLOGIES ---
-        else if (normC >= 65 && normP > normM && normP >= 15 && normM < 35 && normC > (normM + normP) && (normM + normP) < 40) { 
-            result = { umbrella: "Statism", specific: "Fascism", summary: "..." };
-        }
-        else if (normC >= 60 && normM > normP && normM >= 15 && normP < 30 && normC > normP && (normM+normP) < 50) { 
-            result = { umbrella: "Statism", specific: "Marxism-Leninism", summary: "..." };
-            if (normC >= 55 && normC < 70 && normM >= 45 && normM > normP + 10) { 
-                result.specific = "Authoritarian Socialism (e.g., Castroism, Titoism)"; summary: "..." 
-            }
-        }
+    // --- Tier 4: MAJOR MID-RANGE UMBRELLAS ---
+    else if (normP >= 55 && normC < 20 && normM < 30 && !(normP >= 80 && normC <= 20 && normM <= 20)) { 
+        result = { umbrella: "Propertarianism", specific: "Agorism / Counter-Economics", summary: "..." };
+    }
+    else if (normP >= 50 && normC >= 5 && normC < 40 && normM < 30 && normP > normC + 10 && normP > normM + 20 && !(normP >= 80 && normC <= 20 && normM <= 20) ) { 
+        result = { umbrella: "Propertarianism", specific: "Minarchism", summary: "..." };
+    }
+    // "Liberal Tradition" Umbrella Block
+    else if (normC >= 15 && normC < 55 && 
+             normM >= 10 && normM < 50 && 
+             normP >= 15 && normP < 70 && 
+             (normM + normP > 40 || normC + normP > 45 || normC + normM > 40) && 
+             !(normP >= 50 && normC < 40 && normM < 30 && normP > normC +10) && 
+             !(normM >= 35 && normP < 45 && normC < 55 && normM > normP) ) { 
 
-        // --- Tier 3: LOW-C BASE (Anarchist Spectrum) ---
-        else if (normC < 25 && (normM + normP > 55) ) { 
-            result.umbrella = "Individualist Anarchism"; 
-            if (normM >= 38 && normP >= 38 && Math.abs(normM - normP) < 10) { 
-                result.specific = "Mutualism"; summary: "..." 
-            } 
-            else if (normP >= normM + 8 && normP >= 35 && normM < 40) { 
-                if (normP >= 55) { result.specific = "Agorism / Counter-Economics"; summary: "..." }
-                else { result.specific = "Market Individualist Anarchism"; summary: "..." }
-            } 
-            else if (normM >= normP + 8 && normM >= 35 && normP < 40) { 
-                result.specific = "Communal Individualist Anarchism"; summary: "..."
-            } 
-            else { result.specific = "Individualist Anarchism (General)"; summary: "..." }
+        result.umbrella = "Liberal Tradition";
+        if (normP >= 40 && normC >= 20 && normC < 40 && normM < 30 && normP > normC + 5) { 
+            result.specific = "Libertarian Conservatism"; /* ... */
         }
-        else if (normC < 30 && normM >= 50 && normP < 35 && normM > normP + 15 && !(normM >= 80 && normC <= 20 && normP <= 20)) { 
-            result = { umbrella: "Libertarian Socialism", specific: "Anarcho-Syndicalism", summary: "..." };
-            if (normC >= 15 && normC < 30) { result.specific = "Council Communism / Guild Socialism"; summary: "..." }
+        else if (normP >= 40 && normC >= 15 && normC < 35 && normM < 30 && normP > normC + 10 && Math.abs(normP-normC) > 5) {
+            result.specific = "Classical Liberalism"; /* ... */
         }
-
-        // --- Tier 4: MAJOR MID-RANGE UMBRELLAS ---
-        // Propertarianism Block (Minarchism)
-        else if (normP >= 50 && normC >= 5 && normC < 40 && normM < 30 && normP > normC + 10 && normP > normM + 20 && !(normP >= 80 && normC <= 20 && normM <= 20) ) { 
-            result = { umbrella: "Propertarianism", specific: "Minarchism", summary: "..." };
-        }
-        // CONSERVATISM VARIANTS START HERE
-        // Libertarian Conservatism
-        else if (normP >= 40 && normC >= 20 && normC < 40 && normM < 30 && normP > normC + 5) { 
-            result = { 
-                umbrella: "Conservatism", 
-                specific: "Libertarian Conservatism", 
-                summary: "Freedom's great, and traditional values help keep it from going off the rails! Small government, strong families, and don't tread on my inherited property." 
-            };
-        }
-        // One-Nation Conservatism
         else if (normC >= 35 && normC <= 55 && normM >= 25 && normM < 40 && normP < 35 && normC > normP && normM > normP) {
-            result = { 
-                umbrella: "Conservatism", 
-                specific: "One-Nation Conservatism", 
-                summary: "We're all in this together, lads! The rich should look after the poor, the state should smooth out the rough edges, and everyone should know their place for a jolly good society." 
-            };
+            result.specific = "One-Nation Conservatism"; /* ... */
         }
-        // Traditional Conservatism & National Conservatism
         else if (normC >= 38 && normP >= 20 && normM < 30 && normC > normM && (normC >= normP - 15 || normP <= normC + 5)) { 
-            result = { umbrella: "Conservatism", specific: "Traditional Conservatism", summary: "Order, tradition, and a firm belief that things were better when men were men and a good cup of tea solved everything. Change is generally a terrible idea." };
+            result.specific = "Traditional Conservatism"; /* ... */
             if (normC >= 50 && (normP < Math.max(normM + 10, 25)) ) { 
-                result.specific = "National Conservatism";
-                result.summary = "My Country, Right or Wrong (but mostly Right)! Strong borders, strong leader, strong traditional values, and a suspicion of anything too 'global' or 'woke'.";
+                result.specific = "National Conservatism"; /* ... */
             }
         }
-        // END CONSERVATISM VARIANTS
-        // Socialism (Non-Marxist State)
-        else if (normM >= 38 && normC >= 25 && normC < 55 && normP < 35 && normM > normC && normM > normP + 10) { 
-            result = { umbrella: "Socialism (Non-Marxist State)", specific: "Democratic Socialism", summary: "..." };
+        else if (normM >= 30 && normC >= 20 && normC < 50 && normP >= 20 && normM > normP && Math.abs(normC-normP) < 20) { 
+            result.specific = "Social Liberalism"; /* ... */
         }
-        // Liberalism
-        else if (normC >= 15 && normC < 50 && normP >= 25 && normM >= 20 && ( (Math.abs(normP - normM) < 20) || (normP > normM && normP < normM + 25) || (normM > normP && normM < normP + 25) ) ) {
-            result = { umbrella: "Liberalism", specific: "Liberalism (General)", summary: "..."};
-            if (normM > normP && normM >= 30 && Math.abs(normM-normP) < 15) { 
-                result.specific = "Social Liberalism"; summary: "..." 
-            } else if (normP > normM && normP >= 30 && normC <= 35 && Math.abs(normM-normP) < 15) { 
-                result.specific = "Classical Liberalism"; summary: "..."
-            }
+        else {
+            result.specific = "Liberalism (Unspecified Variant)"; /* ... */
         }
+    } 
+    // "Socialism (Non-Marxist State)" Umbrella Block
+    else if (normM >= 35 && normP < 45 && normC < 55 && normM > normP && normM > normC - 5) {
+        result.umbrella = "Socialism (Non-Marxist State)";
+        if (normM >= 40 && normP >= 25 && normP < 45 && normC < 40 && normM > normP + 5) {
+            result.specific = "Market Socialism"; /* ... */
+        }
+        else if (normM >= 40 && normC >= 25 && normC < 50 && normP < 30 && normM > normC) { 
+            result.specific = "Guild Socialism"; /* ... */
+        }
+        else if (normM >= 38 && normC >= 20 && normC < 55 && normP < 30 && normM > normC && normM > normP + 10) { 
+            result.specific = "Democratic Socialism";  /* ... */
+        } else { 
+             result.specific = "Socialism (General Non-Marxist State)"; /* ... */
+        }
+    }
+    
+    // --- Tier 5: CENTRISM / MODERATE POLITICS (REVISED) ---
+    else if (normC >= 15 && normC <= 50 && 
+             normM >= 25 && normM <= 55 &&
+             normP >= 20 && normP <= 55 && 
+             (Math.max(normC, normM, normP) - Math.min(normC, normM, normP)) < 30 ) { 
         
-        // --- Tier 5: CENTRAL REGION ---
-        else if (normC >= 25 && normC <= 50 && 
-                normM >= 25 && normM <= 55 &&
-                normP >= 20 && normP <= 50 &&
-                (Math.max(normC, normM, normP) - Math.min(normC, normM, normP)) < 25 ) { 
-            result = { umbrella: "Centrism / Moderate Politics", specific: "Social Democracy", summary: "..." };
-            if (normP > normM && normP > normC && normP >= Math.max(normM, normC) + 5 && normP > 30) { 
-                result.specific = "Third Way / Market-Oriented Centrism"; summary: "..." 
-            } else if (normC > normM && normC > normP && normC >= Math.max(normM, normP) + 5 && normC > 30) { 
-                result.specific = "Technocratic Centrism / Managerialism"; summary: "..."
-            }
-        }
+        result.umbrella = "Centrism / Moderate Politics";
 
-        // --- Tier 6: Broad Ideological Leanings ---
-        else if (normC >= normM && normC >= normP && normC >= 35 && !(normC >= 80 && normM <= 20 && normP <= 20)) { 
-            result = { umbrella: "Statism / Centralism", specific: "Statism (General)", summary: "..." };
+        if (normP > normM && normP > normC && normP >= Math.max(normM, normC) + 5 && normP > 30) { 
+            result.specific = "Third Way / Market-Oriented Centrism"; 
+            result.summary = "We're 'radically pragmatic'! Markets are good, efficiency is great, and social justice is a nice bonus if it doesn't hurt the bottom line too much. Think 'New Labour' without the actual Labour part.";
         } 
-        else if (normM >= normC && normM >= normP && normM >= 35 && !(normM >= 80 && normC <= 20 && normP <= 20)) { 
-            result = { umbrella: "Communalism / Collectivism", specific: "Collectivism (General)", summary: "..." };
-        } 
-        else if (normP >= normC && normP >= normM && normP >= 35 && !(normP >= 80 && normC <= 20 && normM <= 20)) { 
-            result = { umbrella: "Propertarianism / Individualism", specific: "Propertarianism (General)", summary: "..." };
+        else if (normC > normM && normC > normP && normC >= Math.max(normM, normP) + 5 && normC > 30) { 
+            result.specific = "Technocratic Centrism / Managerialism"; 
+            result.summary = "Society is a complex machine that just needs competent managers (like us!) and evidence-based policies. Feelings are nice, but have you seen our spreadsheets?";
         }
+        else if (normC >= 15 && normC < 30 && 
+                 normM >= 30 && normM < 45 && 
+                 normP >= 30 && normP < 50 && 
+                 Math.abs(normM - normP) < 15 ) { 
+            result.specific = "Liberal Socialism";
+            result.summary = "Let's blend individual liberty with social justice, using markets wisely but fairly! Less state than the old guard, more heart than pure capitalism. Think 'social market economy' with extra rights.";
+        }
+        else { 
+            result.specific = "Social Democracy"; 
+            result.summary = "Capitalism needs a good hug and some strict house rules. Let's have markets, but also a comfy welfare state so nobody starves (too much). It's all about 'balance' and 'fairness' (and probably higher taxes).";
+        }
+    }
 
-        return result;
+    // --- Tier 6: Broad Ideological Leanings ---
+    // (These remain the same as before)
+    else if (normC >= normM && normC >= normP && normC >= 35 && !(normC >= 80 && normM <= 20 && normP <= 20)) { 
+        result = { umbrella: "Statism / Centralism", specific: "Statism (General)", summary: "..." };
+    } 
+    else if (normM >= normC && normM >= normP && normM >= 35 && !(normM >= 80 && normC <= 20 && normP <= 20)) { 
+        result = { umbrella: "Communalism / Collectivism", specific: "Collectivism (General)", summary: "..." };
+    } 
+    else if (normP >= normC && normP >= normM && normP >= 35 && !(normP >= 80 && normC <= 20 && normM <= 20)) { 
+        result = { umbrella: "Propertarianism / Individualism", specific: "Propertarianism (General)", summary: "..." };
+    }
+
+    return result;
 }
 
     // In script.js
