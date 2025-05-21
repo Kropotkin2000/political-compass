@@ -101,3 +101,39 @@ h2 {
     margin-top: 20px;
     margin-bottom: 20px;
 }
+
+#dev-controls {
+    background-color: #f0f0f0;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+}
+
+#dev-controls h3 {
+    margin-top: 0;
+    text-align: center;
+    color: #444;
+}
+
+#dev-controls div {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+}
+
+#dev-controls label {
+    min-width: 120px; /* Adjust as needed */
+    font-weight: bold;
+}
+
+#dev-controls input[type="range"] {
+    flex-grow: 1;
+    margin-right: 10px;
+}
+
+#dev-controls span {
+    min-width: 50px; /* For score display */
+    text-align: right;
+    font-family: monospace;
+}
