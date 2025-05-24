@@ -1,278 +1,420 @@
-// V9 Sarcastic Tiered Questionnaire
-// SCORING IS HIGHLY SPECULATIVE AND REQUIRES INTENSE CALIBRATION
-// C = Centralism, M = Communalism, P = Privatism
+// questions.js (Adaptive Version - Populated for 30-question user path, 66 total system Qs)
 
-const questions = [
-    // Tier 1: Broad Strokes / Value Correlates (8 Questions)
+// Tier 1: Common Broad Questions (10 questions)
+const TIER1_QUESTIONS = [
     {
-        id: 1,
+        id: 't1_q1',
         tier: 1,
         text: "When a big problem arises, what's your instinctive, deeply unhelpful first thought?",
-        type: 'forcedChoice3',
+        type: 'forcedChoice4',
         options: [
-            { text: "\"Someone really important and official should sort this out. Where's the manager of the universe?!\"", scores: { c: 2, m: -1, p: -1 } },
-            { text: "\"Ugh, if only we could form a thousand sub-committees to 'dialogue' this problem into submission! Surely a perfectly 'inclusive' process will magically yield a perfect solution, eventually\"", scores: { c: -1, m: 2, p: -1 } },
-            { text: "\"Not my circus, not my monkeys. Unless there's a way to profit from this chaos, then it's *very much* my circus.\"", scores: { c: -1, m: -1, p: 2 } }
+            { text: "Someone really important and official should sort this out. Where's the manager of the universe?!", scores: { c: 2, m: -1, p: -1 } },
+            { text: "Ugh, if only we could form a thousand sub-committees to 'dialogue' this problem into submission! Surely a perfectly 'inclusive' process will magically yield a perfect solution, eventually.", scores: { c: -1, m: 2, p: -1 } },
+            { text: "Not my circus, not my monkeys. Unless there's a way to profit from this chaos, then it's *very much* my circus.", scores: { c: -1, m: -1, p: 2 } },
+            { text: "\"Sigh. Another one? Fine. Can someone at least Google the 'least worst' option while I make some tea and try not to think about how we're all doomed anyway?\"", scores: { c: 0.3, m: 0.3, p: 0.3 } }
         ]
     },
     {
-        id: 2,
+        id: 't1_q2',
         tier: 1,
         text: "\"Progress.\" If it's not just a fancy word for \"gentrification,\" it probably means:",
-        type: 'forcedChoice3',
+        type: 'forcedChoice4',
         options: [
             { text: "Making everything more streamlined, predictable, and under the firm-but-loving grip of those who 'know best.' For efficiency!", scores: { c: 2, m: -1, p: -1 } },
             { text: "Everyone feeling 'empowered' to 'live their truth' and 'express themselves,' leading to a society that's... certainly more colorful, if not actually functional.", scores: { c: -1, m: 2, p: -1 } },
-            { text: "A new app that shaves 0.2 seconds off ordering a pizza, while the actual societal dumpster fire rages on. But hey, convenience!", scores: { c: -1, m: -1, p: 2 } }
+            { text: "A new app that shaves 0.2 seconds off ordering a pizza, while the actual societal dumpster fire rages on. But hey, convenience!", scores: { c: -1, m: -1, p: 2 } },
+            { text: "Painfully slow, incremental changes that involve a lot of boring meetings, disappoint everyone slightly, and ultimately result in things being marginally less terrible than they were a decade ago. Thrilling.", scores: { c: 0.4, m: 0.4, p: 0.4 } }
         ]
     },
     {
-        id: 3,
+        id: 't1_q3',
         tier: 1,
         text: "What's generally a bigger threat to a \"good life\" (whatever that is)?",
-        type: 'forcedChoice2',
+        type: 'forcedChoice3', // Changed to forcedChoice3 to include X-option
         options: [
             { text: "Too much messy, unpredictable individual freedom leading to societal breakdown and people putting pineapples on pizza.", scores: { c: 1, m: 0, p: -1 } },
-            { text: "Too many rules and powerful institutions telling you what to do, crushing your unique spirit under the weight of conformity.", scores: { c: -1, m: 0, p: 1 } }
+            { text: "Too many rules and powerful institutions telling you what to do, crushing your unique spirit under the weight of conformity.", scores: { c: -1, m: 0, p: 1 } },
+            { text: "Honestly, both extremes are terrifying. The real danger is any ideology taken too far, or just a general lack of common sense and decency.", scores: { c: 0.1, m: 0.1, p: 0.1 } } // New X-Option
         ]
     },
     {
-        id: 4,
+        id: 't1_q4',
         tier: 1,
         text: "When you hear \"the common good,\" what's your immediate, cynical translation?",
-        type: 'forcedChoice3', // Scoring here is inverted: picking A means you're NOT C
+        type: 'forcedChoice4',
         options: [
             { text: "\"What the people in charge have decided is good for *them*, and by extension, 'us,' whether we like it or not.\"", scores: { c: -2, m: 0.5, p: 0.5 } },
             { text: "\"Something vague and fluffy that sounds nice but usually means *I* have to give up something I like for people I don't know.\"", scores: { c: 0.5, m: 0.5, p: -2 } },
-            { text: "\"An endless series of meetings to determine what 'the community' wants, which usually means what the loudest person wants.\"", scores: { c: 0.5, m: -2, p: 0.5 } }
+            { text: "\"An endless series of meetings to determine what 'the community' wants, which usually means what the loudest person with the most free time wants.\"", scores: { c: 0.5, m: -2, p: 0.5 } },
+            { text: "\"A marketing slogan used to sell us policies that primarily benefit powerful, well-connected insiders, while the rest of us get some nice-sounding platitudes and maybe a commemorative tea towel.\"", scores: { c: 0.1, m: 0.1, p: 0.1 } }
         ]
     },
     {
-        id: 5,
+        id: 't1_q5',
         tier: 1,
         text: "If society is a stage play, what's the most crucial role?",
-        type: 'forcedChoice3',
+        type: 'forcedChoice4',
         options: [
             { text: "The Stern But Fair Director: Making sure everyone hits their marks, says their lines, and doesn't upstage the star (usually The State).", scores: { c: 2, m: -1, p: -1 } },
             { text: "The Harmonious Ensemble Cast: Everyone supporting each other, sharing the spotlight, and creating something beautiful (and probably unprofitable) together.", scores: { c: -1, m: 2, p: -1 } },
-            { text: "The Dashing Maverick Lead: Improvising wildly, stealing every scene, and to hell with the script or the other actors. It's *their* show!", scores: { c: -1, m: -1, p: 2 } }
+            { text: "The Dashing Maverick Lead: Improvising wildly, stealing every scene, and to hell with the script or the other actors. It's *their* show!", scores: { c: -1, m: -1, p: 2 } },
+            { text: "The exhausted Stage Manager, fueled by lukewarm coffee and existential dread, desperately trying to stop the sets from collapsing while the actors ad-lib increasingly bizarre plot twists.", scores: { c: 0.3, m: 0.3, p: 0.3 } }
         ]
     },
     {
-        id: 6,
+        id: 't1_q6',
         tier: 1,
         text: "What's the more fundamental human drive?",
-        type: 'forcedChoice3',
+        type: 'forcedChoice4',
         options: [
-            { text: "The desperate need for order, security, and someone to tell us it's all going to be okay (even if it's a lie).", scores: { c: 2, m: -1, p: -1 } },
-            { text: "The deep-seated urge to connect, belong, and not be a total hermit, even if other people are mostly annoying.", scores: { c: -1, m: 2, p: -1 } },
-            { text: "The insatiable hunger to be special, get ahead, and accumulate more shiny things than the next person.", scores: { c: -1, m: -1, p: 2 } }
+            { text: "The desperate need for order, security, and someone to tell us it's all going to be okay (even if it's a blatant, easily disproven lie).", scores: { c: 2, m: -1, p: -1 } },
+            { text: "The deep-seated urge to connect, belong, and not be a total hermit, even if other people are mostly a collection of infuriating quirks and bad opinions.", scores: { c: -1, m: 2, p: -1 } },
+            { text: "The insatiable hunger to be special, get ahead, and accumulate more shiny, status-affirming things than the next person, ideally while live-streaming it.", scores: { c: -1, m: -1, p: 2 } },
+            { text: "The ability to hold wildly contradictory drives simultaneously – like wanting world peace AND that last slice of pizza. Humans: masters of cognitive dissonance.", scores: { c: 0.2, m: 0.2, p: 0.2 } }
         ]
     },
     {
-        id: 7,
+        id: 't1_q7',
         tier: 1,
         text: "When faced with a complex problem, what's your go-to (probably flawed) initial strategy?",
-        type: 'forcedChoice3',
+        type: 'forcedChoice4',
         options: [
-            { text: "\"Let's form a committee, draft a policy paper, and schedule a series of consultations. Action can wait until we have a 300-page report!\"", scores: { c: 2, m: -1, p: -1 } },
-            { text: "\"We need to talk about our feelings about this problem! Let's have a sharing circle and ensure everyone feels validated before we even *think* about solutions.\"", scores: { c: -1, m: 2, p: -1 } },
-            { text: "\"Screw the rules, I have money/connections/a crazy idea! Let me just dive in and 'disrupt' things. What's the worst that could happen?\"", scores: { c: -1, m: -1, p: 2 } }
+            { text: "\"Let's form a committee, draft a policy paper, schedule a series of consultations, and then set up a steering group to review the findings of the preliminary report. Action can wait until we have a 300-page, fully-footnoted document!\"", scores: { c: 2, m: -1, p: -1 } },
+            { text: "\"We need to talk about our *feelings* about this problem! Let's have a sharing circle, ensure everyone feels validated, maybe do some trust falls, before we even *think* about solutions that might invalidate someone's lived experience.\"", scores: { c: -1, m: 2, p: -1 } },
+            { text: "\"Screw the rules, I have money/connections/a half-baked but incredibly disruptive idea! Let me just dive in and 'move fast and break things.' What's the worst that could happen? (Famous last words).\"", scores: { c: -1, m: -1, p: 2 } },
+            { text: "\"Sigh. Okay, what's the absolute minimum we can do that looks like we're addressing this but doesn't actually require too much effort, money, or upsetting anyone important? Let's aim for 'performative competence.'\"", scores: { c: 0.3, m: 0.3, p: 0.3 } } // Adjusted score for balance
         ]
     },
     {
-        id: 8,
+        id: 't1_q8',
         tier: 1,
         text: "If society had a motto, which of these cringeworthy options would be the most accurate (if depressing)?",
-        type: 'forcedChoice3',
-        options: [
-            { text: "\"Order Above All (Even Your Happiness).\"", scores: { c: 1, m: -0.5, p: -0.5 } },
-            { text: "\"Together We Achieve... Eventually... Maybe.\"", scores: { c: -0.5, m: 1, p: -0.5 } },
-            { text: "\"Every Person For Themselves (Good Luck!).\"", scores: { c: -0.5, m: -0.5, p: 1 } }
-        ]
-    },
-
-    // Tier 2: Nuance & Overlap Probes (10 Questions)
-    {
-        id: 9,
-        tier: 2,
-        text: "The \"ideal\" economy (if such a non-disaster exists) would mostly run on:",
         type: 'forcedChoice4',
         options: [
-            { text: "The State's All-Knowing Wisdom: Central planners heroically assigning production quotas for artisanal pickles and novelty socks. Maximum efficiency!", scores: { c: 1.5, m: 0.5, p: -1 } },
-            { text: "Ugh, if only we could form a thousand sub-committees to 'dialogue' this problem into submission! Surely a perfectly 'inclusive' process will magically yield a perfect solution, eventually", scores: { c: -0.5, m: 1.5, p: -0.5 } },
-            { text: "The 'Invisible Hand's' Slightly Sticky Fingers: Let the market decide who gets rich and who gets to eat ramen for eternity. It's 'natural'!", scores: { c: -0.5, m: -0.5, p: 1.5 } },
-            { text: "The 'Sensible Shoes' Model: A bit of market 'dynamism,' a lot of government 'oversight,' and some 'social responsibility.' It's boring, but it vaguely functions.", scores: { c: 0.4, m: 0.3, p: 0.8 } } // P-Leaning Centrist
+            { text: "\"Order Above All (Even Your Happiness, And Especially Your Quirky Hobbies).\"", scores: { c: 1, m: -0.5, p: -0.5 } },
+            { text: "\"Together We Achieve... Eventually... Maybe... After A Few More Meetings About The Minutes Of The Previous Meetings.\"", scores: { c: -0.5, m: 1, p: -0.5 } },
+            { text: "\"Every Person For Themselves (And May The Person With The Best Offshore Accountant Win!).\"", scores: { c: -0.5, m: -0.5, p: 1 } },
+            { text: "\"It's Complicated, Mostly Broken, And We're All Just Pretending It Makes Sense. (Want a donut?)\"", scores: { c: 0.1, m: 0.1, p: 0.1 } }
         ]
     },
     {
-        id: 10,
-        tier: 2,
-        text: "\"Social Justice.\" What does that *actually* mean when it's not just a hashtag?",
+        id: 't1_q9',
+        tier: 1,
+        text: "When you strip away all the fancy flags and boring speeches, the *actual, rock-bottom, non-negotiable* job of whatever entity is 'in charge' should be:",
         type: 'forcedChoice4',
         options: [
-            { text: "The State ensuring everyone is 'equal' by making sure everyone has equally little, except the party officials, who are 'more equal'.", scores: { c: 1, m: 1, p: -1 } },
-            { text: "Everyone in the 'community' feeling equally 'seen' and 'heard,' possibly through mandatory 'empathy workshops,' while systemic issues remain untouched.", scores: { c: -0.5, m: 1.5, p: -0.5 } },
-            { text: "Everyone having the 'equal opportunity' to become obscenely wealthy by exploiting others, or to fail spectacularly on their own 'merits'.", scores: { c: -0.5, m: -0.5, p: 1.5 } },
-            { text: "A complex, probably flawed, attempt to balance individual rights, market realities, and societal support systems so that fewer people get totally screwed over. Low bar, but it's something.", scores: { c: 0.5, m: 0.5, p: 0.5 } } // Balanced Centrist
+            { text: "To efficiently herd us all towards a Glorious National Destiny™, whether we understand it or not, using detailed plans, inspiring slogans, and, if necessary, very pointy sticks.", scores: { c: 2, m: -1, p: -1 } },
+            { text: "To act as a glorified PTA meeting for society: facilitating endless 'community dialogues,' ensuring everyone 'feels heard,' and then maybe, eventually, forming a sub-committee to look into fixing the actual problems.", scores: { c: -1, m: 2, p: -1 } },
+            { text: "To basically be an invisible, ultra-cheap bouncer: making sure no one steals my stuff or burns down my factory, then otherwise staying completely out of my (potentially very profitable) business.", scores: { c: -1, m: -1, p: 2 } },
+            { text: "To provide just enough structure so that society doesn't immediately devolve into a Mad Max sequel, while mostly allowing people to muddle through their lives with a tolerable level of bureaucratic incompetence and occasional, minor existential dread.", scores: { c: 0.3, m: 0.3, p: 0.3 } } // Adjusted score
         ]
     },
-     {
-        id: 11,
-        tier: 2,
-        text: "When it comes to \"individual liberty,\" what's the most common societal self-deception?",
+    {
+        id: 't1_q10',
+        tier: 1,
+        text: "The truly gigantic, mind-bogglingly awful problems plaguing humanity (you know, the usual Tuesday) are, at their core:",
         type: 'forcedChoice4',
         options: [
-            { text: "Believing you're 'free' because the government 'grants' you a list of carefully curated 'rights' (which it can also 'reinterpret' at will).", scores: { c: 1.5, m: -0.5, p: -0.5 } },
-            { text: "Thinking you're 'truly yourself' because you're part of a 'radically inclusive community' that just happens to have very strong opinions on what your 'true self' should be.", scores: { c: -0.5, m: 1.5, p: -0.5 } },
-            { text: "Assuming you're 'captain of your soul' in a 'free market' where giant corporations and billionaires basically own the water you float in.", scores: { c: -0.5, m: -0.5, p: 1.5 } },
-            { text: "The comforting illusion that our current messy system 'balances' all these freedoms perfectly, when it mostly just balances powerful interests against each other, and we get the leftovers.", scores: { c: 0.5, m: 0.5, p: 0.5 } } // Balanced Centrist
-        ]
-    },
-    {
-        id: 12,
-        tier: 2,
-        text: "Healthcare. How do we ensure people don't just, you know, die avoidably (without it being *too* inconvenient for the system)?",
-        type: 'forcedChoice4',
-        options: [
-            { text: "The State Emergency Ward Model: Everyone queues for the same, slightly rusty, government-approved care. It's 'universally accessible' (if you don't mind the wait and the distinct aroma of institutional despair)! Everyone gets the same level of indifferent care!", scores: { c: 1, m: 1, p: -1 } },
-            { text: "The 'Holistic Community Care Collective': Where access is 'guaranteed' through a network of underfunded local clinics run by passionate-but-overwhelmed volunteers, offering 'empowerment' and maybe some actual medicine if they haven't run out.", scores: { c: -0.5, m: 1.5, p: -0.5 } },
-            { text: "The 'Pay-to-Live' Subscription Service: Got gold-plated insurance? Welcome to the VIP recovery suite! No? Here's an aspirin and a pamphlet on 'positive thinking'.", scores: { c: -0.5, m: -0.5, p: 1.5 } },
-            { text: "The Bureaucratic Labyrinth of Mixed Provision: A confusing maze of public options, private plans, and endless forms, where you *might* get what you need if you're persistent and lucky.", scores: { c: 0.4, m: 0.3, p: 0.8 } } // P-Leaning Centrist
-        ]
-    },
-    {
-        id: 13,
-        tier: 2,
-        text: "How should society \"manage\" its \"valuable resources\" (like, say, breathable air or the last dodo)?",
-        type: 'forcedChoice4',
-        options: [
-            { text: "Appoint a Ministry of Absolutely Everything, which will issue stern directives and five-color charts on sustainable dodo farming. Problem solved!", scores: { c: 1.5, m: -0.5, p: -0.5 } },
-            { text: "Establish an 'International People's Resource Stewardship Council' with representatives from every conceivable affinity group, to 'democratically allocate' resources through endless debate and the power of strongly worded resolutions.", scores: { c: -0.5, m: 1.5, p: -0.5 } },
-            { text: "Auction off the broadcasting rights to the last dodo's extinction. The market provides! (Also, dodo nuggets, limited time only!)", scores: { c: -0.5, m: -0.5, p: 1.5 } },
-            { text: "The 'Let's Try Everything and Hope Something Sticks' approach: Forming endless committees to draft toothless regulations, while also 'incentivizing' corporations to 'be green' (wink, wink) and funding a few understaffed conservation groups. It's a masterclass in looking busy!", scores: { c: 0.5, m: 0.5, p: 0.5 } } // Balanced Centrist
-        ]
-    },
-    {
-        id: 14,
-        tier: 2,
-        text: "\"Law and Order.\" What's the least dysfunctional way to stop people from behaving like complete animals (more than usual)?",
-        type: 'forcedChoice4',
-        options: [
-            { text: "A Robocop on Every Corner: Constant surveillance, swift 'justice' (i.e., punishment), and a society so orderly it's practically embalmed.", scores: { c: 1.5, m: -0.5, p: -0.5 } },
-            { text: "Community Accountability Circles™: Where offenders and victims 'dialogue' their way to 'healing,' and serious crimes are handled with 'empathy' and maybe a stern talking-to.", scores: { c: -0.5, m: 1.5, p: -0.5 } },
-            { text: "Private Security for the Rich, Darwin for the Rest: If you can afford a panic room and a mercenary army, you're golden! If not, well, 'natural selection' is a kind of order, isn't it?", scores: { c: -0.5, m: -0.5, p: 1.5 } },
-            { text: "The Current Creaky Legal System: Flawed laws, overburdened courts, some good cops, some bad cops, and lawyers. So many lawyers. It's a mess, but it's *our* mess.", scores: { c: 0.8, m: 0.2, p: 0.2 } } // C-Leaning Centrist
-        ]
-    },
-    {
-        id: 15,
-        tier: 2,
-        text: "How should \"Big Tech\" (those friendly overlords who know your every thought) be \"handled\"?",
-        type: 'forcedChoice4',
-        options: [
-            { text: "Nationalize them! Let The State control the algorithms for 'public good' and 'national security.' What could be more trustworthy?", scores: { c: 1.5, m: -0.5, p: -0.5 } },
-            { text: "Break them up into tiny, worker-owned digital co-ops that build 'ethical AI' and probably get bought out by a new Big Tech in six months.", scores: { c: -0.5, m: 1.5, p: -0.5 } },
-            { text: "Let them fight! May the biggest data-hoarding monopoly win! 'Innovation' means new ways to harvest your soul for ad revenue.", scores: { c: -0.5, m: -0.5, p: 1.5 } },
-            { text: "A patchwork of confusing regulations, antitrust lawsuits that take a decade, and strongly worded parliamentary inquiries that achieve very little besides good soundbites.", scores: { c: 0.4, m: 0.3, p: 0.8 } } // P-Leaning Centrist
-        ]
-    },
-    {
-        id: 16,
-        tier: 2,
-        text: "International relations. What's the most 'realistic' (i.e., depressing) way for nations to interact?",
-        type: 'forcedChoice4',
-        options: [
-            { text: "One World Government (Probably Run by Lizards): Finally, a single authority to mismanage the entire planet with breathtaking efficiency!", scores: { c: 1.5, m: -0.5, p: -0.5 } },
-            { text: "A 'Global Federation of Sovereign Peoples' where everyone agrees to 'peace, love, and mutual understanding' via international Zoom calls, blissfully ignoring power politics until someone actually wants a valuable resource.", scores: { c: -0.5, m: 1.5, p: -0.5 } },
-            { text: "Global Corporate Feudalism: Nations are just brands, citizens are consumers, and a few mega-corps pull all the strings. At least the quarterly reports are good!", scores: { c: -0.5, m: -0.5, p: 1.5 } },
-            { text: "The 'Cautious Diplomat's Two-Step': Issuing strongly worded condemnations, signing vague international accords that everyone ignores, and generally trying to keep the global applecart from completely tipping over through a delicate balance of threats and tea parties.", scores: { c: 0.5, m: 0.5, p: 0.5 } } // Balanced Centrist
-        ]
-    },
-    {
-        id: 17,
-        tier: 2,
-        text: "\"Social progress.\" If it happens at all, it's usually because:",
-        type: 'forcedChoice4',
-        options: [
-            { text: "Some stern, far-sighted (or just plain bossy) state figures drag society kicking and screaming into a 'better' future they've designed.", scores: { c: 1.5, m: -0.5, p: -0.5 } },
-            { text: "Grassroots movements of well-meaning (and often Birkenstock-clad) activists tirelessly campaign for change, annoying everyone into submission eventually.", scores: { c: -0.5, m: 1.5, p: -0.5 } },
-            { text: "Some clever individual invents a new widget or business model that accidentally makes things better (or worse, but differently!) for everyone, while making themselves rich.", scores: { c: -0.5, m: -0.5, p: 1.5 } },
-            { text: "The 'Incremental Muddle-Through' Method: Progress happens via slow, painful compromises, a bit of reluctant state action here, some hesitant market reform there, and a vague hope that it all adds up to something slightly less awful over several decades.", scores: { c: 0.5, m: 0.5, p: 0.5 } } // Balanced Centrist
-        ]
-    },
-    {
-        id: 18,
-        tier: 2,
-        text: "Education's *real* purpose in this clown show we call life is to:",
-        type: 'forcedChoice4',
-        options: [
-            { text: "Produce obedient little citizens who know the approved national narrative and won't cause too much trouble. Think of it as state-sponsored daycare with flags.", scores: { c: 1.5, m: -0.5, p: -0.5 } },
-            { text: "Create 'well-rounded individuals' who can 'think critically' (i.e., agree with their progressive teachers) and 'collaborate' on endless group projects that prepare them for... more group projects.", scores: { c: -0.5, m: 1.5, p: -0.5 } },
-            { text: "Equip individuals with 'marketable skills' so they can 'compete' in the glorious 'knowledge economy' (i.e., fight for unpaid internships).", scores: { c: -0.5, m: -0.5, p: 1.5 } },
-            { text: "Keep kids off the streets and vaguely literate, with a mix of useful stuff, useless stuff, and standardized tests, all managed by a bureaucracy that means well. Mostly.", scores: { c: 0.8, m: 0.2, p: 0.2 } } // C-Leaning Centrist
-        ]
-    },
-
-    // Tier 3: "Dealbreaker" / Strong Stance Clarifiers (6 Questions)
-    {
-        id: 19,
-        tier: 3,
-        text: "\"Private property: sacred right bestowed by angels, or a polite term for 'I stole this fair and square'?\"",
-        type: 'forcedChoice2',
-        options: [
-            { text: "It's the bedrock of civilization! Without it, we're all just cavemen fighting over berries. My stuff is MINE!", scores: { c: 0, m: -1, p: 2 } },
-            { text: "Pretty much a scam that allows a few to hoard what should belong to everyone. Time to share the 'wealth' (and the pitchforks).", scores: { c: 0, m: 2, p: -1 } }
-        ]
-    },
-    {
-        id: 20,
-        tier: 3,
-        text: "\"The State: benevolent protector or just the biggest gang in town?\"",
-        type: 'forcedChoice2',
-        options: [
-            { text: "It's the only thing stopping us from total Mad Max anarchy! We NEED its wise guidance and firm hand (preferably not *too* firm on *my* neck).", scores: { c: 2, m: -0.5, p: -0.5 } },
-            { text: "Mostly a protection racket that takes our money and tells us what to do. Let's just agree to not punch each other and call it a day.", scores: { c: -2, m: 0.5, p: 0.5 } }
-        ]
-    },
-    {
-        id: 21,
-        tier: 3,
-        text: "Statement: \"Ultimately, individual success is purely down to personal effort and talent; blaming 'the system' is just for losers.\"",
-        type: 'agreeDisagree', // Will be handled as two radio buttons: "Agree" and "Disagree"
-        options: [ // Scores for "Agree"
-            { text: "Agree (or at least, that's what winners say).", scores: { c: 0, m: -1, p: 2 } },
-            { text: "Disagree (because 'the system' is obviously rigged, duh).", scores: { c: 0, m: 1, p: -1 } } // Scores for "Disagree"
-        ]
-    },
-    {
-        id: 22,
-        tier: 3,
-        text: "Statement: \"A bit of chaos and radical experimentation is essential for a truly vibrant and evolving society, even if it makes the sensible people nervous.\"",
-        type: 'agreeDisagree',
-        options: [ // Scores for "Agree"
-            { text: "Agree (let's burn it down and see what sprouts!).", scores: { c: -1, m: 0.5, p: 0.5 } },
-            { text: "Disagree (stability and proven methods are underrated, you damn hippies/disruptors!).", scores: { c: 1, m: -0.5, p: -0.5 } } // Scores for "Disagree"
-        ]
-    },
-    {
-        id: 23,
-        tier: 3,
-        text: "\"Community decision-making: beautiful expression of collective wisdom, or just a recipe for endless arguments and bad compromises?\"",
-        type: 'forcedChoice2',
-        options: [
-            { text: "It's the only truly legitimate way! Power to the people (and their endless meetings)!", scores: { c: -0.5, m: 2, p: -0.5 } },
-            { text: "Give me a decisive leader or a clear market signal any day. 'Community' usually means someone's annoying opinions.", scores: { c: 0.5, m: -2, p: 0.5 } }
-        ]
-    },
-    {
-        id: 24,
-        tier: 3,
-        text: "Statement: \"A society that doesn't have a strong, unified national identity and purpose is basically just a random collection of people waiting to fall apart.\"",
-        type: 'agreeDisagree',
-        options: [ // Scores for "Agree"
-            { text: "Agree (One Nation, One Glorious Purpose... as soon as we figure out what it is this week).", scores: { c: 2, m: -0.5, p: -0.5 } },
-            { text: "Disagree (Diversity is strength! National identity is mostly just old flags and boring songs. Let a thousand flowers bloom, etc.).", scores: { c: -1, m: 0.5, p: 0.5 } } // Scores for "Disagree"
+            { text: "Simply a matter of insufficient central planning and a lack of will from The Authorities. If everyone just did exactly what they were told by the right experts, we'd have sorted this utopia thing out by now!", scores: { c: 2, m: -1, p: -0.5 } },
+            { text: "A tragic result of broken communities, empathy deficits, and a failure to collectively envision a more harmonious, fair-trade, organic future. More group hugs and locally-sourced solutions are clearly needed!", scores: { c: -1, m: 2, p: -0.5 } },
+            { text: "Caused by too many damn rules, stifling regulations, and insufficient respect for individual genius and the miracle of the free market to 'disrupt' its way to a solution (and a tidy profit). Get out of the way and let the innovators innovate!", scores: { c: -0.5, m: -0.5, p: 2 } },
+            { text: "Probably permanent features of the human condition, like bad haircuts or the inexplicable popularity of reality TV. We can tinker at the edges, but 'solving' them is a recipe for disappointment and probably another terrible committee.", scores: { c: 0.2, m: 0.2, p: 0.2 } }
         ]
     }
 ];
+
+// Tier 2: C-Path Questions (10 questions)
+const TIER2_C_PATH_QUESTIONS = [
+    {
+        id: 't2c_q1', tier: 2, branch: 'C', text: "Your nation's glorious Head of State, the one whose portrait definitely *shouldn't* be used for dart practice, should primarily be:", type: 'forcedChoice4',
+        options: [ { text: "A Decisive Visionary™ with an iron will, a five-year plan for everything (including your Tuesday), and a healthy disdain for 'the will of the people' when it's clearly wrong.", scores: { c: 2, m: -1, p: -0.5 } }, { text: "A terrifyingly competent super-nerd, ruling by algorithm and spreadsheet, whose idea of a rousing speech involves unveiling a new efficiency metric for paperclip distribution.", scores: { c: 1.5, m: -0.5, p: 0 } }, { text: "A benevolent 'Parent-of-the-Nation' type, always ready with a comforting platitude, a firm guiding hand, and a subtle reminder that the State knows what's best for its slightly dim-witted children.", scores: { c: 1.5, m: 0.5, p: -0.5 } }, { text: "Honestly, just a well-dressed animatronic figurehead. The real power should be with the faceless, unfireable bureaucrats and the sacred, unchanging Book of Regulations.", scores: { c: 1, m: -0.25, p: -0.25 } } ]
+    },
+    {
+        id: 't2c_q2', tier: 2, branch: 'C', text: "Art, news, or (heaven forbid) TikToks that 'undermine national cohesion' or suggest the Dear Leader might have bad hair days, should be:", type: 'forcedChoice3',
+        options: [ { text: "Vigorously scrubbed from existence by the Ministry of Approved Thoughts, its creators sent on an all-expenses-paid re-education retreat to a lovely Siberian wellness spa.", scores: { c: 2, m: -1, p: -1 } }, { text: "Allowed, but only if accompanied by a 500-page official 'Context and Reinterpretation Guide' written by a committee of very serious men with beards.", scores: { c: 1, m: -0.5, p: -0.5 } }, { text: "Technically tolerated, but its purveyors will find their internet mysteriously slow, their tax audits frequent, and their pets looking increasingly nervous.", scores: { c: 0.5, m: 0, p: 0 } } ]
+    },
+    {
+        id: 't2c_q3', tier: 2, branch: 'C', text: "The State's grand economic plan, scribbled on the back of a cocktail napkin by the Minister of Making Things Hum, should prioritize:", type: 'forcedChoice4',
+        options: [ { text: "Owning *everything* and meticulously planning the production of every last widget and turnip via a beautifully complex system of quotas, committees, and soul-crushing queues.", scores: { c: 2, m: 1, p: -2 } }, { text: "Generously allowing 'private' businesses to exist (as long as they're owned by the Leader's nephew), but 'guiding' them with an iron fist towards fulfilling vital national strategic goals, like building more statues of the Leader.", scores: { c: 1.5, m: -0.5, p: 1 } }, { text: "Ensuring just enough economic stability so the peasants don't revolt, providing some basic infrastructure (like roads to the capital), and then mostly focusing on a really impressive military parade budget.", scores: { c: 1, m: 0.25, p: 0.25 } }, { text: "Becoming obscenely wealthy itself through 'strategic national enterprises' (translation: monopolies run by Party loyalists) so it can afford more gold plating for the presidential palace.", scores: { c: 1.5, m: -1, p: 0 } } ]
+    },
+    {
+        id: 't2c_q4', tier: 2, branch: 'C', text: "To keep everyone 'safe' (from wrongthink, mostly), the State's loving gaze via surveillance cameras, internet snooping, and patriotic neighborhood informants should be:", type: 'forcedChoice3',
+        options: [ { text: "Literally everywhere, all the time. Your smart fridge should report your suspicious consumption of 'unpatriotic' cheese. If you've done nothing wrong, you have nothing to hide... from us.", scores: { c: 2, m: -0.5, p: -1 } }, { text: "Comprehensive, but with a *semblance* of due process, like secret courts where a judge (appointed by us) occasionally nods sagely before approving every surveillance request.", scores: { c: 1, m: 0, p: -0.5 } }, { text: "Focused on actual, proper criminals, mostly. Though, a little 'data collection' on everyone 'just in case' never hurt national security, right? Right?!", scores: { c: 0.5, m: 0.25, p: 0.25 } } ]
+    },
+    {
+        id: 't2c_q5', tier: 2, branch: 'C', text: "Our glorious National Culture, based on ancient traditions (some of which we invented last Tuesday), is:", type: 'forcedChoice3',
+        options: [ { text: "A sacred treasure to be fanatically preserved and aggressively promoted by the State, stamping out any deviant foreign fads like 'due process' or 'irony'.", scores: { c: 1.5, m: 0.5, p: -1 } }, { text: "A useful branding tool for tourism and national pride, to be carefully curated and 'modernized' by the Ministry of Acceptable Heritage, ensuring it's all very Instagrammable.", scores: { c: 1, m: 0.25, p: -0.5 } }, { text: "Frankly, a bit of a drag when we're trying to build more missile silos. As long as it doesn't interfere with State power or scare the foreign investors, let them have their folk dances.", scores: { c: 0.5, m: -0.25, p: 0 } } ]
+    },
+    {
+        id: 't2c_q6', tier: 2, branch: 'C', text: "The state education system's noble purpose is to churn out citizens who are primarily:", type: 'forcedChoice3',
+        options: [ { text: "Passionately patriotic, deeply respectful of all authority figures (especially us), and capable of reciting the National Creed backwards while assembling a rifle blindfolded.", scores: { c: 2, m: -0.5, p: -1 } }, { text: "Highly skilled cogs for the Great State Machine – brilliant engineers, efficient bureaucrats, and innovative weapons designers, all unquestioningly loyal, of course.", scores: { c: 1.5, m: 0, p: 0 } }, { text: "Uniformly knowledgeable in the State-approved curriculum, ensuring a harmonious society where everyone thinks the same 'correct' thoughts and celebrates National Efficiency Day with appropriate fervor.", scores: { c: 1, m: 0.25, p: -0.25 } } ]
+    },
+    {
+        id: 't2c_q7', tier: 2, branch: 'C', text: "On the grand chessboard of international dick-waving (also known as 'foreign policy'), our Great Nation should:", type: 'forcedChoice3',
+        options: [ { text: "Confidently stride about, 'liberating' lesser nations (whether they want it or not), securing 'vital national interests' (i.e., their resources), and generally making sure everyone knows who's boss. For global stability, naturally.", scores: { c: 2, m: -1, p: 0 } }, { text: "Build an impenetrable 'Fortress [Our Nation]' with a 'Keep Out!' sign the size of Texas, achieve glorious self-sufficiency in everything (except maybe decent TV shows), and only interact with the chaotic outside world through a very small, heavily guarded hatch.", scores: { c: 1.5, m: -0.5, p: -0.5 } }, { text: "Play nice with others *only* when it directly benefits us, sign treaties with our fingers crossed, and always keep a bigger stick hidden behind our back than anyone else. 'Trust but verify' (and mostly don't trust).", scores: { c: 1, m: 0, p: 0.25 } } ]
+    },
+    {
+        id: 't2c_q8', tier: 2, branch: 'C', text: "The State declares that sacrificing a few pesky 'individual rights' is vital for the 'Greater Good' (as defined by a committee that meets in secret). You think:", type: 'forcedChoice3',
+        options: [ { text: "\"Excellent! Individual rights are a bourgeois indulgence when the destiny of The Nation is at stake! Take my rights, please, I wasn't using them anyway!\"", scores: { c: 2, m: 0, p: -1.5 } }, { text: "\"Hmm, regrettable, but if The Experts™ say it's necessary for order and security, who am I to argue? I'll just keep my head down and hope I'm not one of the 'few'.\"", scores: { c: 1, m: 0, p: -0.5 } }, { text: "\"This is a slippery slope to tyranny! ...But okay, maybe just *this one time*, if it's *really* important, and there's a lot of paperwork involved to make it look legitimate.\"", scores: { c: 0.5, m: 0, p: 0.5 } } ]
+    },
+    {
+        id: 't2c_q9', tier: 2, branch: 'C', text: "The State's solemn duty to mold its citizens into ideal specimens of social conformity and moral purity (according to Chapter 7, Subsection B of the Official Handbook) should be:", type: 'forcedChoice3',
+        options: [ { text: "Vigorous and all-encompassing! From cradle to grave, the State shall guide, shape, and, if necessary, 'gently re-align' every citizen towards the approved model of perfection. Think of the societal harmony!", scores: { c: 2, m: 0.5, p: -1 } }, { text: "Subtly persuasive. Encourage 'good' behavior through uplifting propaganda, tax breaks for 'correct' family structures, and a national curriculum that heavily implies certain lifestyles are... 'suboptimal'.", scores: { c: 1, m: -0.25, p: 0.25 } }, { text: "\"Ugh, can't the State just stick to roads and defense? Let people be weird. As long as their 'alternative lifestyles' don't involve tax evasion or questioning the Dear Leader, it's probably fine.\"", scores: { c: -1, m: 0.5, p: 1 } } ]
+    },
+    {
+        id: 't2c_q10', tier: 2, branch: 'C', text: "The State's latest Glorious Five-Year Plan for Reforming Bureaucratic Inefficiency has, ironically, become a bureaucratic nightmare of its own. The proper statist response is:", type: 'forcedChoice3',
+        options: [ { text: "Clearly, a lack of ideological fervor! Double down with more purges, stricter central controls, longer patriotic speeches, and a new Ministry of Efficiently Implementing Efficiency!", scores: { c: 2, m: -0.5, p: -0.5 } }, { text: "Hire incredibly expensive international 'efficiency consultants' (who are probably spies), implement a dozen new impenetrable layers of AI-driven 'synergistic management solutions,' and declare victory when the org chart becomes too complex for anyone to understand.", scores: { c: 1.5, m: 0, p: 0.5 } }, { text: "To form an Inter-Ministerial Grand Commission for the Study of Inefficiency, which will spend three years producing a 2,000-page report that recommends forming another commission, while quietly re-branding the original failed plan as 'Phase One of a Continuous Improvement Journey'.", scores: { c: 1, m: 0, p: 0 } } ]
+    }
+];
+
+// Tier 2: M-Path Questions (10 questions)
+const TIER2_M_PATH_QUESTIONS = [
+    {
+        id: 't2m_q1', tier: 2, branch: 'M', text: "Your dream commune/collective/totally-not-a-cult utopia, where the patchouli flows like wine, would be structured primarily around:", type: 'forcedChoice4',
+        options: [ { text: "Anarchic bliss! Countless tiny, fiercely independent affinity groups, each pursuing its own esoteric passion project, occasionally bumping into each other at solstice festivals to trade conspiracy theories and home-brewed kombucha.", scores: { c: -1, m: 2, p: -0.5 } }, { text: "A glorious federation of worker-run syndicates, where every decision, from toothpick design to revolutionary strategy, is democratically hammered out on the (collectively owned) shop floor, ideally during paid 'praxis' hours.", scores: { c: -0.75, m: 1.5, p: -0.25 } }, { text: "A vibrant tapestry of hyper-local neighborhood assemblies where every single resident gets to passionately debate parking regulations and the ethics of communal lawnmowers for six to eight hours daily. True democracy!", scores: { c: -0.5, m: 1.5, p: 0 } }, { text: "Essentially, a very relaxed neighborhood association that mostly runs on goodwill and unspoken understandings. Disputes are rare, usually sorted out with a friendly chat over shared, ethically-sourced coffee, or, in extreme cases, a 'vibe recalibration session.'", scores: { c: -1.5, m: 1, p: 0 } } ]
+    },
+    {
+        id: 't2m_q2', tier: 2, branch: 'M', text: "Oh dear, Brother Thistlewick (they/them/theirs, naturally) is 'disrupting group harmony' by 'suboptimally participating' in the mandatory communal yurt-cleaning rota. The collective addresses this crisis by:", type: 'forcedChoice3',
+        options: [ { text: "An Emergency All-Community Non-Punitive Accountability Circle (because 'trial' is such a loaded word), complete with talking stick, feelings chart, and enough herbal tea to float a small battleship, until Thistlewick tearfully confesses their deep-seated yurt-cleaning anxieties.", scores: { c: -0.5, m: 2, p: -1 } }, { text: "Consulting the 1,200-page 'Community Harmony & Shared Resource Protocols' document (Version 7.3, Appendix B), then forming a sub-committee to draft a proposal for a mediation process involving a neutral third-party facilitator (who also needs to be vetted for problematic vibes).", scores: { c: -0.25, m: 1.5, p: -0.75 } }, { text: "A series of increasingly pointed passive-aggressive post-it notes left on Thistlewick's sustainably-sourced sleeping mat, culminating in a group performance art piece about the 'Spiritual Significance of Communal Chores.' Direct confrontation is just so... patriarchal.", scores: { c: -0.75, m: 1, p: -0.25 } } ]
+    },
+    {
+        id: 't2m_q3', tier: 2, branch: 'M', text: "In your glorious, post-capitalist paradise, how do people 'get stuff' without resorting to sordid acts like 'using money'?", type: 'forcedChoice4',
+        options: [ { text: "An exquisitely complex system of 'Labor Credits,' 'Time Dollars,' or 'Community Contribution IOUs,' all tracked on a collectively-managed, ethically-sourced abacus, ensuring 'fairness' down to the last micro-transaction of shared lentils.", scores: { c: -0.5, m: 1.5, p: 0.5 } }, { text: "A pure, unadulterated 'gift economy' – from each according to their artisanal skill, to each according to their expressed (and frequently re-expressed, at length) need. Money is an evil spook! We just magically trust that the communal spreadsheet of 'who needs what' balances out... eventually.", scores: { c: -1, m: 2, p: -1.5 } }, { text: "A 'conscious local market' where small co-ops trade handcrafted goods using 'community tokens' (not to be confused with actual money, okay?), all while engaging in lengthy discussions about the 'emotional labor' embedded in each organic carrot.", scores: { c: -0.25, m: 1, p: 1 } }, { text: "Mostly by just asking nicely, borrowing things indefinitely, and showing up at the 'Surplus Zucchini Re-HomING Extravaganza' every Tuesday. Formal systems are so... confining, man.", scores: { c: -0.75, m: 1.5, p: -0.75 } } ]
+    },
+    {
+        id: 't2m_q4', tier: 2, branch: 'M', text: "The sacred, beating heart of your ideal non-oppressive society, this glorious thing we call 'Community' (cue angelic choir), is primarily defined by:", type: 'forcedChoice3',
+        options: [ { text: "Intimate, face-to-face, hyper-local assemblies where every decision, from dog park etiquette to the color of the community noticeboard, is passionately debated by everyone who happens to live within a five-minute bicycle ride.", scores: { c: -0.5, m: 2, p: -0.5 } }, { text: "The glorious solidarity of The Workers! The factory council, the agricultural commune, the International Union of Exploited Office Drones – all united in their shared toil and their plans to democratically manage the means of production (once they figure out who's cleaning the shared microwave).", scores: { c: -0.25, m: 1.5, p: -0.25 } }, { text: "A global network of like-minded souls and 'chosen family,' connected by shared niche interests (like artisanal kombucha brewing or deconstructing patriarchal subtext in cat videos) and communicating primarily through encrypted messaging apps and elaborately coded zines.", scores: { c: -0.75, m: 1, p: 0.5 } } ]
+    },
+    {
+        id: 't2m_q5', tier: 2, branch: 'M', text: "Your idyllic local collective occasionally needs to interface with *other* idyllic local collectives, probably to argue about whose turn it is to host the Regional Anarchist Potluck. This 'federation' thing should happen via:", type: 'forcedChoice3',
+        options: [ { text: "A meticulously structured, multi-tiered system of recallable delegates, binding mandates, and non-coercive coordinating councils, all governed by a 500-page rulebook on 'Ethical Inter-Communal Resource Sharing Protocols.' Think the UN, but with more dreadlocks and less actual power.", scores: { c: -0.25, m: 1.5, p: -0.25 } }, { text: "Spontaneous, self-organizing 'affinity swarms' that emerge like beautiful, chaotic mushrooms after a rainstorm, tackle a specific issue with passion and open-source spreadsheets, then immediately dissolve before anyone can suggest forming a 'steering committee.'", scores: { c: -1, m: 2, p: -0.5 } }, { text: "Honestly, why bother? Large-scale anything inevitably becomes a bureaucratic hellscape. We'll just focus on our own perfect little micro-utopia and hope the other collectives don't, like, run out of artisanal coffee or something that requires our intervention.", scores: { c: -1.5, m: 1, p: 0 } } ]
+    },
+    {
+        id: 't2m_q6', tier: 2, branch: 'M', text: "Your glorious, grassroots, ethically-sourced, fair-trade, non-hierarchical collective is blooming beautifully... unfortunately, it's still surrounded by the soul-crushing capitalist hellscape that, annoyingly, controls things like 'banks' and 'global supply chains.' Your strategy is:", type: 'forcedChoice3',
+        options: [ { text: "Building impenetrable 'Zones of Autonomy' – think heavily-fortified co-ops and communes – aiming to become a self-sufficient parallel society that makes their exploitative system obsolete through the sheer power of our superior vegan potlucks and well-facilitated meetings.", scores: { c: -0.5, m: 1.5, p: -0.5 } }, { text: "Relentless, direct confrontation! Daily protests outside their evil corporate HQs, mass strikes to cripple their infrastructure, and a constant barrage of scathing critiques in our collectively-run zine until their whole rotten system crumbles under the weight of its own contradictions (and our righteous indignation).", scores: { c: -0.25, m: 2, p: -0.75 } }, { text: "A cunning 'entryist' approach: we'll strategically engage with their markets, using their filthy lucre to fund our noble projects, all while subtly converting their wage slaves with tales of our fulfilling, 3-hour workdays and superior community garden yields. They'll never see it coming.", scores: { c: -0.25, m: 1, p: 0.25 } } ]
+    },
+    {
+        id: 't2m_q7', tier: 2, branch: 'M', text: "That dirty capitalist word, 'efficiency' (ugh!), in your humane and ethically-sourced community, is viewed as:", type: 'forcedChoice3',
+        options: [ { text: "A soul-crushing capitalist metric! We prioritize holistic well-being, ecological harmony, and ensuring everyone has abundant leisure time for personal growth and contributing to endless, deeply fulfilling consensus-building processes.", scores: { c: -0.5, m: 2, p: -1 } }, { text: "Important, but only when achieved through democratic worker-control, sustainable technologies, and without sacrificing our core principles of solidarity or creating soul-destroying assembly lines. We can be efficient *and* humane!", scores: { c: -0.25, m: 1.5, p: 0.25 } }, { text: "An interesting concept we'll definitely get around to exploring... right after we finish this crucial three-day workshop on 'Deconstructing the Problematics of Productivity Paradigms' and have a nice group nap.", scores: { c: -0.75, m: 1, p: -0.5 } } ]
+    },
+    {
+        id: 't2m_q8', tier: 2, branch: 'M', text: "That heartwarming, if slightly vague, communist slogan, 'From each according to ability, to each according to need,' translates in daily practice to:", type: 'forcedChoice3',
+        options: [ { text: "A flawlessly self-regulating system where everyone joyfully contributes their unique talents (mostly in areas like therapeutic horticulture and writing manifestos) and only takes what they truly require, thanks to our advanced state of collective consciousness and an abundance of shared resources.", scores: { c: -1, m: 2, p: -1 } }, { text: "A never-ending psychodrama of 'Needs Assessment Sub-Committees,' 'Ability Volunteer Rosters,' and passive-aggressive sighing near the communal tool shed, punctuated by heated debates about whether Brenda *really* needs another artisanal sourdough starter.", scores: { c: -0.5, m: 1.5, p: -0.5 } }, { text: "A system where a few dedicated (and increasingly resentful) souls do most of the actual work, while others discover a profound 'need' for extended 'self-care sabbaticals' and an 'inability' to operate anything more complex than a beanbag chair. But we're all 'valid,' so it's fine.", scores: { c: -0.25, m: 1, p: 0 } } ]
+    },
+    {
+        id: 't2m_q9', tier: 2, branch: 'M', text: "Oh no! An individual's quirky, non-conformist desire (say, to listen to offensively mainstream pop music) clashes with the collectively-agreed-upon 'Harmonious Community Vibe™'. The group handles this by:", type: 'forcedChoice3',
+        options: [ { text: "Gently but firmly explaining that true individual liberation is found in joyful, voluntary alignment with the collective's superior wisdom and aesthetic standards. The 'Best Of ABBA' CD will be respectfully composted.", scores: { c: -0.25, m: 2, p: -1.5 } }, { text: "It's a sign for more dialogue! We must find a creative, 'both/and' solution that honors the individual's needs *and* the community's integrity, probably involving several healing circles, a mediator trained in non-violent communication, and a collaboratively written song about it.", scores: { c: -0.5, m: 1.5, p: -0.5 } }, { text: "Acknowledging that if the 'community vibe' is so fragile it can't handle a bit of disco, then maybe the vibe (and the 'community' itself) needs to seriously re-examine its own oppressive tendencies. Rock on, individual!", scores: { c: -0.75, m: 1, p: 1 } } ]
+    },
+    {
+        id: 't2m_q10', tier: 2, branch: 'M', text: "The commune next door, 'Egalitaria Beta,' has a *slightly* different (and, frankly, heretical) method for organizing their vegan potluck rota. Your commune, 'Egalitaria Alpha Prime,' responds by:", type: 'forcedChoice3',
+        options: [ { text: "Dispatching a heavily-caffeinated delegation to an emergency Inter-Communal Federation Summit on 'Standardizing Potluck Protocols for Post-Capitalist Harmony,' complete with PowerPoint presentations and a strongly-worded resolution.", scores: { c: -0.25, m: 1.5, p: -0.25 } }, { text: "Celebrating their vibrant diversity of potluck organization! We'll just make sure to loudly tell everyone at regional gatherings how our system is *objectively* more ethically sourced and non-hierarchically delicious.", scores: { c: -0.75, m: 1, p: 0.25 } }, { text: "Issuing a formal denunciation of their 'deviationist potluckism,' severing all lentil-sharing treaties, and engaging in a prolonged ideological struggle (mostly via passive-aggressive community newsletter articles) to bring them back to the One True Potluck Path.", scores: { c: 0, m: 2, p: -1 } } ]
+    }
+];
+
+// Tier 2: P-Path Questions (10 questions)
+const TIER2_P_PATH_QUESTIONS = [
+    {
+        id: 't2p_q1', tier: 2, branch: 'P', text: "That dusty old Enlightenment concept, the 'social contract' – if it's not just a fancy excuse for governments to pick your pocket, it must be:", type: 'forcedChoice4',
+        options: [ { text: "An actual, iron-clad, multi-signature, cryptographically-secured smart contract I personally negotiated, with hourly billing for 'societal services' and a very prominent 'Unsubscribe & Self-Deport to Wilderness' button.", scores: { c: -1.5, m: -1, p: 2 } }, { text: "A grudgingly accepted, ultra-minimal agreement where I allow a 'government' (their term, not mine) to exist solely to stop Mad Max wannabes from stealing my meticulously curated collection of vintage Ayn Rand first editions.", scores: { c: -0.5, m: -0.75, p: 1.5 } }, { text: "Basically, just everyone agreeing not to be a complete barbarian, mostly because rampant face-punching and looting tends to disrupt Q3 earnings and makes it hard to get a decent latte.", scores: { c: -1, m: 0.25, p: 1 } }, { text: "A quaint fairy tale politicians tell to make us feel like we 'consented' to paying for their golf trips and endless bureaucracy. The only contract I recognize is the one with my ISP that guarantees my access to crypto exchanges.", scores: { c: -1, m: -1.5, p: 1.5 } } ]
+    },
+    {
+        id: 't2p_q2', tier: 2, branch: 'P', text: "In your hyper-efficient, voluntary paradise, some freeloading scallywag is mooching off the privately-funded Automated Defense Grid™ without paying their subscription. Justice is served by:", type: 'forcedChoice3',
+        options: [ { text: "Publicly shaming them on the 'Voluntaryville Wall of Shame' blockchain, a catastrophic drop in their 'Personal Responsibility Score™,' and their immediate downgrade to the 'Fend For Yourself With Pointy Sticks' service tier.", scores: { c: -0.5, m: -0.5, p: 2 } }, { text: "A profound sense of schadenfreude when the Defense Grid™ 'regrettably but contractually' fails to intercept the incoming barrage of artisanal, gluten-free cannonballs aimed squarely at their non-contributing hovel. Choices have consequences!", scores: { c: -1, m: 0, p: 1.5 } }, { text: "Dispatching the 'Friendly Neighborhood Persuasion Technicians' from a competing private enforcement agency to 'discuss' the outstanding balance, an offer they literally can't refuse... if they value their kneecaps.", scores: { c: 0, m: -0.75, p: 1 } } ]
+    },
+    {
+        id: 't2p_q3', tier: 2, branch: 'P', text: "Let's get down to brass tacks: real economic value doesn't magically appear (unless you're printing money, which is a whole other issue). It's *actually* forged by:", type: 'forcedChoice4',
+        options: [ { text: "The singular, god-like genius of the Risk-Taking Entrepreneurial Overlord, whose every caffeine-fueled brainstorm showers prosperity upon the grateful (and appropriately deferential) masses, assuming they get out of the way.", scores: { c: -0.75, m: -1, p: 2 } }, { text: "The glorious, chaotic, and entirely amoral ballet of the Free Market, where supply and demand engage in a brutal cage match, and 'value' is whatever emerges from the wreckage before the next speculative bubble.", scores: { c: -0.5, m: -0.5, p: 1.5 } }, { text: "The sacred alchemy of Capital (preferably inherited) meeting Individual Brilliance (preferably mine). Labor? That's what an app is for, or a very cheap intern who's 'passionate about the opportunity.'", scores: { c: -0.25, m: -1.5, p: 1 } }, { text: "Whatever elaborate nonsense rich people with more money than sense are currently obsessed with. If I can sell a JPEG of a fart for a million bucks, that's 'value creation,' and you can't prove otherwise, commie.", scores: { c: 0, m: -0.75, p: 0.75 } } ]
+    },
+    {
+        id: 't2p_q4', tier: 2, branch: 'P', text: "That whole 'intellectual property' song and dance – patents on everything from Chia Pets to new forms of existential dread – in your perfectly free(ish) market utopia, it's considered:", type: 'forcedChoice3',
+        options: [ { text: "The holiest of holies! My brilliant, unique, and definitely-not-just-a-slight-tweak-on-someone-else's-idea concept is MY PROPERTY, and I'll sue your algorithm into oblivion if you even think about it.", scores: { c: 0, m: -0.5, p: 1.5 } }, { text: "A government-enforced scam that creates artificial scarcity, stifles innovation, and mostly benefits giant corporations with armies of lawyers. Information just *wants* to be free (and then cleverly repackaged and sold by me).", scores: { c: -1, m: 0.25, p: 1 } }, { text: "A lawyer's paradise and a source of endless, billable confusion. Honestly, by the time the patent troll armies are done, the original idea is obsolete anyway. Just build faster, sue harder, or work in secret.", scores: { c: -0.5, m: 0, p: 0.5 } } ]
+    },
+    {
+        id: 't2p_q5', tier: 2, branch: 'P', text: "The planet's on fire, the oceans are rising, and the last polar bear just opened an OnlyFans. Saving what's left (or profiting from its spectacular demise) will mostly be down to:", type: 'forcedChoice3',
+        options: [ { text: "Hyper-rational private landowners, obviously! If you *own* the river, you'll only pollute it up to the precise point where the marginal cost of pollution equals the marginal benefit of your toxic waste byproduct. It's called 'efficiency,' look it up.", scores: { c: -0.5, m: -1, p: 2 } }, { text: "Brilliant tech-bro 'eco-visionaries' who'll invent a revolutionary algae-based biofuel that also powers a cryptocurrency mining rig, making them billionaires while 'disrupting' climate change (and probably causing a new, unforeseen ecological disaster).", scores: { c: -0.25, m: -0.5, p: 1.5 } }, { text: "Look, Earth is a depreciating asset. The smart money is on asteroid mining and luxury condos on Mars. Individuals will adapt or, you know, not. The market for bespoke Geiger counters is about to boom!", scores: { c: -0.75, m: -0.75, p: 1 } } ]
+    },
+    {
+        id: 't2p_q6', tier: 2, branch: 'P', text: "Alright, Mr./Ms. 'Leave-Me-Alone-And-My-Property,' let's talk infrastructure. Roads, sewers, maybe even that pesky 'breathable air' – in your dream world of rugged individualism and zero state meddling, who's paying for and fixing this stuff?", type: 'forcedChoice3',
+        options: [ { text: "A glorious free-for-all of competing private 'McRoads™' franchises, 'AquaCorp™' premium water subscriptions, and 'AtmosPure™' personal air-filtration units. Don't like the price or the potholes? Tough, that's the free market, baby!", scores: { c: -1, m: -1, p: 2 } }, { text: "Voluntary 'Neighborhood Improvement & Pothole Vigilante Associations,' funded by a complex system of social pressure, bake sales, and 'friendly reminders' involving baseball bats for those who don't chip in for their share of the gravel.", scores: { c: -0.5, m: 0.5, p: 1.5 } }, { text: "Exclusive 'Covenant Communities' with membership fees higher than a small nation's GDP, managing their own gold-plated infrastructure and employing heavily armed guards to keep out the riff-raff who can't afford the 'Basic Liberty™' subscription tier.", scores: { c: 0, m: -0.5, p: 1 } } ]
+    },
+    {
+        id: 't2p_q7', tier: 2, branch: 'P', text: "Forget all that philosophical mumbo-jumbo from dead guys in togas. For a truly sovereign individual, the ultimate moral compass is:", type: 'forcedChoice3',
+        options: [ { text: "My own magnificent, untrammeled self-interest, rigorously filtered through the sacred Non-Aggression Principle. If I didn't throw the first punch or forge your signature, my conscience is as clean as a freshly laundered bearer bond. Your feelings are not my problem.", scores: { c: -1, m: -1, p: 2 } }, { text: "An unshakeable, deeply personal (and probably very eccentric) code of honor that I alone define and enforce. It might involve heroic virtue, or it might involve being a magnificent, stylish bastard. The point is, *I* am the sole arbiter of my own awesomeness.", scores: { c: -0.75, m: -0.5, p: 1.5 } }, { text: "A finely tuned internal calculator assessing 'What's the maximum benefit/profit for me with the minimum blowback?' 'Morality' is just a fancy word for 'suboptimal resource allocation,' especially when there are contractual loopholes to exploit.", scores: { c: -0.5, m: -1.5, p: 1 } } ]
+    },
+    {
+        id: 't2p_q8', tier: 2, branch: 'P', text: "Someone's down on their luck – made some bad bets on meme stocks, angered a private security firm, whatever. Society's 'compassionate' response should be:", type: 'forcedChoice3',
+        options: [ { text: "A hearty 'Tough luck, buttercup!' perhaps a link to a motivational podcast on 'The 7 Habits of Highly Non-Destitute People,' and a firm reminder that charity begins (and preferably ends) at home. My home. Not theirs.", scores: { c: -1, m: -1.5, p: 2 } }, { text: "To suggest they explore the vibrant free market of private charities, benevolent billionaire foundations (if they can get past the PR department), or perhaps start a really compelling GoFundMe. Voluntary solutions for voluntary problems! (Just don't ask *me* to volunteer).", scores: { c: -0.5, m: 0.5, p: 1.5 } }, { text: "A voucher for a one-way bus ticket to a state with slightly less libertarian views on public defecation, and perhaps a heavily means-tested coupon for a bowl of gruel, but only if they first attend a mandatory 'Bootstrapping Your Way to Success' seminar.", scores: { c: 0, m: -0.5, p: 1 } } ]
+    },
+    {
+        id: 't2p_q9', tier: 2, branch: 'P', text: "Someone is joyfully engaging in activities you personally find baffling or distasteful, but which harm no one else directly (e.g., LARPing in their front yard, competitive ferret legging). You believe:", type: 'forcedChoice3',
+        options: [ { text: "It's their sovereign right to be a glorious weirdo on their own property! As long as their LARP battles don't spill onto my meticulously manicured lawn or violate pre-agreed noise ordinances, I shall defend to the death their right to be utterly ridiculous.", scores: { c: -1, m: -0.5, p: 2 } }, { text: "While I'm mentally composing a scathing anonymous letter to the (non-existent) neighborhood standards committee, I grudgingly accept it's not my place to interfere. Just don't expect a dinner invitation, you... ferret-legger.", scores: { c: -0.5, m: 0, p: 1.5 } }, { text: "This is precisely why God, or at least a very strict private covenant agreement, invented zoning laws and 'Community Aesthetic Guidelines.' There are standards, people! My property values depend on it!", scores: { c: 0, m: 0.5, p: 0.5 } } ]
+    },
+    {
+        id: 't2p_q10', tier: 2, branch: 'P', text: "Fast forward to the glorious, hyper-efficient future shaped by unfettered individual ambition and relentless market forces. 'Having a job' (if that quaint term still exists) will probably mean:", type: 'forcedChoice3',
+        options: [ { text: "Being a 'Chief Executive Officer of Me, Inc.' – a hyper-agile, gig-economy ninja, constantly rebranding, upskilling via micro-credentials, and negotiating a portfolio of short-term contracts through a pitiless AI-driven talent marketplace.", scores: { c: -0.5, m: -1, p: 2 } }, { text: "Largely automated by sophisticated AI and robotics, owned by canny capital-holders. Humans will either be part of the 'creative/managerial elite' overseeing these systems, or finding 'flexible opportunities' in the service sector catering to them (and their AIs).", scores: { c: -0.25, m: -0.75, p: 1.5 } }, { text: "Much like today, but with the glorious freedom to be 'at-will' terminated by a chatbot for insufficient quarterly 'synergy,' and the thrilling opportunity to 'voluntarily' sign away your rights to things like bathroom breaks or a minimum wage. The Market is wise!", scores: { c: 0, m: -1.5, p: 1 } } ]
+    }
+];
+
+// Tier 2: X-Path (Centrist) Questions (10 questions)
+const TIER2_X_PATH_QUESTIONS = [
+    {
+        id: 't2x_q1', tier: 2, branch: 'X', text: "Ah, compromise! That sacred political ritual where bold ideals go to die a slow, beige death. In the grand theatre of governance, it's generally:", type: 'forcedChoice4',
+        options: [ { text: "The absolute, non-negotiable cornerstone of not having society collapse into a screaming match between angry YouTubers. Ideological purity is for manifestos; actual governance is about finding that perfectly unsatisfying middle ground where everyone is equally, mildly disappointed.", scores: { c: 0.5, m: 0.5, p: 0.5 } }, { text: "A regrettable but frequent necessity, usually resulting in a watered-down policy that's too timid to actually solve anything but just bland enough not to cause immediate riots. Progress by inches, or sometimes millimeters.", scores: { c: 0.3, m: 0.3, p: 0.3 } }, { text: "A cowardly betrayal of True Principles™! If an idea is Correct, it should be implemented fully, without pandering to the unwashed masses or the statistically insignificant fringe! (My preferred Correct Principles, obviously).", scores: { c: -1, m: -1, p: -1 } }, { text: "A sophisticated kabuki dance where powerful lobbies and entrenched interests pretend to 'give a little' while actually ensuring their Porsches remain fully funded. The only thing 'common' is the screwing we all get.", scores: { c: 0.1, m: 0.1, p: 0.1 } } ]
+    },
+    {
+        id: 't2x_q2', tier: 2, branch: 'X', text: "A wild-eyed prophet (or just some dude with a podcast) unveils a 'Totally Radical New System™' to fix everything. Your brain immediately goes to:", type: 'forcedChoice3',
+        options: [ { text: "\"Hmm, fascinating. Let's commission a dozen peer-reviewed studies, form a multi-stakeholder focus group, conduct a five-year feasibility assessment, and then cautiously consider a heavily amended pilot program in a very small, very patient town.\"", scores: { c: 0.6, m: 0.2, p: 0.4 } }, { text: "\"Oh, for crying out loud, *another* one? Can't we just tweak the existing, vaguely functional mess we already have? Every 'radical solution' just seems to create three new, even more bizarre problems.\"", scores: { c: 0.4, m: 0.2, p: 0.2 } }, { text: "\"Quick, change the subject! Is anyone else suddenly fascinated by that interesting stain on the carpet? Let's not make eye contact with the 'radical idea' person; maybe they'll go away.\"", scores: { c: 0.1, m: 0.1, p: 0.1 } } ]
+    },
+    {
+        id: 't2x_q3', tier: 2, branch: 'X', text: "The eternal quest for a 'Perfect Political/Economic System™' that solves all human woes is, in your well-considered (and probably extensively hedged) opinion:", type: 'forcedChoice3',
+        options: [ { text: "A lovely thought, like world peace or a truly satisfying decaf. We should certainly aim for 'less catastrophically awful,' but 'perfect' is probably what happens right before the meteor hits.", scores: { c: 0.4, m: 0.4, p: 0.4 } }, { text: "A dangerous distraction peddled by idealists who've never had to actually run anything. The best we can hope for is 'mostly functional with acceptable levels of corruption and a decent public transport system.'", scores: { c: 0.5, m: 0.3, p: 0.3 } }, { text: "The sort of thing people with too many trust funds and not enough real problems agonize over. Me? I just want the Wi-Fi to work and my taxes to be mildly confusing rather than actively malevolent.", scores: { c: 0.2, m: 0.1, p: 0.5 } } ]
+    },
+    {
+        id: 't2x_q4', tier: 2, branch: 'X', text: "Being a True Believer™ in a Big Political Ideology (capital letters absolutely required) generally strikes you as:", type: 'forcedChoice3',
+        options: [ { text: "A bit... intense. Like those people who only eat beige food or have really strong opinions about fonts. Can't we all just agree that 'being reasonable' is a good enough ideology?", scores: { c: 0.3, m: 0.3, p: 0.3 } }, { text: "Potentially useful for bumper stickers and yelling at the TV, but in the real world, it needs to be heavily diluted with pragmatism, common sense, and a willingness to admit your heroes were probably flawed weirdos.", scores: { c: 0.5, m: 0.5, p: 0.5 } }, { text: "The main reason political discussions are insufferable. I prefer to collect my political views like a magpie, taking shiny bits from all over the place and building a comfy, incoherent nest.", scores: { c: 0.2, m: 0.2, p: 0.2 } } ]
+    },
+    {
+        id: 't2x_q5', tier: 2, branch: 'X', text: "When a politician triumphantly declares they have a 'common sense solution' to a problem that has baffled economists and philosophers for centuries, you suspect:", type: 'forcedChoice3',
+        options: [ { text: "They're about to propose something so mind-bogglingly simplistic it makes a nursery rhyme look like advanced calculus, but it'll probably poll well with people who think 'nuance' is a fancy French cheese.", scores: { c: 0.2, m: 0.2, p: 0.6 } }, { text: "They've mistaken their own gut feelings and a half-remembered anecdote from their Uncle Barry for 'timeless wisdom.' This will almost certainly involve blaming a minority group or 'bureaucrats.'", scores: { c: 0.6, m: 0.3, p: 0.1 } }, { text: "They're completely out of actual ideas and are just hoping 'common sense' sounds appealing enough to get them through the next news cycle without anyone asking hard questions about, say, the budget.", scores: { c: 0.3, m: 0.3, p: 0.3 } } ]
+    },
+    {
+        id: 't2x_q6', tier: 2, branch: 'X', text: "Two groups are passionately screaming about their 'Fundamental Human Rights™,' which happen to be in direct, screaming opposition to each other. Your preferred societal response is:", type: 'forcedChoice3',
+        options: [ { text: "To convene a Royal Commission, staffed by very old, very distinguished people, who will spend five years and ten million dollars producing a 3,000-page report that recommends 'further study' and 'cautious dialogue,' thus kicking the can so far down the road it enters another dimension.", scores: { c: 0.7, m: 0.1, p: 0.3 } }, { text: "A series of televised town halls where everyone gets to yell their feelings, followed by a 'National Conversation' facilitated by a celebrity, ultimately leading to a vague compromise that makes both sides equally furious but avoids immediate bloodshed.", scores: { c: 0.2, m: 0.7, p: 0.2 } }, { text: "Finding the most boring, technical, legalistic fudge possible that allows both sides to claim a partial victory while actually changing very little, and hope everyone gets distracted by a new celebrity scandal.", scores: { c: 0.4, m: 0.4, p: 0.4 } } ]
+    },
+    {
+        id: 't2x_q7', tier: 2, branch: 'X', text: "That eternal political cage match: 'The Free Market™' versus 'The Benevolent State™'. When they're brawling over who should provide essential services, you're usually thinking:", type: 'forcedChoice3',
+        options: [ { text: "\"Can't they just... work together? Like a buddy cop movie? The Market can be the reckless hotshot, the State can be the grizzled veteran who knows the rules. Surely a 'public-private partnership' will solve this, despite all historical evidence to the contrary.\"", scores: { c: 0.5, m: 0.3, p: 0.7 } }, { text: "\"It really, truly, agonizingly *depends*. Let's see the data, the white papers, the impact assessments, the pilot studies from Sweden... and then we can make a carefully considered, probably reversible, decision based on the specific context of this particular Tuesday.\"", scores: { c: 0.6, m: 0.3, p: 0.3 } }, { text: "\"Oh god, not this again. Both are probably terrible in their own special ways and will be captured by self-serving charlatans. Just pick whichever one will keep the lights on and the internet fast with the minimum amount of ideological grandstanding.\"", scores: { c: 0.2, m: 0.2, p: 0.2 } } ]
+    },
+    {
+        id: 't2x_q8', tier: 2, branch: 'X', text: "Your dream political debate – the one you'd actually watch without needing copious amounts of sedatives – would primarily feature:", type: 'forcedChoice3',
+        options: [ { text: "Serene, bespectacled academics with PhDs in 'Sensibleness' calmly presenting data-rich PowerPoint slides, occasionally adjusting their ties and saying things like, 'Fascinating point, Beryl, but have you considered the regression analysis from Q2 1998?'", scores: { c: 0.7, m: 0.2, p: 0.3 } }, { text: "A diverse panel of earnest community organizers and thoughtful local leaders sharing deeply personal (but statistically insignificant) anecdotes, all agreeing that 'more dialogue' and 'mutual respect' are key, before breaking for artisanal snacks.", scores: { c: 0.2, m: 0.7, p: 0.2 } }, { text: "Two aging rock stars who peaked in different decades, now political pundits, just absolutely shredding each other with pre-rehearsed zingers and increasingly unhinged conspiracy theories. It solves nothing, but the memes would be glorious.", scores: { c: -0.5, m: -0.5, p: -0.5 } } ]
+    },
+    {
+        id: 't2x_q9', tier: 2, branch: 'X', text: "If cornered at a deeply awkward family gathering and forced to slap a label on your nuanced, multifaceted, and frankly superior political views, you'd hesitantly offer:", type: 'forcedChoice4',
+        options: [ { text: "\"'Aggressively Moderate.' I'm passionately committed to finding the least offensive middle ground and then defending it with well-reasoned, slightly condescending arguments.", scores: { c: 0.6, m: 0.3, p: 0.4 } }, { text: "\"'Sensible.' You know, like a good pair of orthopedic shoes or a diversified mutual fund. Not thrilling, perhaps, but unlikely to lead to sudden, catastrophic failure.", scores: { c: 0.4, m: 0.4, p: 0.4 } }, { text: "\"'Radically Non-Aligned.' I float above the petty squabbles of Left and Right, observing their folly from a position of detached intellectual superiority (and a carefully curated Twitter feed).\"", scores: { c: 0.2, m: 0.2, p: 0.2 } }, { text: "\"'Post-Ideological Pragmatist with Libertarian Sympathies and Socially Conscious Undertones (pending further data).' Or, you know, 'It's Complicated.' Can we talk about the weather?", scores: { c: 0.3, m: 0.3, p: 0.3 } } ]
+    },
+    {
+        id: 't2x_q10', tier: 2, branch: 'X', text: "If you could wave a magic (and strictly non-partisan, of course) wand and fix the one thing that makes modern politics an unwatchable dumpster fire, it would be:", type: 'forcedChoice4',
+        options: [ { text: "The absolute refusal of everyone else to just be reasonable, see things from all sides, and agree on my impeccably balanced, common-sense solutions! It's like they *enjoy* being wrong!", scores: { c: 0.5, m: 0.5, p: 0.5 } }, { text: "The appalling lack of respect for 'The Process™' and 'Expert Consensus.' If people would just listen to the well-credentialed folks in boring suits, we'd have solved most of this by now, probably with a very detailed white paper.", scores: { c: 0.7, m: 0.2, p: 0.2 } }, { text: "The triumph of 'feelings' and 'narratives' over cold, hard facts and rigorous statistical analysis. You can't build a stable society on viral TikToks and collective outrage, people!", scores: { c: 0.6, m: -0.2, p: 0.4 } }, { text: "Just... all the shouting. And the terrible slogans. And the fact that it constantly interrupts my attempts to achieve inner peace and a perfectly curated Netflix queue. Can't we automate this whole 'governance' thing yet?", scores: { c: 0.2, m: 0.2, p: 0.4 } } ]
+    }
+];
+
+// Tier 3: Branched Dealbreakers (4 questions per path)
+const TIER3_C_PATH_DEALBREAKERS = [
+    {
+        id: 't3c_d1', tier: 3, branch: 'C', text: "When push comes to shove (and it always does, doesn't it?), the State's authority over your insignificant individual existence should be:", type: 'forcedChoice2',
+        options: [ { text: "So absolute it makes God look like a part-time intern. The State's decrees are not 'suggestions'; they are divine writ, and your only job is to click your heels and obey. For your own good, naturally.", scores: { c: 2, m: -1, p: -1 } }, { text: "Impressive, sure, but even the most glorious State should occasionally glance at that dusty old 'Constitution' thing, if only for PR purposes, before it decides to, say, nationalize your toothbrush.", scores: { c: 0.5, m: 0.25, p: 0.25 } } ]
+    },
+    {
+        id: 't3c_d2', tier: 3, branch: 'C', text: "A vibrant, diverse tapestry of 'multiculturalism' within the nation is:", type: 'forcedChoice2',
+        options: [ { text: "A horrifying mess. We need One Nation, One Culture, One Approved Playlist, and a rigorously enforced dress code. Diversity is just another word for 'not knowing which fork to use at the State banquet.'", scores: { c: 2, m: -1.5, p: -0.5 } }, { text: "Tolerable, I suppose, as long as all these 'diverse cultures' understand who's *really* in charge and that their quaint little folk dances better not clash with the Dear Leader's birthday parade.", scores: { c: 0.5, m: 0.5, p: 0 } } ]
+    },
+    {
+        id: 't3c_d3', tier: 3, branch: 'C', text: "Regarding the nation's economy, the State's final say over major industries and resource allocation should be:", type: 'forcedChoice2',
+        options: [ { text: "Total. The State must direct all significant economic activity to ensure it aligns perfectly with national strategic objectives and social plans. The 'invisible hand' is for amateurs and traitors.", scores: { c: 2, m: 0.5, p: -1.5 } }, { text: "Supervisory and regulatory, setting the rules and intervening when necessary, but allowing considerable private enterprise and market forces to operate within those state-defined parameters.", scores: { c: 0.5, m: 0, p: 1 } } ]
+    },
+    {
+        id: 't3c_d4', tier: 3, branch: 'C', text: "The State solemnly declares your life, liberty, and pursuit of happiness are now 'temporarily subordinate' to its latest Grand National Project (probably involving a very large, very expensive statue). You:", type: 'forcedChoice2', // Changed from agreeDisagree for consistency
+        options: [ { text: "Enthusiastically agree! 'My paltry individual concerns are but dust compared to the glorious destiny of The Nation! Where do I sign up for glorious, probably fatal, servitude?'", scores: { c: 2.5, m: -1, p: -1 } }, { text: "Grumble, but ultimately comply, because arguing with heavily armed bureaucrats rarely ends well. 'Just tell me this statue won't block my view of the bread queue.'", scores: { c: -1, m: 0.5, p: 0.5 } } ]
+    }
+];
+const TIER3_M_PATH_DEALBREAKERS = [
+    {
+        id: 't3m_d1', tier: 3, branch: 'M', text: "That whole concept of one dude owning a factory that employs hundreds – let's be honest, it's basically:", type: 'forcedChoice2',
+        options: [ { text: "A medieval fiefdom with better Wi-Fi. 'Private ownership of the means of production' is just a fancy term for 'I get rich off your sweat, peasant.' Time for the communal pitchforks!", scores: { c: -0.5, m: 2, p: -2 } }, { text: "Potentially okay, *if* it's a worker co-op where everyone gets a vote and a fair slice of the (probably artisanal) pie, or if it's a lone genius inventing things in their collectively-owned shed. Otherwise, highly suspicious.", scores: { c: -0.25, m: 0.5, p: 1 } } ]
+    },
+    {
+        id: 't3m_d2', tier: 3, branch: 'M', text: "The All-Commune Consensus Meeting™ has, after 72 hours of 'facilitated dialogue' and six ayahuasca ceremonies, decided everyone must wear only beige. A tiny, fashion-forward minority objects. The collective should:", type: 'forcedChoice2',
+        options: [ { text: "Gently guide the dissenters towards understanding the profound communal harmony of beige, perhaps with a dedicated 'Beige Re-Education & Mindfulness Yurt.' The consensus, however painfully achieved, is sacred!", scores: { c: -0.5, m: 1.5, p: -0.5 } }, { text: "Scrap the beige mandate! If even one precious soul feels their vibrant sartorial spirit is being crushed, the 'consensus' is a tyrannical sham! We must re-dialogue until a solution emerges that involves more glitter!", scores: { c: -1, m: 2, p: 0 } } ]
+    },
+    {
+        id: 't3m_d3', tier: 3, branch: 'M', text: "To achieve your glorious, non-hierarchical, fair-trade, gluten-free utopia, the most effective path is:", type: 'forcedChoice2',
+        options: [ { text: "A swift, cathartic, and probably very messy revolution involving barricades, expropriated Whole Foods, and the transformation of corporate HQs into interpretive dance centers. Burn it all down (ethically, of course)!", scores: { c: -1, m: 2, p: -0.5 } }, { text: "Patiently building countless alternative micro-communities, co-ops, and organic kale farms, until the old, corrupt system just withers away from sheer irrelevance and a lack of decent kombucha.", scores: { c: -0.5, m: 1.5, p: 0 } } ]
+    },
+    {
+        id: 't3m_d4', tier: 3, branch: 'M', text: "Statement: 'In our blissful anarchist commune, if Brother Festus consistently contributes nothing but interpretive sighs and auras of vague disapproval during the mandatory turnip harvest, we should eventually just stop sharing our turnips with him.'", type: 'agreeDisagree',
+        options: [ { text: "Agree. 'From each according to ability' implies actually *having* an ability besides competitive napping. Mutual aid isn't a one-way street, even if it makes us feel a bit bourgeois to say so.", scores: { c: 0, m: 1.5, p: 0.5 } }, { text: "Disagree! He's expressing his unique truth! His sighs are a vital contribution to our collective emotional landscape! To deny him turnips would be an act of oppressive turnip-hegemony!", scores: { c: -0.5, m: 2, p: -1 } } ]
+    }
+];
+const TIER3_P_PATH_DEALBREAKERS = [
+    {
+        id: 't3p_d1', tier: 3, branch: 'P', text: "The right to accumulate truly obscene amounts of private property – like, owning your own moon base and several small countries – is:", type: 'forcedChoice2',
+        options: [ { text: "An absolute, god-given (or at least, Rand-given) right! If I earned it (or inherited it from someone who 'earned' it), it's mine, and I'll use it to build a gold-plated statue of myself if I damn well please. Cry more, commies.", scores: { c: -1, m: -2, p: 2.5 } }, { text: "Generally fine, but perhaps there's a point where such extreme accumulation becomes a bit... destabilizing? Maybe a tiny, almost invisible 'societal well-being' fee on the third moon base wouldn't be the end of liberty.", scores: { c: -0.5, m: 0.5, p: 1 } } ]
+    },
+    {
+        id: 't3p_d2', tier: 3, branch: 'P', text: "Is even the most laughably minimal 'night-watchman' state – one that *only* stops people from hitting each other with large rocks and enforces contracts written in blood – still an inherently tyrannical affront to pure individual liberty?", type: 'yesNo', // effectively forcedChoice2
+        options: [ { text: "Yes, you statist bootlicker! All states are gangs! Competing private defense agencies and arbitration firms run on the blockchain are the only moral solution!", scores: { c: -2, m: -0.5, p: 2 } }, { text: "No, look, even I have to admit *someone* needs to stop the outright murder and egregious fraud. A tiny, heavily chained state is a regrettable but probably necessary utility, like a plumber for society's worst leaks.", scores: { c: 0.5, m: 0, p: 1 } } ]
+    },
+    {
+        id: 't3p_d3', tier: 3, branch: 'P', text: "Statement: 'All significant disparities in wealth and success are *solely* the result of differences in individual talent, effort, and voluntary choices; 'luck' or 'systemic factors' are excuses.'", type: 'agreeDisagree',
+        options: [ { text: "Agree. The market is a perfectly just reflection of individual merit. If you're not rich, you simply didn't want it or try hard enough. Now, if you'll excuse me, my private jet to my private island is waiting.", scores: { c: 0, m: -2, p: 2 } }, { text: "Disagree. That's a grotesque oversimplification. Effort matters, sure, but to ignore birth lottery, systemic advantages, and sheer dumb luck is just being willfully blind or a sociopath.", scores: { c: 0, m: 1, p: -1 } } ]
+    },
+    {
+        id: 't3p_d4', tier: 3, branch: 'P', text: "A private corporation legally buys up all the breathable air in a sealed biodome, then starts charging exorbitant prices. According to the strictest Non-Aggression Principle, is this fine because it's 'their property' and 'voluntary exchange'?", type: 'yesNo', // effectively forcedChoice2
+        options: [ { text: "Yes! They acquired it legitimately. If you can't afford their 'Premium Oxygen Subscription,' that's a personal failing. The NAP is sacred, even if we all asphyxiate contractually.", scores: { c: -0.5, m: -1.5, p: 2 } }, { text: "No! That's an absurd, psychopathic abuse of principle. Some things, like basic survival, transcend simplistic property claims. The 'NAP' isn't a suicide pact.", scores: { c: 0, m: 1, p: -1 } } ]
+    }
+];
+const TIER3_X_PATH_DEALBREAKERS = [
+    {
+        id: 't3x_d1', tier: 3, branch: 'X', text: "You're forced to vote: one candidate is a fire-breathing, ideology-fueled extremist who wants to burn society down for their utopia; the other is a corrupt, incompetent, but boringly predictable defender of the mildly awful status quo. You:", type: 'forcedChoice2',
+        options: [ { text: "Reluctantly vote for the boring status quo. It's terrible, but at least it's a *known* terrible. The fire-breather might actually achieve their terrifying 'perfect' world.", scores: { c: 0.5, m: 0, p: 0 } }, { text: "Refuse to choose between two dumpster fires! Abstain, write in 'A Plague on Both Your Houses,' or start a doomed third party based on 'reasonableness and good manners.' Principles, people!", scores: { c: -0.25, m: -0.25, p: -0.25 } } ]
+    },
+    {
+        id: 't3x_d2', tier: 3, branch: 'X', text: "Statement: 'It is almost always better to implement a flawed but politically achievable policy that makes small improvements than to hold out indefinitely for a theoretically perfect solution that alienates half the population.'", type: 'agreeDisagree',
+        options: [ { text: "Agree. Politics is the art of the possible, not a philosophy seminar. Get something done, even if it's messy and makes the purists cry into their manifestos.", scores: { c: 0.3, m: 0.3, p: 0.3 } }, { text: "Disagree. Selling out core principles for 'pragmatism' is a slippery slope to a beige tyranny of mediocrity. Stand firm for what's Right™, even if it means accomplishing nothing for decades!", scores: { c: -0.5, m: -0.5, p: -0.5 } } ]
+    },
+    {
+        id: 't3x_d3', tier: 3, branch: 'X', text: "When confronted with a highly polarized issue where both 'extremes' are screaming at each other, your most profound insight is typically:", type: 'forcedChoice2',
+        options: [ { text: "\"You know, both sides have some valid points, but they're both taking it way too far. The truth, as always, is probably somewhere boringly in the middle, if anyone would just calm down and listen to me.\"", scores: { c: 0.4, m: 0.4, p: 0.4 } }, { text: "\"Actually, in this specific case, one side is demonstrably more unhinged/dangerous/factually incorrect than the other, and pretending otherwise is just enabling bad behavior. Sometimes, the middle is just where you get run over.\"", scores: { c: -0.25, m: -0.25, p: -0.25 } } ]
+    },
+    {
+        id: 't3x_d4', tier: 3, branch: 'X', text: "If you had to identify the single greatest obstacle to a well-functioning, reasonably content society, it would be:", type: 'forcedChoice3',
+        options: [ { text: "Wild-eyed ideological fanatics of all stripes who refuse to compromise and seem to actively enjoy societal chaos as long as it proves their obscure theories right.", scores: { c: 0.3, m: 0.3, p: 0.3 } }, { text: "Sheer, mind-numbing bureaucratic incompetence and the tendency for any good idea to get ground into a bland, ineffective mush by endless committees and risk-averse middle managers.", scores: { c: 0.5, m: 0.1, p: 0.1 } }, { text: "The unfortunate reality that most people are fundamentally a bit selfish, a bit lazy, and not nearly as interested in 'civic virtue' as they are in getting a good deal on a new phone or arguing on social media.", scores: { c: 0.1, m: 0.1, p: 0.5 } } ]
+    }
+];
+
+// The two critique questions are now integrated into TIER3_X_PATH_DEALBREAKERS
+// as an example, but you might spread your original 6 dealbreakers + 2 critiques
+// more strategically across the 4x4 = 16 branched Tier 3 slots.
+// For simplicity, I've drafted 4 new ones for each branch here.
+// You would need to ensure the original Q19-Q24 and the two critique questions are
+// either used as direct inspiration or some are slotted into these TIER3_..._DEALBREAKERS arrays.
+
+// Let's assume for now these TIER3_..._DEALBREAKERS are the 4 questions we drafted for each path.
+// Your original Q19-Q24 and the two critique questions (AnCap/AnCom critiques)
+// would be used to populate these TIER3_..._DEALBREAKERS arrays.
+// For example, TIER3_C_PATH_DEALBREAKERS would draw from Q20, Q24 and the C-leaning answers of the critique Qs.
+
+// I will now populate the TIER3 branched dealbreakers using the refined sarcastic ones from our last discussion.
+// This means each branch has 4 unique dealbreakers.
+
+// Tier 3: Branched Dealbreakers (4 questions per path - Sarcasm Enhanced)
+const TIER3_C_PATH_DEALBREAKERS_FINAL = [
+    { id: 't3c_d1', tier: 3, branch: 'C', text: "When push comes to shove (and it always does, doesn't it?), the State's authority over your insignificant individual existence should be:", type: 'forcedChoice2', options: [ { text: "So absolute it makes God look like a part-time intern. The State's decrees are not 'suggestions'; they are divine writ, and your only job is to click your heels and obey. For your own good, naturally.", scores: { c: 2, m: -1, p: -1 } }, { text: "Impressive, sure, but even the most glorious State should occasionally glance at that dusty old 'Constitution' thing, if only for PR purposes, before it decides to, say, nationalize your toothbrush.", scores: { c: 0.5, m: 0.25, p: 0.25 } } ] },
+    { id: 't3c_d2', tier: 3, branch: 'C', text: "A vibrant, diverse tapestry of 'multiculturalism' within the nation is:", type: 'forcedChoice2', options: [ { text: "A horrifying mess. We need One Nation, One Culture, One Approved Playlist, and a rigorously enforced dress code. Diversity is just another word for 'not knowing which fork to use at the State banquet.'", scores: { c: 2, m: -1.5, p: -0.5 } }, { text: "Tolerable, I suppose, as long as all these 'diverse cultures' understand who's *really* in charge and that their quaint little folk dances better not clash with the Dear Leader's birthday parade.", scores: { c: 0.5, m: 0.5, p: 0 } } ] },
+    { id: 't3c_d3', tier: 3, branch: 'C', text: "Regarding the nation's economy, the State's final say over major industries and resource allocation should be:", type: 'forcedChoice2', options: [ { text: "Total. The State must direct all significant economic activity to ensure it aligns perfectly with national strategic objectives and social plans. The 'invisible hand' is for amateurs and traitors.", scores: { c: 2, m: 0.5, p: -1.5 } }, { text: "Supervisory and regulatory, setting the rules and intervening when necessary, but allowing considerable private enterprise and market forces to operate within those state-defined parameters.", scores: { c: 0.5, m: 0, p: 1 } } ] },
+    { id: 't3c_d4', tier: 3, branch: 'C', text: "The State solemnly declares your life, liberty, and pursuit of happiness are now 'temporarily subordinate' to its latest Grand National Project (probably involving a very large, very expensive statue). You:", type: 'forcedChoice2', options: [ { text: "Enthusiastically agree! 'My paltry individual concerns are but dust compared to the glorious destiny of The Nation! Where do I sign up for glorious, probably fatal, servitude?'", scores: { c: 2.5, m: -1, p: -1 } }, { text: "Grumble, but ultimately comply, because arguing with heavily armed bureaucrats rarely ends well. 'Just tell me this statue won't block my view of the bread queue.'", scores: { c: -1, m: 0.5, p: 0.5 } } ] } // Note: second option changed from agree/disagree to forced choice reaction
+];
+const TIER3_M_PATH_DEALBREAKERS_FINAL = [
+    { id: 't3m_d1', tier: 3, branch: 'M', text: "That whole concept of one dude owning a factory that employs hundreds – let's be honest, it's basically:", type: 'forcedChoice2', options: [ { text: "A medieval fiefdom with better Wi-Fi. 'Private ownership of the means of production' is just a fancy term for 'I get rich off your sweat, peasant.' Time for the communal pitchforks!", scores: { c: -0.5, m: 2, p: -2 } }, { text: "Potentially okay, *if* it's a worker co-op where everyone gets a vote and a fair slice of the (probably artisanal) pie, or if it's a lone genius inventing things in their collectively-owned shed. Otherwise, highly suspicious.", scores: { c: -0.25, m: 0.5, p: 1 } } ] },
+    { id: 't3m_d2', tier: 3, branch: 'M', text: "The All-Commune Consensus Meeting™ has, after 72 hours of 'facilitated dialogue' and six ayahuasca ceremonies, decided everyone must wear only beige. A tiny, fashion-forward minority objects. The collective should:", type: 'forcedChoice2', options: [ { text: "Gently guide the dissenters towards understanding the profound communal harmony of beige, perhaps with a dedicated 'Beige Re-Education & Mindfulness Yurt.' The consensus, however painfully achieved, is sacred!", scores: { c: -0.5, m: 1.5, p: -0.5 } }, { text: "Scrap the beige mandate! If even one precious soul feels their vibrant sartorial spirit is being crushed, the 'consensus' is a tyrannical sham! We must re-dialogue until a solution emerges that involves more glitter!", scores: { c: -1, m: 2, p: 0 } } ] },
+    { id: 't3m_d3', tier: 3, branch: 'M', text: "To achieve your glorious, non-hierarchical, fair-trade, gluten-free utopia, the most effective path is:", type: 'forcedChoice2', options: [ { text: "A swift, cathartic, and probably very messy revolution involving barricades, expropriated Whole Foods, and the transformation of corporate HQs into interpretive dance centers. Burn it all down (ethically, of course)!", scores: { c: -1, m: 2, p: -0.5 } }, { text: "Patiently building countless alternative micro-communities, co-ops, and organic kale farms, until the old, corrupt system just withers away from sheer irrelevance and a lack of decent kombucha.", scores: { c: -0.5, m: 1.5, p: 0 } } ] },
+    { id: 't3m_d4', tier: 3, branch: 'M', text: "Statement: 'In our blissful anarchist commune, if Brother Festus consistently contributes nothing but interpretive sighs and auras of vague disapproval during the mandatory turnip harvest, we should eventually just stop sharing our turnips with him.'", type: 'agreeDisagree', options: [ { text: "Agree. 'From each according to ability' implies actually *having* an ability besides competitive napping. Mutual aid isn't a one-way street, even if it makes us feel a bit bourgeois to say so.", scores: { c: 0, m: 1.5, p: 0.5 } }, { text: "Disagree! He's expressing his unique truth! His sighs are a vital contribution to our collective emotional landscape! To deny him turnips would be an act of oppressive turnip-hegemony!", scores: { c: -0.5, m: 2, p: -1 } } ] }
+];
+const TIER3_P_PATH_DEALBREAKERS_FINAL = [
+    { id: 't3p_d1', tier: 3, branch: 'P', text: "The right to accumulate truly obscene amounts of private property – like, owning your own moon base and several small countries – is:", type: 'forcedChoice2', options: [ { text: "An absolute, god-given (or at least, Rand-given) right! If I earned it (or inherited it from someone who 'earned' it), it's mine, and I'll use it to build a gold-plated statue of myself if I damn well please. Cry more, commies.", scores: { c: -1, m: -2, p: 2.5 } }, { text: "Generally fine, but perhaps there's a point where such extreme accumulation becomes a bit... destabilizing? Maybe a tiny, almost invisible 'societal well-being' fee on the third moon base wouldn't be the end of liberty.", scores: { c: -0.5, m: 0.5, p: 1 } } ] },
+    { id: 't3p_d2', tier: 3, branch: 'P', text: "Is even the most laughably minimal 'night-watchman' state – one that *only* stops people from hitting each other with large rocks and enforces contracts written in blood – still an inherently tyrannical affront to pure individual liberty?", type: 'yesNo', options: [ { text: "Yes, you statist bootlicker! All states are gangs! Competing private defense agencies and arbitration firms run on the blockchain are the only moral solution!", scores: { c: -2, m: -0.5, p: 2 } }, { text: "No, look, even I have to admit *someone* needs to stop the outright murder and egregious fraud. A tiny, heavily chained state is a regrettable but probably necessary utility, like a plumber for society's worst leaks.", scores: { c: 0.5, m: 0, p: 1 } } ] },
+    { id: 't3p_d3', tier: 3, branch: 'P', text: "Statement: 'All significant disparities in wealth and success are *solely* the result of differences in individual talent, effort, and voluntary choices; 'luck' or 'systemic factors' are excuses.'", type: 'agreeDisagree', options: [ { text: "Agree. The market is a perfectly just reflection of individual merit. If you're not rich, you simply didn't want it or try hard enough. Now, if you'll excuse me, my private jet to my private island is waiting.", scores: { c: 0, m: -2, p: 2 } }, { text: "Disagree. That's a grotesque oversimplification. Effort matters, sure, but to ignore birth lottery, systemic advantages, and sheer dumb luck is just being willfully blind or a sociopath.", scores: { c: 0, m: 1, p: -1 } } ] },
+    { id: 't3p_d4', tier: 3, branch: 'P', text: "A private corporation legally buys up all the breathable air in a sealed biodome, then starts charging exorbitant prices. According to the strictest Non-Aggression Principle, is this fine because it's 'their property' and 'voluntary exchange'?", type: 'yesNo', options: [ { text: "Yes! They acquired it legitimately. If you can't afford their 'Premium Oxygen Subscription,' that's a personal failing. The NAP is sacred, even if we all asphyxiate contractually.", scores: { c: -0.5, m: -1.5, p: 2 } }, { text: "No! That's an absurd, psychopathic abuse of principle. Some things, like basic survival, transcend simplistic property claims. The 'NAP' isn't a suicide pact.", scores: { c: 0, m: 1, p: -1 } } ] }
+];
+const TIER3_X_PATH_DEALBREAKERS_FINAL = [
+    { id: 't3x_d1', tier: 3, branch: 'X', text: "You're forced to vote: one candidate is a fire-breathing, ideology-fueled extremist who wants to burn society down for their utopia; the other is a corrupt, incompetent, but boringly predictable defender of the mildly awful status quo. You:", type: 'forcedChoice2', options: [ { text: "Reluctantly vote for the boring status quo. It's terrible, but at least it's a *known* terrible. The fire-breather might actually achieve their terrifying 'perfect' world.", scores: { c: 0.5, m: 0, p: 0 } }, { text: "Refuse to choose between two dumpster fires! Abstain, write in 'A Plague on Both Your Houses,' or start a doomed third party based on 'reasonableness and good manners.' Principles, people!", scores: { c: -0.25, m: -0.25, p: -0.25 } } ] },
+    { id: 't3x_d2', tier: 3, branch: 'X', text: "Statement: 'It is almost always better to implement a flawed but politically achievable policy that makes small improvements than to hold out indefinitely for a theoretically perfect solution that alienates half the population.'", type: 'agreeDisagree', options: [ { text: "Agree. Politics is the art of the possible, not a philosophy seminar. Get something done, even if it's messy and makes the purists cry into their manifestos.", scores: { c: 0.3, m: 0.3, p: 0.3 } }, { text: "Disagree. Selling out core principles for 'pragmatism' is a slippery slope to a beige tyranny of mediocrity. Stand firm for what's Right™, even if it means accomplishing nothing for decades!", scores: { c: -0.5, m: -0.5, p: -0.5 } } ] },
+    { id: 't3x_d3', tier: 3, branch: 'X', text: "When confronted with a highly polarized issue where both 'extremes' are screaming at each other, your most profound insight is typically:", type: 'forcedChoice2', options: [ { text: "\"You know, both sides have some valid points, but they're both taking it way too far. The truth, as always, is probably somewhere boringly in the middle, if anyone would just calm down and listen to me.\"", scores: { c: 0.4, m: 0.4, p: 0.4 } }, { text: "\"Actually, in this specific case, one side is demonstrably more unhinged/dangerous/factually incorrect than the other, and pretending otherwise is just enabling bad behavior. Sometimes, the middle is just where you get run over.\"", scores: { c: -0.25, m: -0.25, p: -0.25 } } ] },
+    { id: 't3x_d4', tier: 3, branch: 'X', text: "If you had to identify the single greatest obstacle to a well-functioning, reasonably content society, it would be:", type: 'forcedChoice3', options: [ { text: "Wild-eyed ideological fanatics of all stripes who refuse to compromise and seem to actively enjoy societal chaos as long as it proves their obscure theories right.", scores: { c: 0.3, m: 0.3, p: 0.3 } }, { text: "Sheer, mind-numbing bureaucratic incompetence and the tendency for any good idea to get ground into a bland, ineffective mush by endless committees and risk-averse middle managers.", scores: { c: 0.5, m: 0.1, p: 0.1 } }, { text: "The unfortunate reality that most people are fundamentally a bit selfish, a bit lazy, and not nearly as interested in 'civic virtue' as they are in getting a good deal on a new phone or arguing on social media.", scores: { c: 0.1, m: 0.1, p: 0.5 } } ] }
+];
+
+// The script.js will need to reference these _FINAL versions for Tier 3
+// For example:
+// case "C_PATH": currentQuestionSet = TIER3_C_PATH_DEALBREAKERS_FINAL; break;
+// etc.
