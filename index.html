@@ -8,7 +8,6 @@
 </head>
 <body>
     <div class="container">
-        <!-- Optional: Dark Mode Toggle -->
         <div class="theme-switch-wrapper">
             <label for="theme-switch-checkbox" style="margin-right: 8px; font-size: 0.9em;">Dark Mode:</label>
             <label class="theme-switch">
@@ -20,9 +19,7 @@
         <h1>The (Probably Flawed) Sarcastic Political Ternary Test</h1>
         <p class="intro">Answer as the "least worst" or "most tolerable caricature." Good luck, you'll need it.</p>
 
-        <!-- Optional: Restart Button (visible when quiz is active or on results page) -->
-        <!-- You might initially hide this and show it with JS -->
-        <button id="restart-button" class="quiz-button" style="display: none; margin-bottom:15px; background-color: #d9534f;">Restart Quiz</button>
+        <button id="restart-button" class="quiz-button" style="display: none; margin-bottom:15px; background-color: #d9534f; width: auto; padding-left: 20px; padding-right: 20px; margin-left: auto; margin-right: auto;">Restart Quiz</button>
 
         <div id="quiz-area">
             <div id="progress-indicator">Question 1 of X</div>
@@ -31,11 +28,13 @@
                 <!-- Options will be dynamically inserted here by script.js -->
             </div>
             
-            <div class="quiz-navigation-buttons">
-                <!-- Optional: Back Button -->
-                <!-- You might initially hide this or only show after Q1 -->
-                <button id="back-button" class="quiz-button" style="display: none;">Back</button> 
-                <button id="next-button" class="quiz-button">Next</button>
+            <!-- NAVIGATION BUTTONS CONTAINER -->
+            <div class="quiz-navigation-buttons" style="margin-top: 20px;"> 
+                <!-- BACK BUTTON - Ensure this ID matches what script.js looks for -->
+                <button id="back-button" class="quiz-button" style="display: none; background-color: #f0ad4e; width: 28%; margin-right: 2%;">Back</button>
+                
+                <!-- NEXT BUTTON -->
+                <button id="next-button" class="quiz-button" style="width: 68%;">Next</button>
             </div>
         </div>
 
@@ -43,34 +42,21 @@
             <h2>Your Gloriously Flawed Results:</h2>
             <p>Remember, this is mostly for amusement. Or despair.</p>
             
-            <!-- Developer controls will be inserted here by script.js if dev mode is active -->
-            
             <div id="raw-scores"></div>
             <div id="normalized-scores"></div>
             
-            <!-- Ideology Label and Summary will be inserted here by script.js -->
-            <!-- Example:
-            <h3 id="ideology-label-result"></h3>
-            <p id="ideology-summary-result" style="font-style: italic; border: 1px dashed #ccc; padding: 10px;"></p> 
-            -->
-
             <div id="plot-div" style="width: 100%; max-width: 650px; height: 550px; margin-left:auto; margin-right:auto;"></div>
             
-            <!-- Optional: Save/Copy Results Section -->
             <div id="save-results-section" style="margin-top: 20px; text-align: center;">
                 <button id="copy-results-button" class="quiz-button" style="background-color: #5bc0de; width:auto; padding: 10px 20px;">Copy Results to Clipboard</button>
-                <p id="copy-status" style="font-size: 0.8em; margin-top: 5px;"></p>
+                <p id="copy-status" style="font-size: 0.8em; margin-top: 5px; min-height: 1.2em;"></p> 
             </div>
 
             <p class="outro">Consider your life choices. Or don't. We're not your dad.</p>
-            <!-- Another place for a Restart button if desired on results page -->
-            <!-- <button id="restart-button-results" class="quiz-button" style="background-color: #d9534f;">Restart Quiz</button> -->
-
         </div>
     </div>
 
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <!-- Ensure questions.js is loaded BEFORE script.js -->
     <script src="questions.js"></script> 
     <script src="script.js"></script>
 </body>
