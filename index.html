@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Sarcastic Political Ternary Test</title>
+    <title>The Sarcastic Political Test</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,7 +16,7 @@
             </label>
         </div>
 
-        <h1>The (Probably Flawed) Sarcastic Political Ternary Test</h1>
+        <h1>The (Very Accurate) Sarcastic Political Test</h1>
         <p class="intro">Answer as the "least worst" or "most tolerable caricature." Good luck, you'll need it.</p>
 
         <button id="restart-button" class="quiz-button" style="display: none; margin-bottom:15px; background-color: #d9534f; width: auto; padding-left: 20px; padding-right: 20px; margin-left: auto; margin-right: auto;">Restart Quiz</button>
@@ -27,13 +27,9 @@
             <div id="options-container">
                 <!-- Options will be dynamically inserted here by script.js -->
             </div>
-            
-            <!-- NAVIGATION BUTTONS CONTAINER -->
-            <div class="quiz-navigation-buttons" style="margin-top: 20px;"> 
-                <!-- BACK BUTTON - Ensure this ID matches what script.js looks for -->
+
+            <div class="quiz-navigation-buttons" style="margin-top: 20px;">
                 <button id="back-button" class="quiz-button" style="display: none; background-color: #f0ad4e; width: 28%; margin-right: 2%;">Back</button>
-                
-                <!-- NEXT BUTTON -->
                 <button id="next-button" class="quiz-button" style="width: 68%;">Next</button>
             </div>
         </div>
@@ -41,15 +37,31 @@
         <div id="results-area" style="display:none;">
             <h2>Your Gloriously Flawed Results:</h2>
             <p>Remember, this is mostly for amusement. Or despair.</p>
-            
+
             <div id="raw-scores"></div>
             <div id="normalized-scores"></div>
-            
-            <div id="plot-div" style="width: 100%; max-width: 650px; height: 550px; margin-left:auto; margin-right:auto;"></div>
-            
+            <div id="extremity-score-display" style="margin-top: 15px; padding: 10px; background-color: #eef; border-left: 3px solid #77a;"></div>
+
+            <!-- Primary Ideology label and summary -->
+            <h3 id="ideology-label-result" style="margin-top: 15px;"></h3>
+            <!-- Proximity for primary will be inserted here by script.js if displayIdeologyInfo is updated to do so -->
+            <!-- <p id="primary-ideology-proximity-result" style="font-size: 0.9em;"></p> --> <!-- Script will create this -->
+            <p id="ideology-summary-result" style="font-style: italic; border: 1px dashed #ccc; padding: 10px; margin-top: 5px; background-color: #f9f9f9;"></p>
+
+            <!-- Secondary Ideology Match Area -->
+            <div id="secondary-match-area" style="display:none; margin-top: 20px; padding-top:15px; border-top: 1px solid #ddd;">
+                <h4>You also show some resemblance to:</h4>
+                <h5 id="secondary-ideology-label-result" style="margin-top: 5px;"></h5>
+                <!-- Proximity for secondary will be inserted here by script.js -->
+                <p id="secondary-ideology-proximity-result" style="font-size: 0.9em; margin-bottom: 5px;"></p>
+                <p id="secondary-ideology-summary-result" style="font-style: italic; border: 1px dashed #eee; padding: 10px; margin-top: 5px; background-color: #fdfdfd;"></p>
+            </div>
+
+            <div id="plot-div" style="width: 100%; max-width: 650px; height: 550px; margin-left:auto; margin-right:auto; margin-top: 20px;"></div>
+
             <div id="save-results-section" style="margin-top: 20px; text-align: center;">
                 <button id="copy-results-button" class="quiz-button" style="background-color: #5bc0de; width:auto; padding: 10px 20px;">Copy Results to Clipboard</button>
-                <p id="copy-status" style="font-size: 0.8em; margin-top: 5px; min-height: 1.2em;"></p> 
+                <p id="copy-status" style="font-size: 0.8em; margin-top: 5px; min-height: 1.2em;"></p>
             </div>
 
             <p class="outro">Consider your life choices. Or don't. We're not your dad.</p>
@@ -57,7 +69,9 @@
     </div>
 
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <script src="questions.js"></script> 
+    <script src="questions.js"></script>
+    <script src="ideology_summaries.js"></script>
+    <script src="ideology_ideal_points.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
