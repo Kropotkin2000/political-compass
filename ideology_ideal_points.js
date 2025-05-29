@@ -21,8 +21,8 @@ const ideologyIdealPoints = {
     // D. Other Low-C Libertarian Socialist Types (M-Dominant, P present, C still low)
     "Guild Socialism":                                 { c: 20, m: 65, p: 15, broad: "Libertarian Socialism / Social Anarchism" }, // Highest C in this LibSoc group
     "Democratic Confederalism / Libertarian Municipalism": { c: 12, m: 63, p: 25, broad: "Libertarian Socialism / Social Anarchism" },
-    "Anarcho-Syndicalism / Collectivist Anarchism":    { c: 10, m: 70, p: 20, broad: "Libertarian Socialism / Social Anarchism" },
-    "De Leonism":                                      { c: 15, m: 75, p: 10, broad: "Libertarian Socialism / Social Anarchism" },
+    "Anarcho-Syndicalism / Collectivist Anarchism":    { c: 15, m: 70, p: 15, broad: "Libertarian Socialism / Social Anarchism" },
+    "De Leonism":                                      { c: 20, m: 70, p: 10, broad: "Libertarian Socialism / Social Anarchism" },
 
     // --- II. EXTREME STATIST POLES (Very High C) ---
     "Totalitarianism / Absolutism":                    { c: 90, m:  5, p:  5, broad: "Statism" },
@@ -34,8 +34,11 @@ const ideologyIdealPoints = {
     // --- III. OTHER NON-CENTRIST IDEOLOGIES (Clear dominance of 1 or 2 axes) ---
 
     // A. Other Statist Types (High C, M & P vary but are subordinate)
-    "Paternalistic/Traditionalist Statism":            { c: 60, m: 20, p: 20, broad: "Statism" },
-    "Authoritarian Capitalism (Fascist Economic Type)":{ c: 55, m: 10, p: 35, broad: "Statism" }, // C-P focus, M very low
+    "Authoritarian Conservatism":                      { c: 50, m: 25, p: 25, broad: "Statism" },
+    "Authoritarian Capitalism (Fascist Economic Type)":{ c: 55, m: 15, p: 30, broad: "Statism" }, 
+    "Paternalistic Conservatism":                      { c: 45, m: 30, p: 25, broad: "Statism" },
+    "Traditionalist Conservatism":                     { c: 45, m: 25, p: 30, broad: "Statism" },
+    "National Conservatism":                           { c: 50, m: 30, p: 20, broad: "Statism" },
 
     // B. Other Propertarian Types (High P, C varies, M generally low)
     "Geolibertarianism":                               { c: 10, m: 25, p: 65, broad: "Propertarianism / Individualist Libertarianism" },
@@ -44,25 +47,24 @@ const ideologyIdealPoints = {
     "Conservative Libertarianism":                     { c: 30, m: 10, p: 60, broad: "Propertarianism / Individualist Libertarianism" },
 
     // C. Authoritarian Socialism / State Collectivism (High C & M, Low P - less C-extreme than "Statism" group II)
-    "State Socialism (Centralized Planning Focus)":    { c: 50, m: 40, p: 10, broad: "Authoritarian Socialism / State Collectivism" }, // C leads M
+    "State Socialism (Centralised Planning Focus)":    { c: 50, m: 40, p: 10, broad: "Authoritarian Socialism / State Collectivism" }, // C leads M
     "State Collectivism":                              { c: 40, m: 50, p: 10, broad: "Authoritarian Socialism / State Collectivism" }, // M leads C
     "National Syndicalism (Non-Fascist)":              { c: 45, m: 45, p: 10, broad: "Authoritarian Socialism / State Collectivism" }, // C=M
 
     // D. Classical Liberalism / Constitutionalism (High C & P, Low M)
     "Constitutional Republicanism / Conservative Liberalism": { c: 45, m: 10, p: 45, broad: "Classical Liberalism / Constitutionalism" }, // C=P
     "Classical Liberalism (Lockean/Smithian)":         { c: 40, m: 10, p: 50, broad: "Classical Liberalism / Constitutionalism" }, // P leads C
-    "Traditional Conservatism (Burkean)":              { c: 50, m: 10, p: 40, broad: "Classical Liberalism / Constitutionalism" }, // C leads P
-
+    
     // E. Democratic Socialism (M-dominant, C moderate, P present - distinct broad category)
     "Democratic Socialism":                            { c: 30, m: 50, p: 20, broad: "Democratic Socialism" },
 
 
     // --- IV. CENTRIST / MIXED ECONOMY IDEOLOGIES ---
-    "Social Democracy":                                { c: 34, m: 33, p: 33, broad: "Centrism / Mixed Economy Ideologies" }, // New "balanced center"
+    "Social Democracy":                                { c: 34, m: 36, p: 30, broad: "Centrism / Mixed Economy Ideologies" }, // New "balanced center"
     "Radical Centrism / Syncretic Politics":           { c: 30, m: 30, p: 40, broad: "Centrism / Mixed Economy Ideologies" }, // P-leaning balanced C/M
-    "Social Liberalism / Progressive Liberalism":      { c: 35, m: 30, p: 35, broad: "Centrism / Mixed Economy Ideologies" }, // C=P, M strong, P>=M
+    "Social Liberalism / Progressive Liberalism":      { c: 35, m: 32, p: 33, broad: "Centrism / Mixed Economy Ideologies" }, // C=P, M strong, P>=M
     "Technocratic / Managerial Liberalism":            { c: 40, m: 15, p: 45, broad: "Centrism / Mixed Economy Ideologies" }, // C&P strong, P slightly leads C, M very low
-    "Market-Oriented Liberalism / Third Way":          { c: 25, m: 25, p: 50, broad: "Centrism / Mixed Economy Ideologies" }  // P dominant, C=M secondary
+    "Market-Oriented Liberalism / Third Way":          { c: 30, m: 20, p: 50, broad: "Centrism / Mixed Economy Ideologies" }  // P dominant, C=M secondary
 };
 
 // Ensure all C, M, P values for each point sum to 100 and are valid numbers.
