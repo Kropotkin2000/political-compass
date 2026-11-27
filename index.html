@@ -2,71 +2,132 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>The Sarcastic Political Test</title>
+    <meta name="description" content="A three-cornered, deeply unscientific political test. Centralism, Communalism or Privatism: pick your least-worst caricature.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <div class="theme-switch-wrapper">
-            <label for="theme-switch-checkbox" style="margin-right: 8px; font-size: 0.9em;">Dark Mode:</label>
-            <label class="theme-switch">
-                <input type="checkbox" id="theme-switch-checkbox">
-                <span class="slider"></span>
-            </label>
-        </div>
-
-        <h1>The (Very Accurate) Sarcastic Political Test</h1>
-        <p class="intro">Answer as the "least worst" or "most tolerable caricature." Good luck, you'll need it.</p>
-
-        <button id="restart-button" class="quiz-button" style="display: none; margin-bottom:15px; background-color: #d9534f; width: auto; padding-left: 20px; padding-right: 20px; margin-left: auto; margin-right: auto;">Restart Quiz</button>
-
-        <div id="quiz-area">
-            <div id="progress-indicator">Question 1 of X</div>
-            <h2 id="question-text">Question text will load here...</h2>
-            <div id="options-container">
-                <!-- Options will be dynamically inserted here by script.js -->
-            </div>
-
-            <div class="quiz-navigation-buttons" style="margin-top: 20px;">
-                <button id="back-button" class="quiz-button" style="display: none; background-color: #f0ad4e; width: 28%; margin-right: 2%;">Back</button>
-                <button id="next-button" class="quiz-button" style="width: 68%;">Next</button>
-            </div>
-        </div>
-
-        <div id="results-area" style="display:none;">
-            <h2>Your Gloriously Flawed Results:</h2>
-            <p>Remember, this is mostly for amusement. Or despair.</p>
-
-            <div id="raw-scores"></div>
-            <div id="normalized-scores"></div>
-            <div id="extremity-score-display" style="margin-top: 15px; padding: 10px; background-color: #eef; border-left: 3px solid #77a;"></div>
-
-            <!-- Primary Ideology label and summary -->
-            <h3 id="ideology-label-result" style="margin-top: 15px;"></h3>
-            <p id="primary-ideology-proximity-result" style="font-size: 0.9em; margin-bottom: 5px; padding: 10px; background-color: #eef;"></p> <!-- Made active and styled like other info boxes -->
-            <p id="ideology-summary-result" style="font-style: italic; border: 1px dashed #ccc; padding: 10px; margin-top: 5px; background-color: #f9f9f9;"></p>
-
-            <!-- Secondary Ideology Match Area -->
-            <div id="secondary-match-area" style="display:none; margin-top: 20px; padding-top:15px; border-top: 1px solid #ddd;">
-                <h4>You also show some resemblance to:</h4>
-                <h5 id="secondary-ideology-label-result" style="margin-top: 5px;"></h5>
-                <p id="secondary-ideology-proximity-result" style="font-size: 0.9em; margin-bottom: 5px; padding: 10px; background-color: #eef;"></p> <!-- Styled like other info boxes -->
-                <p id="secondary-ideology-summary-result" style="font-style: italic; border: 1px dashed #eee; padding: 10px; margin-top: 5px; background-color: #fdfdfd;"></p>
-            </div>
-
-            <div id="plot-div" style="width: 100%; max-width: 650px; height: 550px; margin-left:auto; margin-right:auto; margin-top: 20px;"></div>
-
-            <div id="save-results-section" style="margin-top: 20px; text-align: center;">
-                <button id="copy-results-button" class="quiz-button" style="background-color: #5bc0de; width:auto; padding: 10px 20px;">Copy Results to Clipboard</button>
-                <p id="copy-status" style="font-size: 0.8em; margin-top: 5px; min-height: 1.2em;"></p>
-            </div>
-
-            <p class="outro">Consider your life choices. Or don't. We're not your dad.</p>
-        </div>
+    <div class="aurora" aria-hidden="true">
+        <span class="blob blob-c"></span>
+        <span class="blob blob-m"></span>
+        <span class="blob blob-p"></span>
     </div>
 
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <header class="topbar">
+        <button id="home-button" class="brand" type="button" aria-label="Back to start">
+            <svg viewBox="0 0 24 21" aria-hidden="true"><path d="M12 1 23 20H1Z"/></svg>
+            <span>Sarcastic Political Test</span>
+        </button>
+        <button id="theme-toggle" class="icon-button" type="button" aria-label="Toggle dark mode">
+            <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/></svg>
+            <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11Z"/></svg>
+        </button>
+    </header>
+
+    <main>
+        <!-- ============ INTRO ============ -->
+        <section id="screen-intro" class="screen" aria-labelledby="intro-title">
+            <div class="intro-grid">
+                <div class="intro-copy">
+                    <p class="eyebrow">Very accurate. Not remotely scientific.</p>
+                    <h1 id="intro-title">Which <em>least-worst</em> caricature are you?</h1>
+                    <p class="lede">Forget left and right. This test drops you somewhere inside a triangle with three corners:</p>
+                    <ul class="corner-list">
+                        <li class="corner-c"><b>Centralism</b> The State should run things.</li>
+                        <li class="corner-m"><b>Communalism</b> The community should run things.</li>
+                        <li class="corner-p"><b>Privatism</b> You should run your own things.</li>
+                    </ul>
+                    <button id="start-button" class="cta" type="button">Start the test <span aria-hidden="true">&rarr;</span></button>
+                    <p class="fineprint">30 questions &middot; about 6 minutes &middot; keys 1&ndash;4 to answer, &larr; to go back</p>
+                </div>
+                <div class="intro-art" aria-hidden="true">
+                    <svg id="intro-triangle" class="tri" viewBox="0 0 400 370"></svg>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ QUIZ ============ -->
+        <section id="screen-quiz" class="screen" hidden aria-live="polite">
+            <div class="quiz-head">
+                <button id="back-button" class="ghost" type="button"><span aria-hidden="true">&larr;</span> Back</button>
+                <div class="progress" role="progressbar" aria-valuemin="1" aria-valuemax="30" aria-valuenow="1" id="progress">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <span id="progress-label" class="progress-label">1 / 30</span>
+                <svg id="mini-triangle" class="mini-tri" viewBox="0 0 400 370" aria-hidden="true"></svg>
+            </div>
+            <div id="question-card" class="question-card">
+                <p id="question-kicker" class="kicker">Question 1</p>
+                <h2 id="question-text" class="question-text"></h2>
+                <div id="options-container" class="options" role="radiogroup" aria-labelledby="question-text"></div>
+            </div>
+        </section>
+
+        <!-- ============ RESULTS ============ -->
+        <section id="screen-results" class="screen" hidden>
+            <div class="results-hero">
+                <p id="results-eyebrow" class="eyebrow">Your gloriously flawed result</p>
+                <h1 id="result-name" class="result-name"></h1>
+                <p id="result-broad" class="chip"></p>
+                <p id="shared-note" class="shared-note" hidden>Someone shared their result with you. <a href="./">Take the test yourself &rarr;</a></p>
+            </div>
+
+            <div class="results-grid">
+                <div class="map-panel">
+                    <svg id="result-triangle" class="tri tri-large" viewBox="0 0 400 370" role="img" aria-label="Your position in the political triangle, with all 36 ideologies plotted"></svg>
+                    <p class="map-hint" id="map-hint">Tap any dot to read about that ideology.</p>
+                    <div id="legend" class="legend"></div>
+                </div>
+
+                <div class="info-panel">
+                    <article id="focus-card" class="focus-card">
+                        <p id="focus-label" class="focus-label">Your closest match</p>
+                        <h3 id="focus-name"></h3>
+                        <p id="focus-meta" class="focus-meta"></p>
+                        <p id="focus-summary" class="focus-summary"></p>
+                        <button id="focus-reset" class="ghost small" type="button" hidden>&larr; Back to your match</button>
+                    </article>
+
+                    <div class="block">
+                        <h4>Your closest three</h4>
+                        <ol id="match-list" class="match-list"></ol>
+                        <p class="note">Distance is measured in percentage points inside the triangle. 0 would be a bullseye; the far corners are about 140 apart.</p>
+                    </div>
+
+                    <div class="block">
+                        <h4>Your mix</h4>
+                        <div id="mix-bars" class="mix-bars"></div>
+                        <div class="extremity">
+                            <div class="extremity-row"><span>Distance from the dead centre</span><b id="extremity-value"></b></div>
+                            <div class="meter"><div id="extremity-fill" class="meter-fill"></div></div>
+                            <p id="extremity-quip" class="note"></p>
+                        </div>
+                    </div>
+
+                    <div id="dev-panel" class="block dev-panel" hidden>
+                        <h4>Developer mode</h4>
+                        <p class="note">Click or drag on the triangle to move the dot.</p>
+                        <pre id="dev-readout"></pre>
+                    </div>
+
+                    <div class="actions">
+                        <button id="copy-link-button" class="cta" type="button">Copy share link</button>
+                        <button id="copy-text-button" class="ghost" type="button">Copy as text</button>
+                        <button id="restart-button" class="ghost" type="button">Take it again</button>
+                    </div>
+                    <p id="copy-status" class="copy-status" role="status"></p>
+                </div>
+            </div>
+            <p class="outro">Consider your life choices. Or don't. We're not your dad.</p>
+        </section>
+    </main>
+
+    <div id="toast" class="toast" role="status" hidden></div>
+
     <script src="questions.js"></script>
     <script src="ideology_summaries.js"></script>
     <script src="ideology_ideal_points.js"></script>

@@ -1,567 +1,684 @@
-// script.js
+// script.js — The Sarcastic Political Test
+// Data lives in questions.js, ideology_summaries.js and ideology_ideal_points.js.
 
-document.addEventListener('DOMContentLoaded', () => {
-    // UTILITY FUNCTIONS
-    function shuffleArray(array) {
-        if (!array || array.length === 0) return [];
-        const newArray = [...array];
-        for (let i = newArray.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-        }
-        return newArray;
+(() => {
+    'use strict';
+
+    // ------------------------------------------------------------------
+    // Data checks
+    // ------------------------------------------------------------------
+    const fail = (msg) => {
+        document.querySelector('main').innerHTML = `<p class="fatal">Error: ${msg}</p>`;
+    };
+    if (typeof questions === 'undefined' || !Array.isArray(questions) || !questions.length) return fail('questions.js not loaded or empty.');
+    if (typeof ideologySummaries === 'undefined') return fail('ideology_summaries.js not loaded.');
+    if (typeof ideologyIdealPoints === 'undefined') return fail('ideology_ideal_points.js not loaded.');
+
+    const AXES = ['c', 'm', 'p'];
+    const AXIS_INFO = {
+        c: { name: 'Centralism', blurb: 'The State should run things' },
+        m: { name: 'Communalism', blurb: 'The community should run things' },
+        p: { name: 'Privatism', blurb: 'You should run your own things' },
+    };
+    const IDEOLOGIES = Object.entries(ideologyIdealPoints).map(([name, pt]) => ({ name, ...pt }));
+    const BROAD_ORDER = [...new Set(IDEOLOGIES.map(i => i.broad))];
+    const broadIndex = (b) => BROAD_ORDER.indexOf(b);
+
+    const params = new URLSearchParams(location.search);
+    const isDevMode = params.get('dev') === 'true';
+    const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (isDevMode) {
+        const missing = IDEOLOGIES.filter(i => !ideologySummaries[i.name]).map(i => i.name);
+        if (missing.length) console.warn('Ideologies with no summary:', missing);
+        IDEOLOGIES.forEach(i => { if (Math.abs(i.c + i.m + i.p - 100) > 0.01) console.warn('Ideal point does not sum to 100:', i.name); });
     }
 
-    // DOM Element References
-    const questionTextElement = document.getElementById('question-text');
-    const optionsContainer = document.getElementById('options-container');
-    const nextButton = document.getElementById('next-button');
-    const progressIndicator = document.getElementById('progress-indicator');
-    const quizArea = document.getElementById('quiz-area');
-    const resultsArea = document.getElementById('results-area');
-    const rawScoresElement = document.getElementById('raw-scores');
-    const normalizedScoresElement = document.getElementById('normalized-scores');
-    const devControlsContainer = document.createElement('div');
-    devControlsContainer.id = 'dev-controls';
-
-    const restartButton = document.getElementById('restart-button');
-    const backButton = document.getElementById('back-button');
-    const themeSwitch = document.getElementById('theme-switch-checkbox');
-    const copyResultsButton = document.getElementById('copy-results-button');
-    const copyStatusElement = document.getElementById('copy-status');
-
-    const ideologyLabelElement = document.getElementById('ideology-label-result');
-    const primaryIdeologyProximityElement = document.getElementById('primary-ideology-proximity-result');
-    const ideologySummaryElement = document.getElementById('ideology-summary-result');
-    const plotDiv = document.getElementById('plot-div');
-    const extremityScoreDisplayElement = document.getElementById('extremity-score-display');
-
-    const secondaryMatchArea = document.getElementById('secondary-match-area');
-    const secondaryIdeologyLabelElement = document.getElementById('secondary-ideology-label-result');
-    const secondaryIdeologyProximityElement = document.getElementById('secondary-ideology-proximity-result');
-    const secondaryIdeologySummaryElement = document.getElementById('secondary-ideology-summary-result');
-
-    // Quiz State Variables
-    let userScores = { c: 0, m: 0, p: 0 };
-    let minMaxRawScores = { c: { min: 0, max: 0 }, m: { min: 0, max: 0 }, p: { min: 0, max: 0 } };
-
-    // Affinity System State & Parameters
-    const stage1AffinityQuestionIds = ['q1', 'q2', 'q3']; // Assumes q1-q3 in questions.js are the IDQs
-    const NUM_STAGE_1_QUESTIONS = stage1AffinityQuestionIds.length;
-    const stage2AffinityQuestionIds = ['q4', 'q5', 'q6']; // Assumes q4-q6 in questions.js are the Vision questions
-    const NUM_STAGE_2_QUESTIONS = stage2AffinityQuestionIds.length;
-
-    let affinityOptionChoices = {};
-    let idqAxisStates = { dominantHigh: null, resisted: [], confidence: 'none' };
-    let affinityStage1Complete = false;
-    let affinityStage2Complete = false;
-
-    const MIN_AFFIRMATION_SIGNAL_FOR_HIGH = 2.0; // Example: Net positive signal required
-    const DOMINANT_HIGH_SIGNAL_DIFFERENCE = 1.0; // Example: How much stronger one signal must be
+    // ------------------------------------------------------------------
+    // Scoring (unchanged maths from the original version)
+    // ------------------------------------------------------------------
+    const STAGE1 = ['q1', 'q2', 'q3'];          // identity questions
+    const STAGE2 = ['q4', 'q5', 'q6'];          // vision questions
+    const MIN_AFFIRMATION_SIGNAL_FOR_HIGH = 2.0;
+    const DOMINANT_HIGH_SIGNAL_DIFFERENCE = 1.0;
     const DAMPENING_FACTOR = 0.5;
     const MAX_ACCUMULATED_ON_RESISTED_AXIS = 3.0;
 
-    let currentQuestionActualIndex = 0;
-    let currentQuestionDisplayNumber = 0;
-    let questionOrder = [];
-    let answerHistory = [];
-    let debounceTimer;
-    let devSliderControlsState = {};
-    const MAX_POSSIBLE_DISTANCE_IN_TERNARY_SPACE = Math.sqrt(20000);
+    // [affirm/reject signals] per option of each affinity question
+    const AFFINITY = {
+        q1: [{ P: 1, rM: 1 }, { M: 1, rP: 1 }, { rP: 0.3, rM: 0.3 }],
+        q2: [{ C: 1 }, { rC: 1 }, { rC: 0.3 }],
+        q3: [{ M: 1 }, { rM: 1 }, { rM: 0.3 }],
+        q4: [{ P: 2 }, { rP: 1.5, C: 0.5 }, { rP: 1.5, M: 0.5 }, { rP: 0.5 }],
+        q5: [{ M: 2 }, { rM: 1.5, C: 0.5 }, { rM: 1.5, P: 0.5 }, { rM: 0.5 }],
+        q6: [{ C: 2 }, { rC: 1.5, M: 0.5 }, { rC: 1.5, P: 0.5 }, { rC: 0.5 }],
+    };
 
-    // --- CRITICAL FILE CHECKS ---
-    if (typeof questions === 'undefined' || !Array.isArray(questions) || questions.length === 0) {
-        document.body.innerHTML = `<p style="color:red;text-align:center;padding:20px;font-size:1.2em;">Error: questions.js not loaded or empty.</p>`; return;
-    }
-    if (typeof ideologySummaries === 'undefined' || typeof ideologySummaries !== 'object' || Object.keys(ideologySummaries).length === 0) {
-        document.body.innerHTML = `<p style="color:red;text-align:center;padding:20px;font-size:1.2em;">Error: ideology_summaries.js not loaded or empty.</p>`; return;
-    }
-    if (typeof ideologyIdealPoints === 'undefined' || typeof ideologyIdealPoints !== 'object' || Object.keys(ideologyIdealPoints).length === 0) {
-        document.body.innerHTML = `<p style="color:red;text-align:center;padding:20px;font-size:1.2em;">Error: ideology_ideal_points.js not loaded or empty.</p>`; return;
-    }
-    if (typeof Plotly === 'undefined') {
-        if (plotDiv) plotDiv.innerHTML = "<p style='color:red; text-align:center;'>Error: Plotly.js library not loaded.</p>";
-        console.error("Plotly.js not loaded.");
-    }
-
-    // --- DARK MODE LOGIC ---
-    function applyTheme(theme) {
-        const isCurrentlyDark = document.body.classList.contains('dark-mode');
-        let themeChanged = false;
-        if (theme === 'dark') { if (!isCurrentlyDark) { document.body.classList.add('dark-mode'); themeChanged = true; } if (themeSwitch) themeSwitch.checked = true; }
-        else { if (isCurrentlyDark) { document.body.classList.remove('dark-mode'); themeChanged = true; } if (themeSwitch) themeSwitch.checked = false; }
-
-        const elementsToStyleLikeScoreBox = [extremityScoreDisplayElement, primaryIdeologyProximityElement, secondaryIdeologyProximityElement];
-         elementsToStyleLikeScoreBox.forEach(el => {
-            if (el) {
-                const isDarkNow = document.body.classList.contains('dark-mode');
-                const safeGetCssVar = (varName, fallback) => { try { const val = getComputedStyle(document.documentElement).getPropertyValue(varName).trim(); return val || fallback; } catch (e) { return fallback; } };
-                el.style.backgroundColor = isDarkNow ? safeGetCssVar('--score-box-bg', '#2c2c3a') : '#eef';
-                if (el === extremityScoreDisplayElement) {
-                    el.style.borderLeftColor = isDarkNow ? safeGetCssVar('--score-box-border', '#555577') : '#77a';
-                    el.style.borderLeftStyle = 'solid'; el.style.borderLeftWidth = '3px';
-                } else { el.style.borderLeftStyle = 'none'; }
-                el.style.color = isDarkNow ? safeGetCssVar('--text-color', '#e2e2e2') : '#333';
-                el.style.padding = '10px';
-            }
-        });
-        if (ideologySummaryElement) {
-            const isDarkNow = document.body.classList.contains('dark-mode');
-            const safeGetCssVar = (varName, fallback) => { try { const val = getComputedStyle(document.documentElement).getPropertyValue(varName).trim(); return val || fallback; } catch (e) { return fallback; }};
-            ideologySummaryElement.style.backgroundColor = isDarkNow ? safeGetCssVar('--option-bg', '#333333') : '#f9f9f9';
-            ideologySummaryElement.style.borderColor = isDarkNow ? safeGetCssVar('--option-border', '#444444') : '#ccc';
-        }
-         if (secondaryIdeologySummaryElement) {
-            const isDarkNow = document.body.classList.contains('dark-mode');
-            const safeGetCssVar = (varName, fallback) => { try { const val = getComputedStyle(document.documentElement).getPropertyValue(varName).trim(); return val || fallback; } catch (e) { return fallback; }};
-            secondaryIdeologySummaryElement.style.backgroundColor = isDarkNow ? safeGetCssVar('--option-bg', '#383838') : '#fdfdfd';
-            secondaryIdeologySummaryElement.style.borderColor = isDarkNow ? safeGetCssVar('--option-border', '#4a4a4a') : '#eee';
-        }
-        if (themeChanged && resultsArea && resultsArea.style.display === 'block' && typeof Plotly !== 'undefined') {
-            let currentNormalizedScoresToPlot; let currentIdeologyInfoForPlot; let currentRawScoresForExtremityUpdate;
-            if (isDevMode && Object.keys(devSliderControlsState).length > 0 && devSliderControlsState.C.input) {
-                currentNormalizedScoresToPlot = { c: parseFloat(devSliderControlsState.C.value), m: parseFloat(devSliderControlsState.M.value), p: parseFloat(devSliderControlsState.P.value) };
-                let tempSumForPlot = currentNormalizedScoresToPlot.c + currentNormalizedScoresToPlot.m + currentNormalizedScoresToPlot.p;
-                if (Math.abs(tempSumForPlot - 100.0) > 0.1) {
-                    if (tempSumForPlot === 0) {currentNormalizedScoresToPlot = {c:33.33,m:33.33,p:33.34};}
-                    else { let scale = 100.0 / tempSumForPlot; currentNormalizedScoresToPlot.c *= scale; currentNormalizedScoresToPlot.m *= scale; currentNormalizedScoresToPlot.p = 100.0 - currentNormalizedScoresToPlot.c - currentNormalizedScoresToPlot.m;}
-                }
-                currentNormalizedScoresToPlot.c = parseFloat(currentNormalizedScoresToPlot.c.toFixed(2)); currentNormalizedScoresToPlot.m = parseFloat(currentNormalizedScoresToPlot.m.toFixed(2)); currentNormalizedScoresToPlot.p = parseFloat(currentNormalizedScoresToPlot.p.toFixed(2));
-                const mid_C_dev = (minMaxRawScores.c.max + minMaxRawScores.c.min) / 2; const mid_M_dev = (minMaxRawScores.m.max + minMaxRawScores.m.min) / 2; const mid_P_dev = (minMaxRawScores.p.max + minMaxRawScores.p.min) / 2;
-                const range_C_dev = (minMaxRawScores.c.max - minMaxRawScores.c.min); const range_M_dev = (minMaxRawScores.m.max - minMaxRawScores.m.min); const range_P_dev = (minMaxRawScores.p.max - minMaxRawScores.p.min);
-                currentRawScoresForExtremityUpdate = { c: mid_C_dev + ((currentNormalizedScoresToPlot.c - 50) / 50) * (range_C_dev / 2 || 1), m: mid_M_dev + ((currentNormalizedScoresToPlot.m - 50) / 50) * (range_M_dev / 2 || 1), p: mid_P_dev + ((currentNormalizedScoresToPlot.p - 50) / 50) * (range_P_dev / 2 || 1)};
-                currentRawScoresForExtremityUpdate.c = Math.max(minMaxRawScores.c.min, Math.min(minMaxRawScores.c.max, currentRawScoresForExtremityUpdate.c)); currentRawScoresForExtremityUpdate.m = Math.max(minMaxRawScores.m.min, Math.min(minMaxRawScores.m.max, currentRawScoresForExtremityUpdate.m)); currentRawScoresForExtremityUpdate.p = Math.max(minMaxRawScores.p.min, Math.min(minMaxRawScores.p.max, currentRawScoresForExtremityUpdate.p));
-                currentIdeologyInfoForPlot = getIdeologyLabelAndSarcasm(currentNormalizedScoresToPlot.c, currentNormalizedScoresToPlot.m, currentNormalizedScoresToPlot.p);
-            } else if (!isDevMode && Object.keys(userScores).length > 0 && (userScores.c !== 0 || userScores.m !== 0 || userScores.p !== 0) ) {
-                currentNormalizedScoresToPlot = normalizeScores(userScores, minMaxRawScores); currentRawScoresForExtremityUpdate = userScores;
-                currentIdeologyInfoForPlot = getIdeologyLabelAndSarcasm(currentNormalizedScoresToPlot.c, currentNormalizedScoresToPlot.m, currentNormalizedScoresToPlot.p);
-            }
-            if (currentNormalizedScoresToPlot && currentIdeologyInfoForPlot) {
-                let plotTitle = determinePlotTitle(currentIdeologyInfoForPlot);
-                drawPlot(currentNormalizedScoresToPlot, plotTitle);
-                if (currentRawScoresForExtremityUpdate && typeof minMaxRawScores.c.min !== 'undefined') { calculateAndDisplayExtremityScore(currentNormalizedScoresToPlot, currentRawScoresForExtremityUpdate);}
+    function dominantAxis(choices) {
+        const net = { C: 0, M: 0, P: 0 };
+        for (const id in choices) {
+            const sig = (AFFINITY[id] || [])[choices[id]] || {};
+            for (const k in sig) {
+                if (k[0] === 'r') net[k[1]] -= sig[k]; else net[k] += sig[k];
             }
         }
-    }
-    if (themeSwitch) { const savedTheme = localStorage.getItem('theme'); if (savedTheme) { applyTheme(savedTheme); } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) { applyTheme('dark'); } else { applyTheme('light'); } themeSwitch.addEventListener('change', function() { const newTheme = this.checked ? 'dark' : 'light'; applyTheme(newTheme); localStorage.setItem('theme', newTheme); }); if (window.matchMedia) { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => { if (!localStorage.getItem('theme')) { applyTheme(e.matches ? 'dark' : 'light'); }});}} else { if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) { applyTheme('dark');} else {applyTheme('light');}}
-
-    // --- QUIZ LOGIC & AFFINITY SYSTEM ---
-    function initializeQuizState() {
-        userScores = { c: 0, m: 0, p: 0 };
-        affinityOptionChoices = {};
-        idqAxisStates = { dominantHigh: null, resisted: [], confidence: 'none' };
-        affinityStage1Complete = false;
-        affinityStage2Complete = false;
-        currentQuestionDisplayNumber = 0;
-        answerHistory = [];
-
-        const allQuestionIndices = [...Array(questions.length).keys()];
-        const stage1OriginalIndices = stage1AffinityQuestionIds.map(id => questions.findIndex(q => q.id === id)).filter(idx => idx !== -1);
-        const stage2OriginalIndices = stage2AffinityQuestionIds.map(id => questions.findIndex(q => q.id === id)).filter(idx => idx !== -1);
-
-        if (stage1OriginalIndices.length !== NUM_STAGE_1_QUESTIONS || stage2OriginalIndices.length !== NUM_STAGE_2_QUESTIONS) {
-            console.error("Critical error: Not all affinity questions found by ID. Quiz order will be incorrect. Defaulting to simple sequence.");
-            questionOrder = allQuestionIndices;
-        } else {
-            const affinityIndicesSet = new Set([...stage1OriginalIndices, ...stage2OriginalIndices]);
-            const mainPoolOriginalIndices = allQuestionIndices.filter(index => !affinityIndicesSet.has(index));
-            questionOrder = [...stage1OriginalIndices, ...stage2OriginalIndices, ...mainPoolOriginalIndices];
-        }
-
-        if (resultsArea) resultsArea.style.display = 'none';
-        if (extremityScoreDisplayElement) extremityScoreDisplayElement.style.display = 'none';
-        if (primaryIdeologyProximityElement) primaryIdeologyProximityElement.style.display = 'none';
-        if (secondaryMatchArea) secondaryMatchArea.style.display = 'none';
-        if (quizArea) quizArea.style.display = 'block';
-        if (devControlsContainer.parentNode) { devControlsContainer.parentNode.removeChild(devControlsContainer); }
-        if (progressIndicator) progressIndicator.style.display = 'block';
-        if (nextButton) { nextButton.disabled = false; nextButton.style.backgroundColor = ''; }
-        if (restartButton) restartButton.style.display = 'none';
-        if (backButton) backButton.style.display = 'none';
-        if (copyStatusElement) copyStatusElement.textContent = "";
-        if (isDevMode && devSliderControlsState.C && devSliderControlsState.C.input) {
-            devSliderControlsState.C.value = 33.3; devSliderControlsState.C.locked = false;
-            devSliderControlsState.M.value = 33.3; devSliderControlsState.M.locked = false;
-            devSliderControlsState.P.value = 33.4; devSliderControlsState.P.locked = false;
-            updateAllDisplaysFromInternalState();
-        }
-    }
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const isDevMode = urlParams.get('dev') === 'true';
-    calculateMinMaxRawScores();
-
-    function calculateMinMaxRawScores() {
-        minMaxRawScores = { c: { min: 0, max: 0 }, m: { min: 0, max: 0 }, p: { min: 0, max: 0 } };
-        if (!questions || questions.length === 0) {
-            console.error("No questions found for min/max score calculation.");
-            minMaxRawScores = { c: { min: -10, max: 10 }, m: { min: -10, max: 10 }, p: { min: -10, max: 10 } }; return;
-        }
-        questions.forEach(q => {
-            if (q && q.options && q.options.length > 0) {
-                const cScoresInQ = q.options.map(opt => opt.scores.c || 0);
-                const mScoresInQ = q.options.map(opt => opt.scores.m || 0);
-                const pScoresInQ = q.options.map(opt => opt.scores.p || 0);
-                if (cScoresInQ.length > 0) { minMaxRawScores.c.min += Math.min(...cScoresInQ); minMaxRawScores.c.max += Math.max(...cScoresInQ); }
-                if (mScoresInQ.length > 0) { minMaxRawScores.m.min += Math.min(...mScoresInQ); minMaxRawScores.m.max += Math.max(...mScoresInQ); }
-                if (pScoresInQ.length > 0) { minMaxRawScores.p.min += Math.min(...pScoresInQ); minMaxRawScores.p.max += Math.max(...pScoresInQ); }
-            }
-        });
-    }
-
-    function determineDominantHighAndResistedAxes(currentStage) {
-        let affirm_C = 0, affirm_M = 0, affirm_P = 0;
-        let reject_C = 0, reject_M = 0, reject_P = 0;
-        const questionsToConsider = currentStage === 1 ? stage1AffinityQuestionIds : [...stage1AffinityQuestionIds, ...stage2AffinityQuestionIds];
-
-        questionsToConsider.forEach(qId => {
-            const choice = affinityOptionChoices[qId];
-            if (typeof choice === 'undefined') return;
-
-            if (qId === 'q1') { // Property: P vs M
-                if (choice === 0) { affirm_P += 1; reject_M += 1; }
-                else if (choice === 1) { affirm_M += 1; reject_P += 1; }
-                else if (choice === 2) { reject_P += 0.3; reject_M += 0.3; }
-            } else if (qId === 'q2') { // State: C vs Anti-C
-                if (choice === 0) { affirm_C += 1; }
-                else if (choice === 1) { reject_C += 1; }
-                else if (choice === 2) { reject_C += 0.3; }
-            } else if (qId === 'q3') { // Community Decision: M vs Anti-M
-                if (choice === 0) { affirm_M += 1; }
-                else if (choice === 1) { reject_M += 1; }
-                else if (choice === 2) { reject_M += 0.3; }
-            } else if (qId === 'q4') { // Anarcho-Capitalism (Extreme P)
-                if (choice === 0) { affirm_P += 2; }
-                else if (choice === 1) { reject_P += 1.5; affirm_C += 0.5; }
-                else if (choice === 2) { reject_P += 1.5; affirm_M += 0.5; }
-                else if (choice === 3) { reject_P += 0.5; }
-            } else if (qId === 'q5') { // Anarcho-Communism (Extreme M)
-                if (choice === 0) { affirm_M += 2; }
-                else if (choice === 1) { reject_M += 1.5; affirm_C += 0.5; }
-                else if (choice === 2) { reject_M += 1.5; affirm_P += 0.5; }
-                else if (choice === 3) { reject_M += 0.5; }
-            } else if (qId === 'q6') { // Totalitarian State (Extreme C)
-                if (choice === 0) { affirm_C += 2; }
-                else if (choice === 1) { reject_C += 1.5; affirm_M += 0.5; }
-                else if (choice === 2) { reject_C += 1.5; affirm_P += 0.5; }
-                else if (choice === 3) { reject_C += 0.5; }
-            }
-        });
-
-        let netSignal_C = affirm_C - reject_C; let netSignal_M = affirm_M - reject_M; let netSignal_P = affirm_P - reject_P;
-        let potentialHighAxes = [];
-        if (netSignal_C >= MIN_AFFIRMATION_SIGNAL_FOR_HIGH) potentialHighAxes.push({ axis: 'C', signal: netSignal_C });
-        if (netSignal_M >= MIN_AFFIRMATION_SIGNAL_FOR_HIGH) potentialHighAxes.push({ axis: 'M', signal: netSignal_M });
-        if (netSignal_P >= MIN_AFFIRMATION_SIGNAL_FOR_HIGH) potentialHighAxes.push({ axis: 'P', signal: netSignal_P });
-
-        idqAxisStates.dominantHigh = null; idqAxisStates.resisted = []; idqAxisStates.confidence = 'none';
-        if (potentialHighAxes.length > 0) {
-            potentialHighAxes.sort((a, b) => b.signal - a.signal);
-            if (potentialHighAxes.length === 1 || (potentialHighAxes[0].signal > potentialHighAxes[1].signal + DOMINANT_HIGH_SIGNAL_DIFFERENCE)) {
-                idqAxisStates.dominantHigh = potentialHighAxes[0].axis;
-                idqAxisStates.confidence = (currentStage === 1) ? 'tentative' : 'confirmed';
-            }
-        }
-        if (idqAxisStates.dominantHigh) {
-            idqAxisStates.resisted = ['C', 'M', 'P'].filter(ax => ax !== idqAxisStates.dominantHigh);
-        }
-    }
-
-    function applyDiminishingReturns(baseScores, currentTotalUserScores) {
-        if (!idqAxisStates.dominantHigh || idqAxisStates.confidence !== 'confirmed') { return baseScores; }
-        let dampened = { ...baseScores };
-        idqAxisStates.resisted.forEach(resistedAxisLetter => {
-            const axisKey = resistedAxisLetter.toLowerCase();
-            if (baseScores[axisKey] > 0) {
-                if (currentTotalUserScores[axisKey] >= MAX_ACCUMULATED_ON_RESISTED_AXIS) { dampened[axisKey] = 0; }
-                else if (currentTotalUserScores[axisKey] + baseScores[axisKey] > MAX_ACCUMULATED_ON_RESISTED_AXIS) {
-                    dampened[axisKey] = MAX_ACCUMULATED_ON_RESISTED_AXIS - currentTotalUserScores[axisKey];
-                    dampened[axisKey] = Math.max(0, dampened[axisKey]);
-                } else { dampened[axisKey] = baseScores[axisKey] * DAMPENING_FACTOR; }
-            }
-        });
-        return dampened;
-    }
-
-    function loadQuestion() {
-        if (currentQuestionDisplayNumber < questions.length) {
-            currentQuestionActualIndex = questionOrder[currentQuestionDisplayNumber];
-            const currentQuestionObject = questions[currentQuestionActualIndex];
-            if (!currentQuestionObject) {
-                console.error("Question object not found for actual index: " + currentQuestionActualIndex + " (display number " + currentQuestionDisplayNumber + ")");
-                if(quizArea) quizArea.innerHTML = "<p style='color:red'>Error loading question. Please restart.</p>"; return;
-            }
-            if (questionTextElement) questionTextElement.innerHTML = `Q${currentQuestionDisplayNumber + 1}: ${currentQuestionObject.text}`;
-            if (optionsContainer) optionsContainer.innerHTML = '';
-            const previousAnswerRecord = answerHistory.find(hist => hist.displayNumber === currentQuestionDisplayNumber);
-            let displayOptions = [...currentQuestionObject.options];
-            const shouldShuffleOptions = (currentQuestionObject.type === 'forcedChoice3' || currentQuestionObject.type === 'forcedChoice4');
-            if (shouldShuffleOptions) { displayOptions = shuffleArray(displayOptions); }
-
-            displayOptions.forEach((optionData, displayIndexInList) => {
-                const originalOptionIndex = currentQuestionObject.options.findIndex(opt => opt.text === optionData.text);
-                const inputId = `q${currentQuestionDisplayNumber}_opt${displayIndexInList}`;
-                const input = document.createElement('input'); input.type = 'radio'; input.name = `q_options_${currentQuestionDisplayNumber}`; input.id = inputId;
-                input.value = originalOptionIndex.toString(); input.dataset.scores = JSON.stringify(optionData.scores); input.dataset.originalOptionText = optionData.text;
-                if (previousAnswerRecord && previousAnswerRecord.selectedOptionIndex === originalOptionIndex) { input.checked = true; }
-                const label = document.createElement('label'); label.htmlFor = inputId; label.textContent = optionData.text;
-                if (optionsContainer) { optionsContainer.appendChild(input); optionsContainer.appendChild(label); }
-            });
-            if (progressIndicator) progressIndicator.textContent = `Question ${currentQuestionDisplayNumber + 1} of ${questions.length}`;
-            if (nextButton) nextButton.textContent = (currentQuestionDisplayNumber + 1 === questions.length) ? "Finish & See My Glorious Doom" : "Next";
-            if (backButton) backButton.style.display = (currentQuestionDisplayNumber > 0 && answerHistory.length > 0) ? 'inline-block' : 'none';
-            const showRestart = currentQuestionDisplayNumber > 0 || (resultsArea && resultsArea.style.display === 'block');
-            if (restartButton) { restartButton.style.display = isDevMode || showRestart ? 'inline-block' : 'none'; }
-        } else { showResults(); }
-    }
-
-    function getSelectedOptionData() {
-        const radioGroupName = `q_options_${currentQuestionDisplayNumber}`;
-        const selectedRadio = document.querySelector(`input[name="${radioGroupName}"]:checked`);
-        if (selectedRadio) {
-            try {
-                const scores = JSON.parse(selectedRadio.dataset.scores);
-                const validatedScores = { c: Number(scores.c) || 0, m: Number(scores.m) || 0, p: Number(scores.p) || 0 };
-                const originalIndex = parseInt(selectedRadio.value, 10); const text = selectedRadio.dataset.originalOptionText;
-                return { scores: validatedScores, originalOptionIndex: originalIndex, text: text };
-            } catch (e) { console.error("Error parsing scores:", e); return null; }
-        }
+        const high = Object.entries(net).filter(([, v]) => v >= MIN_AFFIRMATION_SIGNAL_FOR_HIGH).sort((a, b) => b[1] - a[1]);
+        if (!high.length) return null;
+        if (high.length === 1 || high[0][1] > high[1][1] + DOMINANT_HIGH_SIGNAL_DIFFERENCE) return high[0][0].toLowerCase();
         return null;
     }
 
-    if (nextButton) {
-        nextButton.addEventListener('click', () => {
-            const selectedData = getSelectedOptionData();
-            if (selectedData && typeof selectedData.originalOptionIndex !== 'undefined') {
-                const questionJustAnswered = questions[currentQuestionActualIndex];
-                let baseScoresFromOption = { ...selectedData.scores }; let scoresToAdd = { ...baseScoresFromOption };
-                const isStage1AffinityQ = stage1AffinityQuestionIds.includes(questionJustAnswered.id);
-                const isStage2AffinityQ = stage2AffinityQuestionIds.includes(questionJustAnswered.id);
+    const optScores = (o) => ({ c: Number(o.scores.c) || 0, m: Number(o.scores.m) || 0, p: Number(o.scores.p) || 0 });
 
-                if (isStage1AffinityQ || isStage2AffinityQ) { affinityOptionChoices[questionJustAnswered.id] = selectedData.originalOptionIndex; }
-                if (!isStage1AffinityQ && !isStage2AffinityQ) { scoresToAdd = applyDiminishingReturns(baseScoresFromOption, userScores); }
+    // Replays a list of answers from scratch. answers[i] = original option index for questions[order[i]].
+    // Because it always rebuilds, going Back can never leave the totals in a half-undone state.
+    function computeRaw(order, answers) {
+        const total = { c: 0, m: 0, p: 0 };
+        const choices = {};
+        let dominant = null; // only "confirmed" after both affinity stages are answered
+        const min = { c: 0, m: 0, p: 0 }, max = { c: 0, m: 0, p: 0 };
 
-                userScores.c += scoresToAdd.c; userScores.m += scoresToAdd.m; userScores.p += scoresToAdd.p;
-                answerHistory.push({ displayNumber: currentQuestionDisplayNumber, questionId: questionJustAnswered.id, originalQuestionIndex: currentQuestionActualIndex, selectedOptionIndex: selectedData.originalOptionIndex, selectedOptionText: selectedData.text, scoresAddedToUserTotal: { ...scoresToAdd }, baseScoresFromOption: { ...baseScoresFromOption } });
-
-                if (isStage1AffinityQ) {
-                    const answeredStage1Count = Object.keys(affinityOptionChoices).filter(id => stage1AffinityQuestionIds.includes(id)).length;
-                    if (answeredStage1Count === NUM_STAGE_1_QUESTIONS && !affinityStage1Complete) {
-                        affinityStage1Complete = true; determineDominantHighAndResistedAxes(1);
-                    }
-                } else if (isStage2AffinityQ) {
-                    const answeredStage2Count = Object.keys(affinityOptionChoices).filter(id => stage2AffinityQuestionIds.includes(id)).length;
-                    if (answeredStage2Count === NUM_STAGE_2_QUESTIONS && affinityStage1Complete && !affinityStage2Complete) {
-                        affinityStage2Complete = true; determineDominantHighAndResistedAxes(2);
-                    }
-                }
-                currentQuestionDisplayNumber++; loadQuestion();
-            } else { if (currentQuestionDisplayNumber < questions.length) { alert("Please select an option before proceeding, you indecisive wretch!"); } }
-        });
-    }
-
-    if (backButton) {
-        backButton.addEventListener('click', () => {
-            if (currentQuestionDisplayNumber > 0) {
-                const lastAnswerRecord = answerHistory.pop();
-                if (lastAnswerRecord) {
-                    userScores.c -= lastAnswerRecord.scoresAddedToUserTotal.c; userScores.m -= lastAnswerRecord.scoresAddedToUserTotal.m; userScores.p -= lastAnswerRecord.scoresAddedToUserTotal.p;
-                    const questionIdPopped = lastAnswerRecord.questionId;
-                    if (stage1AffinityQuestionIds.includes(questionIdPopped) || stage2AffinityQuestionIds.includes(questionIdPopped)) {
-                        delete affinityOptionChoices[questionIdPopped];
-                        if (affinityStage2Complete && stage2AffinityQuestionIds.includes(questionIdPopped)) {
-                            affinityStage2Complete = false; determineDominantHighAndResistedAxes(1);
-                        } else if (affinityStage1Complete && stage1AffinityQuestionIds.includes(questionIdPopped)) {
-                            affinityStage1Complete = false; idqAxisStates = { dominantHigh: null, resisted: [], confidence: 'none' };
-                        }
-                    }
-                }
-                currentQuestionDisplayNumber--; loadQuestion();
+        answers.forEach((optIndex, i) => {
+            if (optIndex == null) return;
+            const q = questions[order[i]];
+            for (const a of AXES) {
+                const vals = q.options.map(o => optScores(o)[a]);
+                min[a] += Math.min(...vals); max[a] += Math.max(...vals);
             }
+            let s = optScores(q.options[optIndex]);
+            const isAffinity = STAGE1.includes(q.id) || STAGE2.includes(q.id);
+            if (isAffinity) {
+                choices[q.id] = optIndex;
+                const allAnswered = [...STAGE1, ...STAGE2].every(id => id in choices);
+                if (allAnswered) dominant = dominantAxis(choices);
+            } else if (dominant) {
+                s = { ...s };
+                for (const a of AXES) {
+                    if (a === dominant || s[a] <= 0) continue;
+                    if (total[a] >= MAX_ACCUMULATED_ON_RESISTED_AXIS) s[a] = 0;
+                    else if (total[a] + s[a] > MAX_ACCUMULATED_ON_RESISTED_AXIS) s[a] = Math.max(0, MAX_ACCUMULATED_ON_RESISTED_AXIS - total[a]);
+                    else s[a] *= DAMPENING_FACTOR;
+                }
+            }
+            for (const a of AXES) total[a] += s[a];
+        });
+        return { total, min, max };
+    }
+
+    function normalise({ total, min, max }) {
+        const n = {};
+        let sum = 0;
+        for (const a of AXES) {
+            const range = (max[a] - min[a]) || 1;
+            n[a] = Math.max(0, Math.min(1, (total[a] - min[a]) / range));
+            sum += n[a];
+        }
+        if (sum === 0) return { c: 100 / 3, m: 100 / 3, p: 100 / 3 };
+        for (const a of AXES) n[a] = n[a] / sum * 100;
+        return n;
+    }
+
+    const dist = (a, b) => Math.hypot(a.c - b.c, a.m - b.m, a.p - b.p);
+
+    function rankIdeologies(pos) {
+        return IDEOLOGIES.map(i => ({ ...i, d: dist(pos, i) })).sort((a, b) => a.d - b.d);
+    }
+
+    // Distance from the centre, as a share of the distance from the centre to a corner.
+    const CENTRE = { c: 100 / 3, m: 100 / 3, p: 100 / 3 };
+    const CORNER_DIST = dist(CENTRE, { c: 100, m: 0, p: 0 });
+    const extremity = (pos) => Math.min(100, dist(pos, CENTRE) / CORNER_DIST * 100);
+
+    // ------------------------------------------------------------------
+    // Triangle geometry (C top, M bottom-left, P bottom-right)
+    // ------------------------------------------------------------------
+    const SIDE = 330, H = SIDE * Math.sqrt(3) / 2;
+    const V = { c: [200, 26], m: [200 - SIDE / 2, 26 + H], p: [200 + SIDE / 2, 26 + H] };
+    const toXY = (pt) => {
+        const s = (pt.c + pt.m + pt.p) || 100;
+        return [
+            (pt.c * V.c[0] + pt.m * V.m[0] + pt.p * V.p[0]) / s,
+            (pt.c * V.c[1] + pt.m * V.m[1] + pt.p * V.p[1]) / s,
+        ];
+    };
+    function fromXY(x, y) {
+        // barycentric coordinates, clamped into the triangle
+        const [x1, y1] = V.c, [x2, y2] = V.m, [x3, y3] = V.p;
+        const det = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
+        let c = ((y2 - y3) * (x - x3) + (x3 - x2) * (y - y3)) / det;
+        let m = ((y3 - y1) * (x - x3) + (x1 - x3) * (y - y3)) / det;
+        c = Math.max(0, c); m = Math.max(0, m);
+        let p = Math.max(0, 1 - c - m);
+        const s = c + m + p;
+        return { c: c / s * 100, m: m / s * 100, p: p / s * 100 };
+    }
+
+    const SVGNS = 'http://www.w3.org/2000/svg';
+    const el = (tag, attrs = {}, parent) => {
+        const e = document.createElementNS(SVGNS, tag);
+        for (const k in attrs) e.setAttribute(k, attrs[k]);
+        if (parent) parent.appendChild(e);
+        return e;
+    };
+
+    function drawTriangleBase(svg, { grid = true, labels = true, idPrefix = 't' } = {}) {
+        svg.innerHTML = '';
+        const defs = el('defs', {}, svg);
+        const grad = el('linearGradient', { id: `${idPrefix}-fill`, x1: '0', y1: '0', x2: '0', y2: '1' }, defs);
+        el('stop', { offset: '0', 'stop-color': 'var(--c)', 'stop-opacity': '0.16' }, grad);
+        el('stop', { offset: '1', 'stop-color': 'var(--surface-2)', 'stop-opacity': '0.0' }, grad);
+        const gradL = el('linearGradient', { id: `${idPrefix}-fill2`, x1: '0', y1: '0', x2: '1', y2: '0' }, defs);
+        el('stop', { offset: '0', 'stop-color': 'var(--m)', 'stop-opacity': '0.16' }, gradL);
+        el('stop', { offset: '1', 'stop-color': 'var(--p)', 'stop-opacity': '0.16' }, gradL);
+
+        const pts = [V.c, V.m, V.p].map(v => v.join(',')).join(' ');
+        el('polygon', { points: pts, fill: `url(#${idPrefix}-fill2)`, class: 'tri-face' }, svg);
+        el('polygon', { points: pts, fill: `url(#${idPrefix}-fill)`, class: 'tri-face' }, svg);
+
+        if (grid) {
+            const g = el('g', { class: 'tri-grid' }, svg);
+            for (let k = 20; k < 100; k += 20) {
+                // lines of constant c, m, p
+                const lines = [
+                    [{ c: k, m: 100 - k, p: 0 }, { c: k, m: 0, p: 100 - k }],
+                    [{ m: k, c: 100 - k, p: 0 }, { m: k, c: 0, p: 100 - k }],
+                    [{ p: k, c: 100 - k, m: 0 }, { p: k, c: 0, m: 100 - k }],
+                ];
+                lines.forEach(([a, b]) => {
+                    const [x1, y1] = toXY(a), [x2, y2] = toXY(b);
+                    el('line', { x1, y1, x2, y2 }, g);
+                });
+            }
+        }
+        el('polygon', { points: pts, class: 'tri-edge' }, svg);
+
+        if (labels) {
+            const lab = (txt, x, y, cls, anchor) => {
+                const t = el('text', { x, y, class: `tri-label ${cls}`, 'text-anchor': anchor }, svg);
+                t.textContent = txt;
+            };
+            lab('Centralism', V.c[0], V.c[1] - 10, 'lab-c', 'middle');
+            lab('Communalism', V.m[0] - 2, V.m[1] + 24, 'lab-m', 'start');
+            lab('Privatism', V.p[0] + 2, V.p[1] + 24, 'lab-p', 'end');
+        }
+        return svg;
+    }
+
+    // ------------------------------------------------------------------
+    // DOM
+    // ------------------------------------------------------------------
+    const $ = (id) => document.getElementById(id);
+    const screens = { intro: $('screen-intro'), quiz: $('screen-quiz'), results: $('screen-results') };
+    const optionsContainer = $('options-container');
+    const questionText = $('question-text');
+    const questionCard = $('question-card');
+
+    function show(name) {
+        for (const k in screens) screens[k].hidden = k !== name;
+        document.body.dataset.screen = name;
+        window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+    }
+
+    // Moves the background colour blobs towards the current position
+    function tintBackground(pos) {
+        const r = document.documentElement.style;
+        r.setProperty('--wc', (0.25 + pos.c / 100 * 1.1).toFixed(3));
+        r.setProperty('--wm', (0.25 + pos.m / 100 * 1.1).toFixed(3));
+        r.setProperty('--wp', (0.25 + pos.p / 100 * 1.1).toFixed(3));
+    }
+
+    // ------------------------------------------------------------------
+    // Theme
+    // ------------------------------------------------------------------
+    function applyTheme(theme) {
+        document.documentElement.dataset.theme = theme;
+    }
+    const savedTheme = localStorage.getItem('theme');
+    applyTheme(savedTheme || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
+    $('theme-toggle').addEventListener('click', () => {
+        const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        applyTheme(next);
+        localStorage.setItem('theme', next);
+    });
+
+    // ------------------------------------------------------------------
+    // Intro art: all ideologies twinkling inside the triangle
+    // ------------------------------------------------------------------
+    function drawIntroArt() {
+        const svg = drawTriangleBase($('intro-triangle'), { idPrefix: 'intro' });
+        const g = el('g', {}, svg);
+        IDEOLOGIES.forEach((i, k) => {
+            const [x, y] = toXY(i);
+            const dot = el('circle', { cx: x, cy: y, r: 4.5, class: `ideo-dot b${broadIndex(i.broad)} twinkle` }, g);
+            dot.style.animationDelay = `${(k * 0.37) % 4}s`;
+        });
+        const [cx, cy] = toXY(CENTRE);
+        el('circle', { cx, cy, r: 18, class: 'you-ring pulse' }, svg);
+        el('circle', { cx, cy, r: 8, class: 'you-dot' }, svg);
+        const t = el('text', { x: cx, y: cy + 34, class: 'you-label', 'text-anchor': 'middle' }, svg);
+        t.textContent = 'you?';
+    }
+
+    // ------------------------------------------------------------------
+    // Quiz state
+    // ------------------------------------------------------------------
+    let order = [];        // question indices in the order asked
+    let optionOrders = []; // shuffled option order per question, fixed for the run
+    let answers = [];      // chosen original option index per position
+    let current = 0;
+    let advancing = false;
+    let miniDot = null;
+
+    function shuffle(arr) {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+
+    function startQuiz() {
+        const idx = [...questions.keys()];
+        const affinity = [...STAGE1, ...STAGE2].map(id => questions.findIndex(q => q.id === id));
+        if (affinity.some(i => i < 0)) {
+            console.error('Affinity questions missing; asking in file order.');
+            order = idx;
+        } else {
+            order = [...affinity, ...idx.filter(i => !affinity.includes(i))];
+        }
+        optionOrders = order.map(qi => {
+            const q = questions[qi];
+            const keys = [...q.options.keys()];
+            return q.type === 'agreeDisagree' ? keys : shuffle(keys);
+        });
+        answers = new Array(order.length).fill(null);
+        current = 0;
+        history.replaceState(null, '', location.pathname + location.search);
+        show('quiz');
+        drawMini();
+        renderQuestion('none');
+    }
+
+    function drawMini() {
+        const svg = drawTriangleBase($('mini-triangle'), { grid: false, labels: false, idPrefix: 'mini' });
+        const [x, y] = toXY(CENTRE);
+        miniDot = el('circle', { cx: x, cy: y, r: 22, class: 'you-dot mini-dot' }, svg);
+    }
+
+    function livePosition() {
+        const answered = answers.slice(0, current).some(a => a != null);
+        if (!answered) return CENTRE;
+        return normalise(computeRaw(order, answers.slice(0, current)));
+    }
+
+    function updateLive() {
+        const pos = livePosition();
+        const [x, y] = toXY(pos);
+        if (miniDot) { miniDot.setAttribute('cx', x); miniDot.setAttribute('cy', y); }
+        tintBackground(pos);
+    }
+
+    // Strip the wrapping quote marks some questions carry, and render *emphasis*.
+    function formatText(s) {
+        const safe = s.replace(/^"(.*)"$/s, '$1')
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return safe.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    }
+
+    function renderQuestion(direction) {
+        const q = questions[order[current]];
+        const total = order.length;
+        $('progress-label').textContent = `${current + 1} / ${total}`;
+        $('progress').setAttribute('aria-valuenow', current + 1);
+        $('progress-fill').style.width = `${(current / total) * 100}%`;
+        $('question-kicker').textContent = current < 3 ? 'Warm-up' : current < 6 ? 'Thought experiment' : `Question ${current + 1}`;
+        $('back-button').disabled = current === 0;
+
+        questionText.innerHTML = formatText(q.text);
+        optionsContainer.innerHTML = '';
+        optionOrders[current].forEach((origIdx, displayIdx) => {
+            const o = q.options[origIdx];
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'option';
+            b.setAttribute('role', 'radio');
+            b.setAttribute('aria-checked', answers[current] === origIdx ? 'true' : 'false');
+            if (answers[current] === origIdx) b.classList.add('selected');
+            b.dataset.orig = origIdx;
+            b.innerHTML = `<span class="key">${displayIdx + 1}</span><span class="opt-text">${formatText(o.text)}</span>`;
+            b.addEventListener('click', () => choose(origIdx, b));
+            optionsContainer.appendChild(b);
+        });
+
+        if (direction !== 'none' && !reduceMotion) {
+            questionCard.classList.remove('enter-fwd', 'enter-back');
+            void questionCard.offsetWidth;
+            questionCard.classList.add(direction === 'back' ? 'enter-back' : 'enter-fwd');
+        }
+        updateLive();
+    }
+
+    function choose(origIdx, button) {
+        if (advancing) return;
+        advancing = true;
+        answers[current] = origIdx;
+        optionsContainer.querySelectorAll('.option').forEach(o => {
+            const on = o === button;
+            o.classList.toggle('selected', on);
+            o.setAttribute('aria-checked', on ? 'true' : 'false');
+        });
+        setTimeout(() => {
+            advancing = false;
+            if (current + 1 >= order.length) {
+                finishQuiz();
+            } else {
+                current++;
+                renderQuestion('fwd');
+            }
+        }, reduceMotion ? 80 : 320);
+    }
+
+    function goBack() {
+        if (advancing || current === 0) return;
+        current--;
+        renderQuestion('back');
+    }
+
+    function finishQuiz() {
+        $('progress-fill').style.width = '100%';
+        const raw = computeRaw(order, answers);
+        const pos = normalise(raw);
+        history.replaceState(null, '', `${location.pathname}${location.search}#r=${encodePos(pos)}`);
+        try { sessionStorage.setItem('ownResult', encodePos(pos)); } catch (e) { /* private mode */ }
+        showResults(pos, { raw, shared: false });
+    }
+
+    // ------------------------------------------------------------------
+    // Results
+    // ------------------------------------------------------------------
+    const encodePos = (pos) => AXES.map(a => pos[a].toFixed(1)).join(',');
+    function decodePos(str) {
+        const parts = (str || '').split(',').map(Number);
+        if (parts.length !== 3 || parts.some(n => !isFinite(n) || n < 0)) return null;
+        const s = parts[0] + parts[1] + parts[2];
+        if (s <= 0) return null;
+        return { c: parts[0] / s * 100, m: parts[1] / s * 100, p: parts[2] / s * 100 };
+    }
+
+    let resultState = null;
+
+    function extremityQuip(x) {
+        if (x < 15) return 'Aggressively moderate. You probably own a beige fleece.';
+        if (x < 35) return 'Opinions, yes. Pitchforks, not yet.';
+        if (x < 60) return 'Strong views, lightly held. Mostly strong.';
+        if (x < 80) return 'You have a manifesto. It has footnotes.';
+        return 'You are the corner. The corner is you.';
+    }
+
+    function showResults(pos, { raw = null, shared = false } = {}) {
+        show('results');
+        $('shared-note').hidden = !shared;
+        $('results-eyebrow').textContent = shared ? 'Their gloriously flawed result' : 'Your gloriously flawed result';
+        $('dev-panel').hidden = !isDevMode;
+        $('map-hint').textContent = isDevMode ? 'Dev mode: click or drag to move the dot.' : 'Tap any dot to read about that ideology.';
+
+        const svg = drawTriangleBase($('result-triangle'), { idPrefix: 'res' });
+        const linkLayer = el('g', { class: 'links' }, svg);
+        const dotLayer = el('g', {}, svg);
+        const labelLayer = el('g', { class: 'dot-labels' }, svg);
+        const youLayer = el('g', { class: 'you' }, svg);
+
+        const dots = new Map();
+        IDEOLOGIES.forEach(i => {
+            const [x, y] = toXY(i);
+            const g = el('g', { class: 'ideo', tabindex: '0', role: 'button', 'aria-label': i.name }, dotLayer);
+            el('circle', { cx: x, cy: y, r: 13, class: 'hit' }, g);
+            const c = el('circle', { cx: x, cy: y, r: 5, class: `ideo-dot b${broadIndex(i.broad)}` }, g);
+            const title = el('title', {}, g); title.textContent = i.name;
+            g.addEventListener('click', () => focusIdeology(i.name));
+            g.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); focusIdeology(i.name); } });
+            dots.set(i.name, { g, c, x, y });
+        });
+
+        const [cx0, cy0] = toXY(CENTRE);
+        const ring = el('circle', { cx: cx0, cy: cy0, r: 16, class: 'you-ring pulse' }, youLayer);
+        const you = el('circle', { cx: cx0, cy: cy0, r: 8, class: 'you-dot' }, youLayer);
+
+        resultState = { pos, raw, svg, dots, linkLayer, labelLayer, ring, you, focused: null };
+
+        drawLegend();
+        updateResultsView(pos, { animate: !reduceMotion && !isDevMode, firstReveal: true });
+
+        if (isDevMode) enableDrag(svg);
+    }
+
+    function updateResultsView(pos, { animate = false, firstReveal = false } = {}) {
+        const st = resultState;
+        st.pos = pos;
+        const ranked = rankIdeologies(pos);
+        const top = ranked.slice(0, 3);
+        st.top = top;
+
+        // Headline
+        $('result-name').textContent = top[0].name;
+        $('result-broad').textContent = top[0].broad;
+        if (firstReveal && !reduceMotion) {
+            $('result-name').classList.remove('reveal'); void $('result-name').offsetWidth; $('result-name').classList.add('reveal');
+        }
+
+        // Dot position
+        const [x, y] = toXY(pos);
+        const move = () => {
+            st.you.setAttribute('cx', x); st.you.setAttribute('cy', y);
+            st.ring.setAttribute('cx', x); st.ring.setAttribute('cy', y);
+        };
+        if (animate) {
+            st.svg.classList.add('animating');
+            requestAnimationFrame(() => requestAnimationFrame(move));
+            setTimeout(() => st.svg.classList.remove('animating'), 1400);
+        } else move();
+
+        // Highlight top three with links and labels
+        st.linkLayer.innerHTML = '';
+        st.labelLayer.innerHTML = '';
+        st.dots.forEach(d => d.g.classList.remove('top', 'top1'));
+        top.forEach((t, k) => {
+            const d = st.dots.get(t.name);
+            d.g.classList.add('top');
+            if (k === 0) d.g.classList.add('top1');
+            const line = el('line', { x1: x, y1: y, x2: d.x, y2: d.y, class: `link link${k}` }, st.linkLayer);
+            if (animate) line.style.animationDelay = `${1.0 + k * 0.15}s`;
+        });
+        const d0 = st.dots.get(top[0].name);
+        // put the label on the far side of the match dot from "you", so they never overlap
+        let ux = d0.x - x, uy = d0.y - y;
+        const len = Math.hypot(ux, uy);
+        if (len < 1) { ux = 0; uy = -1; } else { ux /= len; uy /= len; }
+        let lx = d0.x + ux * 16, ly = d0.y + uy * 16 + (uy > 0.3 ? 10 : uy < -0.3 ? -2 : 4);
+        let anchor = Math.abs(ux) < 0.35 ? labelAnchor(d0.x) : (ux > 0 ? 'start' : 'end');
+        if (ly > V.m[1] - 8) {
+            // would collide with the base edge and corner labels: go sideways instead
+            const side = ux >= 0 ? 1 : -1;
+            lx = d0.x + side * 14; ly = d0.y - 10; anchor = side > 0 ? 'start' : 'end';
+        }
+        const lab = el('text', { x: lx, y: ly, class: 'dot-label', 'text-anchor': anchor }, st.labelLayer);
+        lab.textContent = shortName(top[0].name);
+
+        // Closest three list
+        const list = $('match-list');
+        list.innerHTML = '';
+        const maxD = Math.max(...top.map(t => t.d), 1);
+        top.forEach((t, k) => {
+            const li = document.createElement('li');
+            const closeness = Math.max(6, 100 - (t.d / Math.max(maxD * 1.6, 25)) * 100);
+            li.innerHTML = `<button type="button" class="match"><span class="match-name"><i class="sw b${broadIndex(t.broad)}"></i>${t.name}</span><span class="match-d">${t.d.toFixed(1)} pts away</span><span class="bar"><span style="width:${closeness.toFixed(0)}%"></span></span></button>`;
+            li.querySelector('button').addEventListener('click', () => focusIdeology(t.name));
+            if (k === 0) li.classList.add('first');
+            list.appendChild(li);
+        });
+
+        // Mix bars
+        const mix = $('mix-bars');
+        mix.innerHTML = '';
+        AXES.forEach(a => {
+            const row = document.createElement('div');
+            row.className = `mix-row mix-${a}`;
+            row.innerHTML = `<div class="mix-top"><span><b>${AXIS_INFO[a].name}</b> <small>${AXIS_INFO[a].blurb}</small></span><b>${pos[a].toFixed(0)}%</b></div><div class="meter"><div class="meter-fill" style="width:${pos[a].toFixed(1)}%"></div></div>`;
+            mix.appendChild(row);
+        });
+        const ex = extremity(pos);
+        $('extremity-value').textContent = `${ex.toFixed(0)}%`;
+        $('extremity-fill').style.width = `${ex.toFixed(1)}%`;
+        $('extremity-quip').textContent = extremityQuip(ex);
+
+        tintBackground(pos);
+        focusIdeology(null);
+
+        if (isDevMode) {
+            const r = st.raw;
+            $('dev-readout').textContent =
+                `C ${pos.c.toFixed(2)}  M ${pos.m.toFixed(2)}  P ${pos.p.toFixed(2)}\n` +
+                (r ? `raw C ${r.total.c.toFixed(2)}  M ${r.total.m.toFixed(2)}  P ${r.total.p.toFixed(2)}\n` : '') +
+                ranked.slice(0, 5).map(t => `${t.d.toFixed(2).padStart(6)}  ${t.name}`).join('\n');
+        }
+    }
+
+    const shortName = (n) => n.split(/ \(| \//)[0];
+    const labelAnchor = (x) => (x < 120 ? 'start' : x > 280 ? 'end' : 'middle');
+
+    function focusIdeology(name) {
+        const st = resultState;
+        const target = name ? IDEOLOGIES.find(i => i.name === name) : st.top[0];
+        const isOwn = !name || name === st.top[0].name;
+        const d = dist(st.pos, target);
+        const rank = rankIdeologies(st.pos).findIndex(i => i.name === target.name) + 1;
+        $('focus-label').textContent = isOwn ? 'Your closest match' : `Your #${rank} closest of ${IDEOLOGIES.length}`;
+        $('focus-name').textContent = target.name;
+        $('focus-meta').innerHTML = `<i class="sw b${broadIndex(target.broad)}"></i>${target.broad} &middot; ${d.toFixed(1)} pts from you &middot; C ${target.c} / M ${target.m} / P ${target.p}`;
+        $('focus-summary').innerHTML = formatText(ideologySummaries[target.name] || ideologySummaries[target.broad] || 'No summary written yet.');
+        $('focus-reset').hidden = isOwn;
+        st.dots.forEach((dd, n) => dd.g.classList.toggle('focused', !isOwn && n === target.name));
+        const card = $('focus-card');
+        card.classList.remove('flash'); void card.offsetWidth; card.classList.add('flash');
+        if (name && matchMedia('(max-width: 860px)').matches) card.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
+    }
+
+    function drawLegend() {
+        const lg = $('legend');
+        lg.innerHTML = '';
+        BROAD_ORDER.forEach((b, k) => {
+            const s = document.createElement('span');
+            s.innerHTML = `<i class="sw b${k}"></i>${b}`;
+            lg.appendChild(s);
         });
     }
 
-    function normalizeScores(rawScores, minMax) {
-        let rangeC = (minMax.c.max - minMax.c.min); let rangeM = (minMax.m.max - minMax.m.min); let rangeP = (minMax.p.max - minMax.p.min);
-        if (rangeC === 0) rangeC = 1; if (rangeM === 0) rangeM = 1; if (rangeP === 0) rangeP = 1;
-        let normC_intermediate = (rawScores.c - minMax.c.min) / rangeC; let normM_intermediate = (rawScores.m - minMax.m.min) / rangeM; let normP_intermediate = (rawScores.p - minMax.p.min) / rangeP;
-        normC_intermediate = Math.max(0, Math.min(1, normC_intermediate)); normM_intermediate = Math.max(0, Math.min(1, normM_intermediate)); normP_intermediate = Math.max(0, Math.min(1, normP_intermediate));
-        const totalIntermediate = normC_intermediate + normM_intermediate + normP_intermediate;
-        if (totalIntermediate === 0) return { c: 33.33, m: 33.33, p: 33.34 };
-        let c = parseFloat(((normC_intermediate / totalIntermediate) * 100).toFixed(2)); let m = parseFloat(((normM_intermediate / totalIntermediate) * 100).toFixed(2)); let p = parseFloat((100.0 - c - m).toFixed(2));
-        c = Math.max(0, Math.min(100, c)); m = Math.max(0, Math.min(100, m)); p = Math.max(0, Math.min(100, p));
-        let finalSum = c + m + p; const epsilon = 0.03;
-        if (Math.abs(finalSum - 100.0) > epsilon) { p = parseFloat((100.0 - c - m).toFixed(2)); p = Math.max(0, Math.min(100, p)); }
-        return { c: c, m: m, p: p };
+    function enableDrag(svg) {
+        let dragging = false;
+        const at = (e) => {
+            const pt = svg.createSVGPoint();
+            pt.x = e.clientX; pt.y = e.clientY;
+            const p = pt.matrixTransform(svg.getScreenCTM().inverse());
+            resultState.raw = null;
+            updateResultsView(fromXY(p.x, p.y));
+            history.replaceState(null, '', `${location.pathname}${location.search}#r=${encodePos(resultState.pos)}`);
+        };
+        svg.addEventListener('pointerdown', (e) => { dragging = true; svg.setPointerCapture(e.pointerId); at(e); });
+        svg.addEventListener('pointermove', (e) => { if (dragging) at(e); });
+        svg.addEventListener('pointerup', () => { dragging = false; });
+        svg.style.touchAction = 'none';
+        svg.style.cursor = 'crosshair';
     }
 
-    function updateAllDisplaysFromInternalState() { for (const key in devSliderControlsState) { const s = devSliderControlsState[key]; if (s.input && s.span && s.label && s.lockStatusSpan) { s.value = parseFloat(s.value.toFixed(1)); s.input.value = s.value.toFixed(1); s.span.textContent = `${s.value.toFixed(1)}%`; s.lockStatusSpan.textContent = s.locked ? "(Locked)" : ""; s.label.classList.toggle('locked-label', s.locked); s.input.disabled = s.locked; } } }
-    function reBalanceSliders(changedKey = null) { let sumLocked = 0; let unlockedKeys = []; let sumOfUnlockedOriginalValues = 0; for (const key in devSliderControlsState) { const s = devSliderControlsState[key]; let currentValue = (key === changedKey && !s.locked) ? parseFloat(s.input.value) : s.value; currentValue = parseFloat(Math.max(0, Math.min(100, currentValue)).toFixed(1)); s.value = currentValue; if (s.locked) { sumLocked += s.value; } else { unlockedKeys.push(key); sumOfUnlockedOriginalValues += s.value; } } let availableForUnlocked = 100.0 - sumLocked; availableForUnlocked = Math.max(0, availableForUnlocked); if (unlockedKeys.length > 0) { if (unlockedKeys.includes(changedKey)) { let valueOfChanged = devSliderControlsState[changedKey].value; valueOfChanged = Math.min(valueOfChanged, availableForUnlocked); devSliderControlsState[changedKey].value = valueOfChanged; let sumForOthers = availableForUnlocked - valueOfChanged; sumForOthers = Math.max(0, sumForOthers); let otherUnlockedKeys = unlockedKeys.filter(k => k !== changedKey); if (otherUnlockedKeys.length > 0) { let sumOfOriginalValuesOfOthers = 0; otherUnlockedKeys.forEach(k => sumOfOriginalValuesOfOthers += devSliderControlsState[k].value); if (Math.abs(sumOfOriginalValuesOfOthers) < 0.01) { const valPer = sumForOthers / otherUnlockedKeys.length; otherUnlockedKeys.forEach(k => devSliderControlsState[k].value = valPer); } else { otherUnlockedKeys.forEach(k => { const proportion = devSliderControlsState[k].value / sumOfOriginalValuesOfOthers; devSliderControlsState[k].value = proportion * sumForOthers; }); } } } else { if (Math.abs(sumOfUnlockedOriginalValues) < 0.01 && unlockedKeys.length > 0) { const valPer = availableForUnlocked / unlockedKeys.length; unlockedKeys.forEach(k => devSliderControlsState[k].value = valPer); } else if (unlockedKeys.length > 0 && sumOfUnlockedOriginalValues !== 0) { unlockedKeys.forEach(k => { const proportion = devSliderControlsState[k].value / sumOfUnlockedOriginalValues; devSliderControlsState[k].value = proportion * availableForUnlocked; }); } } } let currentTotal = 0; for (const key in devSliderControlsState) { devSliderControlsState[key].value = parseFloat(Math.max(0, Math.min(100, devSliderControlsState[key].value)).toFixed(1)); currentTotal += devSliderControlsState[key].value; } let diff = 100.0 - currentTotal; if (Math.abs(diff) >= 0.05) { const orderOfPreference = ['P', 'M', 'C']; for (const key of orderOfPreference) { if (unlockedKeys.includes(key)) { let newVal = devSliderControlsState[key].value + diff; if (newVal >= -0.049 && newVal <= 100.049) { devSliderControlsState[key].value = parseFloat(Math.max(0, Math.min(100, newVal)).toFixed(1)); break; } } } } if (!devSliderControlsState.P.locked && (devSliderControlsState.C.locked || devSliderControlsState.M.locked)) { devSliderControlsState.P.value = parseFloat(Math.max(0, Math.min(100, 100.0 - devSliderControlsState.C.value - devSliderControlsState.M.value)).toFixed(1)); } else if (!devSliderControlsState.M.locked && (devSliderControlsState.C.locked || devSliderControlsState.P.locked)) { devSliderControlsState.M.value = parseFloat(Math.max(0, Math.min(100, 100.0 - devSliderControlsState.C.value - devSliderControlsState.P.value)).toFixed(1)); } else if (!devSliderControlsState.C.locked && (devSliderControlsState.M.locked || devSliderControlsState.P.locked)) { devSliderControlsState.C.value = parseFloat(Math.max(0, Math.min(100, 100.0 - devSliderControlsState.M.value - devSliderControlsState.P.value)).toFixed(1)); } updateAllDisplaysFromInternalState(); triggerResultsUpdate(); }
-    function triggerResultsUpdate() { clearTimeout(debounceTimer); debounceTimer = setTimeout(updateResultsFromDevControls, 100); }
-    function setupDevControls() { devControlsContainer.innerHTML = `<h3>Developer Controls (Normalized Scores %)</h3><div><label for="devC" id="labelC" title="Double-click to lock/unlock">Centralism (C):</label><input type="range" id="devC" min="0" max="100" value="33.3" step="0.1"><span id="devCValue">33.3%</span><span id="lockStatusC" class="lock-status"></span></div><div><label for="devM" id="labelM" title="Double-click to lock/unlock">Communalism (M):</label><input type="range" id="devM" min="0" max="100" value="33.3" step="0.1"><span id="devMValue">33.3%</span><span id="lockStatusM" class="lock-status"></span></div><div><label for="devP" id="labelP" title="Double-click to lock/unlock">Privatism (P):</label><input type="range" id="devP" min="0" max="100" value="33.4" step="0.1"><span id="devPValue">33.4%</span><span id="lockStatusP" class="lock-status"></span></div><p style="font-size:0.8em; color: #555;">Double-click a label to lock/unlock its slider. Sliders will auto-balance.</p>`; const style = document.createElement('style'); style.textContent = `.lock-status { margin-left: 5px; font-size: 0.8em; color: #d9534f; font-style: italic; } label.locked-label { font-weight: bold; color: #d9534f !important; cursor: pointer; } label:not(.locked-label) { cursor: pointer; } input[type="range"]:disabled { opacity: 0.6; }`; document.head.appendChild(style); if (resultsArea && rawScoresElement && resultsArea.contains(rawScoresElement)) { resultsArea.insertBefore(devControlsContainer, rawScoresElement); } else if (resultsArea) { resultsArea.appendChild(devControlsContainer); } else { console.error("Cannot setup dev controls: resultsArea not found."); return; } devSliderControlsState = { C: { input: document.getElementById('devC'), span: document.getElementById('devCValue'), label: document.getElementById('labelC'), lockStatusSpan: document.getElementById('lockStatusC'), locked: false, value: 33.3 }, M: { input: document.getElementById('devM'), span: document.getElementById('devMValue'), label: document.getElementById('labelM'), lockStatusSpan: document.getElementById('lockStatusM'), locked: false, value: 33.3 }, P: { input: document.getElementById('devP'), span: document.getElementById('devPValue'), label: document.getElementById('labelP'), lockStatusSpan: document.getElementById('lockStatusP'), locked: false, value: 33.4 } }; updateAllDisplaysFromInternalState(); for (const key in devSliderControlsState) { const s = devSliderControlsState[key]; s.input.addEventListener('input', (event) => { if (s.locked) { event.target.value = s.value.toFixed(1); return; } reBalanceSliders(key); }); s.label.addEventListener('dblclick', () => { s.locked = !s.locked; s.input.disabled = s.locked; if (s.locked) { s.value = parseFloat(s.input.value); } reBalanceSliders(); }); } reBalanceSliders(); }
+    // ------------------------------------------------------------------
+    // Sharing
+    // ------------------------------------------------------------------
+    const baseUrl = () => location.href.split(/[?#]/)[0];
 
-    function getIdeologyLabelAndSarcasm(normC_user, normM_user, normP_user) {
-        let bestMatch = { specific: "Mixed / Eclectic Political Outlook", broadCategory: "Mixed / Eclectic Political Outlook", summary: "", distanceToClosest: MAX_POSSIBLE_DISTANCE_IN_TERNARY_SPACE, proximityPrimary: 0, secondClosestSpecific: null, distanceToSecondClosest: MAX_POSSIBLE_DISTANCE_IN_TERNARY_SPACE, proximitySecondary: 0 };
-        if (typeof ideologyIdealPoints === 'undefined' || Object.keys(ideologyIdealPoints).length === 0) { console.error("ideology_ideal_points.js not loaded or empty for getIdeologyLabelAndSarcasm!"); bestMatch.summary = ideologySummaries[bestMatch.specific] || "Error: Ideal points data missing."; return bestMatch; }
-        if (typeof ideologySummaries === 'undefined') { console.error("ideology_summaries.js not loaded for getIdeologyLabelAndSarcasm!"); bestMatch.summary = "Error: Summaries data missing."; return bestMatch; }
-        let C_user = parseFloat(normC_user); let M_user = parseFloat(normM_user); let P_user = parseFloat(normP_user);
-        let sumUser = C_user + M_user + P_user;
-        if (Math.abs(sumUser - 100.0) > 0.01) { if (sumUser === 0) { C_user = 33.33; M_user = 33.33; P_user = 33.34; } else { const scale = 100.0 / sumUser; C_user = parseFloat((C_user * scale).toFixed(2)); M_user = parseFloat((M_user * scale).toFixed(2)); } P_user = parseFloat((100.0 - C_user - M_user).toFixed(2)); }
-        C_user = Math.max(0, Math.min(100, C_user)); M_user = Math.max(0, Math.min(100, M_user)); P_user = Math.max(0, Math.min(100, P_user)); P_user = parseFloat((100.0 - C_user - M_user).toFixed(2));
-        let distances = [];
-        for (const ideologyName in ideologyIdealPoints) {
-            const ideal = ideologyIdealPoints[ideologyName];
-            if (typeof ideal.c !== 'number' || typeof ideal.m !== 'number' || typeof ideal.p !== 'number' || typeof ideal.broad !== 'string') { console.warn(`Skipping invalid ideal point structure for: ${ideologyName}`); continue; }
-            const distance = Math.sqrt(Math.pow(C_user - ideal.c, 2) + Math.pow(M_user - ideal.m, 2) + Math.pow(P_user - ideal.p, 2));
-            distances.push({ name: ideologyName, distance: distance, broad: ideal.broad });
+    async function copy(text, okMsg) {
+        try {
+            await navigator.clipboard.writeText(text);
+            toast(okMsg);
+        } catch (e) {
+            const ta = document.createElement('textarea');
+            ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta); ta.select();
+            const ok = document.execCommand && document.execCommand('copy');
+            ta.remove();
+            toast(ok ? okMsg : 'Copy failed. Your browser said no.');
         }
-        if (distances.length === 0) { console.error("No valid ideal points found for distance calculation."); bestMatch.summary = ideologySummaries[bestMatch.specific] || "Error: No ideal points."; return bestMatch; }
-        distances.sort((a, b) => a.distance - b.distance);
-        bestMatch.specific = distances[0].name; bestMatch.broadCategory = distances[0].broad; bestMatch.distanceToClosest = distances[0].distance;
-        bestMatch.proximityPrimary = Math.max(0, parseFloat(((1 - (bestMatch.distanceToClosest / MAX_POSSIBLE_DISTANCE_IN_TERNARY_SPACE)) * 100).toFixed(1)));
-        let foundSecond = false;
-        for (let i = 1; i < distances.length; i++) { if (distances[i].name !== bestMatch.specific) { bestMatch.secondClosestSpecific = distances[i].name; bestMatch.distanceToSecondClosest = distances[i].distance; bestMatch.proximitySecondary = Math.max(0, parseFloat(((1 - (bestMatch.distanceToSecondClosest / MAX_POSSIBLE_DISTANCE_IN_TERNARY_SPACE)) * 100).toFixed(1))); foundSecond = true; break; } }
-        if (!foundSecond) { bestMatch.secondClosestSpecific = null; bestMatch.distanceToSecondClosest = MAX_POSSIBLE_DISTANCE_IN_TERNARY_SPACE; bestMatch.proximitySecondary = 0; }
-        if (ideologySummaries[bestMatch.specific]) { bestMatch.summary = ideologySummaries[bestMatch.specific]; }
-        else if (ideologySummaries[bestMatch.broadCategory]) { bestMatch.summary = ideologySummaries[bestMatch.broadCategory]; if (bestMatch.specific !== bestMatch.broadCategory && bestMatch.specific !== "Mixed / Eclectic Political Outlook") { bestMatch.summary += ` (Specific leaning towards ${bestMatch.specific}.)`; } }
-        else { const ultimateFallbackSpecific = "Mixed / Eclectic Political Outlook"; bestMatch.specific = ultimateFallbackSpecific; bestMatch.broadCategory = ultimateFallbackSpecific; bestMatch.summary = ideologySummaries[ultimateFallbackSpecific] || "Your political profile is a unique enigma! (Summary data incomplete)"; if (!ideologySummaries[ultimateFallbackSpecific]) console.error("Critical Error: Summary for 'Mixed / Eclectic Political Outlook' is missing!"); }
-        if (bestMatch.secondClosestSpecific === bestMatch.specific || bestMatch.secondClosestSpecific === "Mixed / Eclectic Political Outlook") { bestMatch.secondClosestSpecific = null; bestMatch.distanceToSecondClosest = MAX_POSSIBLE_DISTANCE_IN_TERNARY_SPACE; bestMatch.proximitySecondary = 0; }
-        return bestMatch;
     }
 
-    function calculateAndDisplayExtremityScore(currentNormalizedScores, currentRawUserScores) {
-        if (!minMaxRawScores || !minMaxRawScores.c || typeof minMaxRawScores.c.min === 'undefined') { console.error("minMaxRawScores not fully available for extremity calculation."); if (extremityScoreDisplayElement) extremityScoreDisplayElement.innerHTML = `<b>Overall Profile Extremity:</b> Data N/A`; return; }
-        const mid_C = (minMaxRawScores.c.max + minMaxRawScores.c.min) / 2; const mid_M = (minMaxRawScores.m.max + minMaxRawScores.m.min) / 2; const mid_P = (minMaxRawScores.p.max + minMaxRawScores.p.min) / 2;
-        const dev_C = Math.abs(currentRawUserScores.c - mid_C); const dev_M = Math.abs(currentRawUserScores.m - mid_M); const dev_P = Math.abs(currentRawUserScores.p - mid_P);
-        const rawExtremityScore = dev_C + dev_M + dev_P;
-        const max_dev_C = (minMaxRawScores.c.max - minMaxRawScores.c.min) / 2; const max_dev_M = (minMaxRawScores.m.max - minMaxRawScores.m.min) / 2; const max_dev_P = (minMaxRawScores.p.max - minMaxRawScores.p.min) / 2;
-        const theoreticalMaxRawExtremity = max_dev_C + max_dev_M + max_dev_P;
-        let extremityPercentage = 0;
-        if (theoreticalMaxRawExtremity > 0) { extremityPercentage = Math.min(100, (rawExtremityScore / theoreticalMaxRawExtremity) * 100); }
-        extremityPercentage = Math.max(0, parseFloat(extremityPercentage.toFixed(1)));
-        if (extremityScoreDisplayElement) { extremityScoreDisplayElement.style.display = 'block'; extremityScoreDisplayElement.innerHTML = `<b>Overall Profile Extremity:</b> ${extremityPercentage}%`; if (isDevMode) { extremityScoreDisplayElement.innerHTML += ` <span style="font-size:0.8em; color:#777;">(Approximated for Dev Mode)</span>`; } }
+    let toastTimer;
+    function toast(msg) {
+        const t = $('toast');
+        t.textContent = msg;
+        t.hidden = false;
+        t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => { t.hidden = true; }, 2600);
     }
 
-    function showResults() {
-        if(quizArea) quizArea.style.display = 'none'; if(resultsArea) resultsArea.style.display = 'block'; if(progressIndicator) progressIndicator.style.display = 'none'; if(restartButton && !isDevMode) restartButton.style.display = 'block'; if(backButton) backButton.style.display = 'none';
-        const finalNormalizedScores = normalizeScores(userScores, minMaxRawScores);
-        if(rawScoresElement) rawScoresElement.innerHTML = `Raw Scores (End of Quiz):<br>C: ${userScores.c.toFixed(2)}, M: ${userScores.m.toFixed(2)}, P: ${userScores.p.toFixed(2)}`;
-        if(normalizedScoresElement) normalizedScoresElement.innerHTML = `Normalized Scores (Final):<br>C: ${finalNormalizedScores.c.toFixed(2)}%, M: ${finalNormalizedScores.m.toFixed(2)}%, P: ${finalNormalizedScores.p.toFixed(2)}%`;
-        if (typeof minMaxRawScores.c.min !== 'undefined') { calculateAndDisplayExtremityScore(finalNormalizedScores, userScores); }
-        const ideologyInfo = getIdeologyLabelAndSarcasm(finalNormalizedScores.c, finalNormalizedScores.m, finalNormalizedScores.p);
-        displayIdeologyInfo(ideologyInfo); let plotTitle = determinePlotTitle(ideologyInfo);
-        if (typeof Plotly !== 'undefined') { drawPlot(finalNormalizedScores, plotTitle); }
-        else { console.error("Plotly undefined in showResults. Plot not drawn."); if(plotDiv) plotDiv.innerHTML = "<p style='color:orange; text-align:center;'>Plot could not be displayed (Plotly library issue).</p>"; }
-        applyTheme(document.body.classList.contains('dark-mode') ? 'dark' : 'light');
-    }
+    $('copy-link-button').addEventListener('click', () => {
+        copy(`${baseUrl()}#r=${encodePos(resultState.pos)}`, 'Share link copied. Spread the despair.');
+    });
+    $('copy-text-button').addEventListener('click', () => {
+        const { pos, top } = resultState;
+        const lines = [
+            'My Sarcastic Political Test result:',
+            `${top[0].name} (${top[0].broad})`,
+            `Centralism ${pos.c.toFixed(0)}% / Communalism ${pos.m.toFixed(0)}% / Privatism ${pos.p.toFixed(0)}%`,
+            `Also close to: ${top[1].name}, ${top[2].name}`,
+            '',
+            `See it: ${baseUrl()}#r=${encodePos(pos)}`,
+        ];
+        copy(lines.join('\n'), 'Result copied as text.');
+    });
 
-    function updateResultsFromDevControls() {
-        let cVal = parseFloat(devSliderControlsState.C.value); let mVal = parseFloat(devSliderControlsState.M.value); let pVal = parseFloat(devSliderControlsState.P.value);
-        let tempSum = cVal + mVal;
-        if (tempSum > 100.0) { if (tempSum > 0) { cVal = (cVal / tempSum) * 100.0; mVal = 100.0 - cVal; } else { cVal = 33.33; mVal = 33.33; } pVal = 0.0; } else { pVal = 100.0 - cVal - mVal; }
-        cVal = parseFloat(Math.max(0, Math.min(100, cVal)).toFixed(2)); mVal = parseFloat(Math.max(0, Math.min(100, mVal)).toFixed(2)); pVal = parseFloat(Math.max(0, Math.min(100, pVal)).toFixed(2));
-        pVal = parseFloat((100.0 - cVal - mVal).toFixed(2)); pVal = Math.max(0, pVal);
-        const normalizedScoresToUse = { c: cVal, m: mVal, p: pVal };
-        if (devSliderControlsState.C.input && ( Math.abs(parseFloat(devSliderControlsState.C.input.value) - normalizedScoresToUse.c) > 0.05 || Math.abs(parseFloat(devSliderControlsState.M.input.value) - normalizedScoresToUse.m) > 0.05 || Math.abs(parseFloat(devSliderControlsState.P.input.value) - normalizedScoresToUse.p) > 0.05 )) {
-            devSliderControlsState.C.input.value = normalizedScoresToUse.c.toFixed(1); devSliderControlsState.M.input.value = normalizedScoresToUse.m.toFixed(1); devSliderControlsState.P.input.value = normalizedScoresToUse.p.toFixed(1);
-            devSliderControlsState.C.value = parseFloat(normalizedScoresToUse.c.toFixed(1)); devSliderControlsState.M.value = parseFloat(normalizedScoresToUse.m.toFixed(1)); devSliderControlsState.P.value = parseFloat(normalizedScoresToUse.p.toFixed(1));
-            if (devSliderControlsState.C.span) devSliderControlsState.C.span.textContent = `${devSliderControlsState.C.value}%`; if (devSliderControlsState.M.span) devSliderControlsState.M.span.textContent = `${devSliderControlsState.M.value}%`; if (devSliderControlsState.P.span) devSliderControlsState.P.span.textContent = `${devSliderControlsState.P.value}%`;
+    // ------------------------------------------------------------------
+    // Wiring
+    // ------------------------------------------------------------------
+    $('start-button').addEventListener('click', startQuiz);
+    $('restart-button').addEventListener('click', startQuiz);
+    $('back-button').addEventListener('click', goBack);
+    $('focus-reset').addEventListener('click', () => focusIdeology(null));
+    $('home-button').addEventListener('click', () => {
+        if (!screens.quiz.hidden && answers.some(a => a != null) && !confirm('Abandon this test and go back to the start?')) return;
+        history.replaceState(null, '', location.pathname + location.search);
+        tintBackground(CENTRE);
+        show('intro');
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (screens.quiz.hidden || e.altKey || e.ctrlKey || e.metaKey) return;
+        const n = parseInt(e.key, 10);
+        if (n >= 1 && n <= 4) {
+            const btn = optionsContainer.querySelectorAll('.option')[n - 1];
+            if (btn) { e.preventDefault(); btn.click(); btn.focus(); }
+        } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
+            e.preventDefault(); goBack();
         }
-        const mid_C = (minMaxRawScores.c.max + minMaxRawScores.c.min) / 2; const mid_M = (minMaxRawScores.m.max + minMaxRawScores.m.min) / 2; const mid_P = (minMaxRawScores.p.max + minMaxRawScores.p.min) / 2;
-        const range_C = (minMaxRawScores.c.max - minMaxRawScores.c.min); const range_M = (minMaxRawScores.m.max - minMaxRawScores.m.min); const range_P = (minMaxRawScores.p.max - minMaxRawScores.p.min);
-        const mockedRawScoresForExtremity = { c: mid_C + ((normalizedScoresToUse.c - 50) / 50) * (range_C / 2 || 1), m: mid_M + ((normalizedScoresToUse.m - 50) / 50) * (range_M / 2 || 1), p: mid_P + ((normalizedScoresToUse.p - 50) / 50) * (range_P / 2 || 1) };
-        mockedRawScoresForExtremity.c = Math.max(minMaxRawScores.c.min, Math.min(minMaxRawScores.c.max, mockedRawScoresForExtremity.c)); mockedRawScoresForExtremity.m = Math.max(minMaxRawScores.m.min, Math.min(minMaxRawScores.m.max, mockedRawScoresForExtremity.m)); mockedRawScoresForExtremity.p = Math.max(minMaxRawScores.p.min, Math.min(minMaxRawScores.p.max, mockedRawScoresForExtremity.p));
-        if (rawScoresElement) rawScoresElement.innerHTML = `Raw Scores (Mocked for Dev Mode):<br>C: ${mockedRawScoresForExtremity.c.toFixed(2)}, M: ${mockedRawScoresForExtremity.m.toFixed(2)}, P: ${mockedRawScoresForExtremity.p.toFixed(2)}`;
-        if (normalizedScoresElement) normalizedScoresElement.innerHTML = `Normalized Scores (from sliders):<br>C: ${normalizedScoresToUse.c.toFixed(2)}%, M: ${normalizedScoresToUse.m.toFixed(2)}%, P: ${normalizedScoresToUse.p.toFixed(2)}%`;
-        if (typeof minMaxRawScores.c.min !== 'undefined') calculateAndDisplayExtremityScore(normalizedScoresToUse, mockedRawScoresForExtremity);
-        const ideologyInfo = getIdeologyLabelAndSarcasm(normalizedScoresToUse.c, normalizedScoresToUse.m, normalizedScoresToUse.p);
-        displayIdeologyInfo(ideologyInfo); let plotTitle = determinePlotTitle(ideologyInfo);
-        if (typeof Plotly !== 'undefined') { drawPlot(normalizedScoresToUse, plotTitle); }
-        else { console.error("Plotly undefined in updateDevControls"); if(plotDiv) plotDiv.innerHTML = "<p style='color:orange; text-align:center;'>Plot could not be displayed (Plotly library issue).</p>";}
-        applyTheme(document.body.classList.contains('dark-mode') ? 'dark' : 'light');
-    }
+    });
 
-    function displayIdeologyInfo(ideologyInfo) {
-        if (!ideologyInfo || !ideologyInfo.specific) {
-            console.error("displayIdeologyInfo received invalid ideologyInfo:", ideologyInfo);
-            if(ideologyLabelElement) ideologyLabelElement.innerHTML = "<b>Political Profile:</b> Error determining ideology."; if(ideologySummaryElement) ideologySummaryElement.textContent = "Please try the quiz again or check console for errors."; if(primaryIdeologyProximityElement) primaryIdeologyProximityElement.style.display = 'none'; if(secondaryMatchArea) secondaryMatchArea.style.display = 'none'; return;
-        }
-        if (ideologyLabelElement) {
-            let labelHTML = "Political Profile:<br>"; const ultimateFallback = "Mixed / Eclectic Political Outlook";
-            if (ideologyInfo.specific && ideologyInfo.specific !== ultimateFallback) { labelHTML += `<b>Specific Ideology:</b> ${ideologyInfo.specific}`; if (ideologyInfo.broadCategory && ideologyInfo.broadCategory !== "" && ideologyInfo.broadCategory !== ideologyInfo.specific && ideologyInfo.broadCategory !== ultimateFallback) { labelHTML += `<br><b>Broad Category:</b> ${ideologyInfo.broadCategory}`; } }
-            else { labelHTML += `<b>Category:</b> ${ultimateFallback}`; } ideologyLabelElement.innerHTML = labelHTML;
-        }
-        if (primaryIdeologyProximityElement) { primaryIdeologyProximityElement.innerHTML = `<b>Match Strength:</b> ${ideologyInfo.proximityPrimary.toFixed(1)}%`; if (isDevMode) primaryIdeologyProximityElement.innerHTML += ` <span style="font-size:0.8em; color:${document.body.classList.contains('dark-mode') ? '#aaa' : '#777'};">(Dist: ${ideologyInfo.distanceToClosest.toFixed(2)})</span>`; primaryIdeologyProximityElement.style.display = 'block';
-        } else { console.warn("Element #primary-ideology-proximity-result not found. Primary proximity not displayed."); }
-        if (ideologySummaryElement) { ideologySummaryElement.textContent = ideologyInfo.summary || "No summary available for this profile."; }
-        const MIN_DIST_DIFFERENCE = 0.01;
-        if (secondaryMatchArea && ideologyInfo.secondClosestSpecific && ideologyInfo.secondClosestSpecific !== "Mixed / Eclectic Political Outlook" && ideologyInfo.secondClosestSpecific !== ideologyInfo.specific && ideologyInfo.distanceToSecondClosest > (ideologyInfo.distanceToClosest + MIN_DIST_DIFFERENCE)) {
-            if (secondaryIdeologyLabelElement) secondaryIdeologyLabelElement.textContent = ideologyInfo.secondClosestSpecific;
-            if (secondaryIdeologyProximityElement) { secondaryIdeologyProximityElement.innerHTML = `<b>Match Strength:</b> ${ideologyInfo.proximitySecondary.toFixed(1)}%`; if (isDevMode) secondaryIdeologyProximityElement.innerHTML += ` <span style="font-size:0.8em; color:${document.body.classList.contains('dark-mode') ? '#aaa' : '#777'};">(Dist: ${ideologyInfo.distanceToSecondClosest.toFixed(2)})</span>`; }
-            if (secondaryIdeologySummaryElement) { secondaryIdeologySummaryElement.textContent = ideologySummaries[ideologyInfo.secondClosestSpecific] || "No summary available."; }
-            secondaryMatchArea.style.display = 'block';
-        } else { if (secondaryMatchArea) secondaryMatchArea.style.display = 'none'; }
-    }
+    window.addEventListener('beforeunload', (e) => {
+        if (!screens.quiz.hidden && answers.some(a => a != null)) { e.preventDefault(); e.returnValue = ''; }
+    });
 
-    function determinePlotTitle(ideologyInfo) {
-        let plotTitle = ideologyInfo.specific || "Your Political Profile"; const genericKeywords = ["(General)", "Tendencies", "Eclectic", "Outlook", "(Undifferentiated)", "Uncategorized"]; const ultimateFallback = "Mixed / Eclectic Political Outlook";
-        const isSpecificGeneric = !ideologyInfo.specific || plotTitle === ultimateFallback || plotTitle === "Undetermined" || plotTitle === ideologyInfo.broadCategory || genericKeywords.some(keyword => plotTitle.includes(keyword));
-        if (isSpecificGeneric) { if (ideologyInfo.broadCategory && ideologyInfo.broadCategory !== ultimateFallback && ideologyInfo.broadCategory !== "Undetermined" && ideologyInfo.broadCategory !== "Unclassifiable" && !genericKeywords.some(keyword => ideologyInfo.broadCategory.includes(keyword))) { plotTitle = ideologyInfo.broadCategory; } else { plotTitle = isDevMode ? "Political Profile Explorer" : "Your Political Profile"; } }
-        if (!plotTitle || plotTitle.trim() === "") { plotTitle = isDevMode ? "Political Profile Explorer" : "Your Political Profile"; } return plotTitle;
+    // ------------------------------------------------------------------
+    // Boot
+    // ------------------------------------------------------------------
+    drawIntroArt();
+    const hashStr = (location.hash.match(/r=([^&]+)/) || [])[1];
+    const hashPos = decodePos(hashStr);
+    let ownResult = null;
+    try { ownResult = sessionStorage.getItem('ownResult'); } catch (e) { /* private mode */ }
+    if (hashPos) {
+        showResults(hashPos, { shared: !isDevMode && hashStr !== ownResult });
+    } else if (isDevMode) {
+        showResults({ ...CENTRE });
+    } else {
+        tintBackground(CENTRE);
+        show('intro');
     }
-
-    function drawPlot(normalized, ideologyLabel = "Your Position") {
-        const plotDivRef = document.getElementById('plot-div');
-        if (!plotDivRef || typeof Plotly === 'undefined') { if (plotDivRef) plotDivRef.innerHTML = "<p style='color:red; text-align:center;'>Error: Plotting library not loaded or plot area missing.</p>"; else console.error("Plot div not found and Plotly undefined/not loaded."); return; }
-        let plotC = !isNaN(normalized.c) ? parseFloat(normalized.c.toFixed(2)) : 33.33; let plotM = !isNaN(normalized.m) ? parseFloat(normalized.m.toFixed(2)) : 33.33; let plotP = parseFloat((100.0 - plotC - plotM).toFixed(2));
-        plotC = Math.max(0, Math.min(100, plotC)); plotM = Math.max(0, Math.min(100, plotM)); plotP = Math.max(0, Math.min(100, plotP));
-        let sumTotal = plotC + plotM + plotP; const plotEpsilon = 0.03;
-        if (Math.abs(sumTotal - 100.0) > plotEpsilon) { if (sumTotal === 0) { plotC = 33.33; plotM = 33.33; plotP = 33.34; } else { const scale = 100.0 / sumTotal; plotC = parseFloat((plotC * scale).toFixed(2)); plotM = parseFloat((plotM * scale).toFixed(2)); } plotP = parseFloat((100.0 - plotC - plotM).toFixed(2)); }
-        plotC = parseFloat(Math.max(0, Math.min(100, plotC)).toFixed(2)); plotM = parseFloat(Math.max(0, Math.min(100, plotM)).toFixed(2)); plotP = parseFloat(Math.max(0, Math.min(100, 100.0 - plotC - plotM)).toFixed(2));
-        const isDarkMode = document.body.classList.contains('dark-mode');
-        const safeGetCssVar = (varName, fallback) => { try { const val = getComputedStyle(document.documentElement).getPropertyValue(varName).trim(); return val || fallback; } catch (e) { return fallback; }};
-        const currentBgColor = isDarkMode ? safeGetCssVar('--container-bg', '#2a2a2a') : '#fff'; const currentTextColor = isDarkMode ? safeGetCssVar('--text-color', '#e2e2e2') : '#333'; const plotTernaryBgColor = isDarkMode ? safeGetCssVar('--option-bg', '#333333') : '#f0f0f0'; const currentGridColor = isDarkMode ? safeGetCssVar('--dev-controls-border', '#555555') : safeGetCssVar('--option-border','#cccccc');
-        const plotData = [{ type: 'scatterternary', mode: 'markers', a: [plotC], b: [plotM], c: [plotP], name: 'Your Position', text: [`C: ${plotC.toFixed(1)}%<br>M: ${plotM.toFixed(1)}%<br>P: ${plotP.toFixed(1)}%`], hoverinfo: 'text', marker: { symbol: 'circle', color: '#FF4136', size: 14, line: { width: 1, color: isDarkMode ? '#FFA500' : '#8B0000' } } }];
-        const layout = { title: { text: `Political Profile: <b>${ideologyLabel}</b>`, font: { color: currentTextColor, size: 16 } }, ternary: { sum: 100, aaxis: { title: '<b>Centralism (C)</b>', min: 0, linewidth: 2, ticks: 'outside', tickfont: { color: currentTextColor, size:10 }, titlefont: { color: currentTextColor, size:12 },linecolor: currentTextColor, gridcolor: currentGridColor }, baxis: { title: '<b>Communalism (M)</b>', min: 0, linewidth: 2, ticks: 'outside', tickfont: { color: currentTextColor, size:10 }, titlefont: { color: currentTextColor, size:12 }, linecolor: currentTextColor, gridcolor: currentGridColor }, caxis: { title: '<b>Privatism (P)</b>', min: 0, linewidth: 2, ticks: 'outside', tickfont: { color: currentTextColor, size:10 }, titlefont: { color: currentTextColor, size:12 }, linecolor: currentTextColor, gridcolor: currentGridColor }, bgcolor: plotTernaryBgColor }, annotations: [{ showarrow: false, text: '*Not remotely scientific. Mostly for amusement.', x: 0.5, y: -0.15, xref: 'paper', yref: 'paper', font: { size: 10, color: isDarkMode ? '#aaa' : '#666' } }], paper_bgcolor: currentBgColor, plot_bgcolor: currentBgColor, margin: { l: 70, r: 50, b: 100, t: 80, pad: 4 } };
-        try { Plotly.newPlot('plot-div', plotData, layout, {responsive: true}); }
-        catch (e) { console.error("Error during Plotly.newPlot:", e); if (plotDivRef) plotDivRef.innerHTML = "<p style='color:red; text-align:center;'>Error rendering plot. Check console for details.</p>"; }
-    }
-
-    if (restartButton) {
-        restartButton.addEventListener('click', () => {
-            if (isDevMode) { devSliderControlsState.C.value = 33.3; devSliderControlsState.C.locked = false; devSliderControlsState.M.value = 33.3; devSliderControlsState.M.locked = false; devSliderControlsState.P.value = 33.4; devSliderControlsState.P.locked = false; updateAllDisplaysFromInternalState(); reBalanceSliders(); }
-            else { initializeQuizState(); loadQuestion(); }
-        });
-    }
-
-    if (copyResultsButton) {
-        copyResultsButton.addEventListener('click', () => {
-            let resultsText = "My Sarcastic Political Test Results:\n";
-            const normScores = isDevMode ? {c: parseFloat(devSliderControlsState.C.value), m: parseFloat(devSliderControlsState.M.value), p: parseFloat(devSliderControlsState.P.value) } : normalizeScores(userScores, minMaxRawScores);
-            resultsText += `Normalized Scores: C: ${normScores.c.toFixed(1)}%, M: ${normScores.m.toFixed(1)}%, P: ${normScores.p.toFixed(1)}%\n`;
-            if (extremityScoreDisplayElement && extremityScoreDisplayElement.textContent.includes('%')) { resultsText += `${extremityScoreDisplayElement.textContent}\n`; }
-            const ideologyInfo = getIdeologyLabelAndSarcasm(normScores.c, normScores.m, normScores.p);
-            resultsText += `Primary Ideology: ${ideologyInfo.specific} (Match Strength: ${ideologyInfo.proximityPrimary.toFixed(1)}%)\n`;
-            if (ideologyInfo.broadCategory && ideologyInfo.broadCategory !== ideologyInfo.specific && ideologyInfo.broadCategory !== "Mixed / Eclectic Political Outlook") { resultsText += `Broad Category: ${ideologyInfo.broadCategory}\n`; }
-            const MIN_DIST_DIFF_FOR_COPY = 0.01;
-            if (ideologyInfo.secondClosestSpecific && ideologyInfo.secondClosestSpecific !== "Mixed / Eclectic Political Outlook" && ideologyInfo.secondClosestSpecific !== ideologyInfo.specific && ideologyInfo.distanceToSecondClosest > (ideologyInfo.distanceToClosest + MIN_DIST_DIFF_FOR_COPY)) { resultsText += `Secondary Leaning: ${ideologyInfo.secondClosestSpecific} (Match Strength: ${ideologyInfo.proximitySecondary.toFixed(1)}%)\n`; }
-            resultsText += `\nTake the test: ${window.location.href.split('?')[0]}`;
-            navigator.clipboard.writeText(resultsText).then(() => { if (copyStatusElement) copyStatusElement.textContent = "Results copied to clipboard!"; setTimeout(() => { if (copyStatusElement) copyStatusElement.textContent = ""; }, 3000);
-            }).catch(err => { console.error('Failed to copy results: ', err); if (copyStatusElement) copyStatusElement.textContent = "Failed to copy. See console."; });
-        });
-    }
-
-    // --- INITIALIZATION ---
-    if (isDevMode) {
-        const mainHeading = document.querySelector('.container h1');
-        if (mainHeading && !mainHeading.textContent.includes("(Dev Mode)")) mainHeading.textContent += " (Dev Mode)";
-        if(quizArea) quizArea.style.display = 'none'; if(resultsArea) resultsArea.style.display = 'block';
-        const introP = document.querySelector('p.intro'); if (introP) introP.style.display = 'none';
-        const outroP = document.querySelector('p.outro'); if(outroP) outroP.style.display = 'none';
-        if(progressIndicator) progressIndicator.style.display = 'none'; if(restartButton) restartButton.style.display = 'block'; // Always show restart in dev
-        setupDevControls(); updateResultsFromDevControls();
-    } else { 
-        initializeQuizState(); 
-        loadQuestion(); 
-    }
-}); // End of DOMContentLoaded
+})();
