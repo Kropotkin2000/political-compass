@@ -16,9 +16,9 @@
 
     const AXES = ['c', 'm', 'p'];
     const AXIS_INFO = {
-        c: { name: 'Centralism', blurb: 'The State should run things' },
-        m: { name: 'Communalism', blurb: 'The community should run things' },
-        p: { name: 'Privatism', blurb: 'You should run your own things' },
+        c: { name: 'Centralism', blurb: 'The state organises society, through law and planning' },
+        m: { name: 'Communalism', blurb: 'Communities organise society, through shared ownership and collective decisions' },
+        p: { name: 'Privatism', blurb: 'Private owners organise society, through property and markets' },
     };
     const IDEOLOGIES = Object.entries(ideologyIdealPoints).map(([name, pt]) => ({ name, ...pt }));
     const BROAD_ORDER = [...new Set(IDEOLOGIES.map(i => i.broad))];
