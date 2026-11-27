@@ -431,7 +431,7 @@ main { position: relative; z-index: 1; }
 @media (max-width: 560px) {
     body { font-size: 15px; }
     .topbar { padding-top: max(12px, env(safe-area-inset-top)); padding-bottom: 8px; }
-    .brand span { display: none; }
+    .brand { font-size: 14px; }
     .intro-art .tri { max-width: 230px; }
     .corner-list b { min-width: 0; }
     .corner-list li { flex-direction: column; gap: 0; }
@@ -494,23 +494,24 @@ main { position: relative; z-index: 1; }
 .opt-quip { font-size: 13px; line-height: 1.35; color: var(--text-3); font-style: italic; }
 .option.selected .opt-quip { color: var(--text-2); }
 
-/* ---------- Sarcastic / Classroom switch ---------- */
+/* ---------- The secret switch: the logo triangle ---------- */
 .topbar-right { display: flex; align-items: center; gap: 10px; }
-.tone-switch {
-    display: inline-flex; padding: 3px; border-radius: 999px;
-    background: var(--surface); border: 1px solid var(--line); backdrop-filter: blur(10px);
+.brand-wrap { display: inline-flex; align-items: center; gap: 10px; }
+.brand-mark {
+    display: grid; place-items: center; width: 34px; height: 34px; margin: -6px;
+    background: none; border: 0; border-radius: 50%; cursor: pointer; padding: 0;
 }
-.tone-switch button {
-    border: 0; background: transparent; cursor: pointer; border-radius: 999px;
-    padding: 7px 14px; font-size: 14px; font-weight: 500; color: var(--text-3);
-    transition: background-color .25s, color .25s;
+.brand-mark svg {
+    width: 22px; height: 19px; fill: none; stroke: var(--text); stroke-width: 2; stroke-linejoin: round;
+    transition: transform .7s var(--spring), fill .4s;
 }
-.tone-switch button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
-.tone-switch button:not([aria-pressed="true"]):hover { color: var(--text); }
-.tone-switch button:focus-visible { outline: 2px solid var(--you); outline-offset: 2px; }
-@media (max-width: 560px) {
-    .tone-switch button { padding: 6px 10px; font-size: 13px; }
-}
+/* barely-there hint on hover: a small tilt, nothing more */
+.brand-mark:hover svg { transform: rotate(-12deg); }
+.brand-mark:focus-visible { outline: 2px solid var(--you); outline-offset: 2px; }
+/* classroom version: the triangle sits upside down */
+:root[data-tone="classroom"] .brand-mark svg { transform: rotate(180deg); }
+:root[data-tone="classroom"] .brand-mark:hover svg { transform: rotate(168deg); }
+.brand-mark.flipping svg { fill: var(--text); }
 
 /* Classroom version: calmer background, no twinkling */
 :root[data-tone="classroom"] { --blob-alpha: .22; }

@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <!-- Bump ?v= on all seven links whenever you change any of these files, so browsers fetch them together. -->
-    <link rel="stylesheet" href="style.css?v=2026-11-28c">
+    <link rel="stylesheet" href="style.css?v=2026-11-28d">
 </head>
 <body>
     <div class="aurora" aria-hidden="true">
@@ -19,15 +19,16 @@
     </div>
 
     <header class="topbar">
-        <button id="home-button" class="brand" type="button" aria-label="Back to start">
-            <svg viewBox="0 0 24 21" aria-hidden="true"><path d="M12 1 23 20H1Z"/></svg>
-            <span data-copy="brand">Sarcastic Political Test</span>
-        </button>
-        <div class="topbar-right">
-        <div class="tone-switch" role="group" aria-label="Version">
-            <button type="button" data-tone="sarcastic" aria-pressed="true">Sarcastic</button>
-            <button type="button" data-tone="classroom" aria-pressed="false">Classroom</button>
+        <div class="brand-wrap">
+            <!-- The secret switch: the triangle flips between the sarcastic and classroom versions. -->
+            <button id="tone-flip" class="brand-mark" type="button" aria-label="Switch to the classroom version">
+                <svg viewBox="0 0 24 21" aria-hidden="true"><path d="M12 1 23 20H1Z"/></svg>
+            </button>
+            <button id="home-button" class="brand" type="button" aria-label="Back to start">
+                <span data-copy="brand">Sarcastic Political Test</span>
+            </button>
         </div>
+        <div class="topbar-right">
         <button id="theme-toggle" class="icon-button" type="button" aria-label="Toggle dark mode">
             <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/></svg>
             <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11Z"/></svg>
@@ -140,11 +141,11 @@
 
     <div id="toast" class="toast" role="status" hidden></div>
 
-    <script src="scoring.js?v=2026-11-28c"></script>
-    <script src="questions.js?v=2026-11-28c"></script>
-    <script src="ideology_summaries.js?v=2026-11-28c"></script>
-    <script src="ideology_summaries_classroom.js?v=2026-11-28c"></script>
-    <script src="ideology_ideal_points.js?v=2026-11-28c"></script>
-    <script src="script.js?v=2026-11-28c"></script>
+    <script src="scoring.js?v=2026-11-28d"></script>
+    <script src="questions.js?v=2026-11-28d"></script>
+    <script src="ideology_summaries.js?v=2026-11-28d"></script>
+    <script src="ideology_summaries_classroom.js?v=2026-11-28d"></script>
+    <script src="ideology_ideal_points.js?v=2026-11-28d"></script>
+    <script src="script.js?v=2026-11-28d"></script>
 </body>
 </html>

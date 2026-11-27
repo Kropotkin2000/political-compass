@@ -744,7 +744,7 @@
         document.querySelectorAll('[data-copy-axis]').forEach(node => { node.textContent = T('axes')[node.dataset.copyAxis]; });
         const you = document.getElementById('intro-you-label');
         if (you) you.textContent = T('youLabel');
-        document.querySelectorAll('.tone-switch button').forEach(b => b.setAttribute('aria-pressed', b.dataset.tone === tone ? 'true' : 'false'));
+        $('tone-flip').setAttribute('aria-label', tone === 'classroom' ? 'Switch to the sarcastic version' : 'Switch to the classroom version');
         if (remember) {
             localStorage.setItem('tone-mode', tone);
             // keep the address in step, so a teacher can copy it straight from the address bar
@@ -759,7 +759,15 @@
             updateResultsView(resultState.pos);
         }
     }
-    document.querySelectorAll('.tone-switch button').forEach(b => b.addEventListener('click', () => applyTone(b.dataset.tone)));
+    // The secret switch: the logo triangle. It flips over, the tone changes, and a short message confirms it.
+    $('tone-flip').addEventListener('click', () => {
+        const next = tone === 'classroom' ? 'sarcastic' : 'classroom';
+        applyTone(next);
+        const mark = $('tone-flip');
+        mark.classList.add('flipping');
+        setTimeout(() => mark.classList.remove('flipping'), 700);
+        toast(next === 'classroom' ? 'Classroom version. Best behaviour, everyone.' : 'Sarcasm restored.');
+    });
 
     // ------------------------------------------------------------------
     // Boot
