@@ -32,7 +32,8 @@ const IDEOS = Object.entries(IP).map(([name, p]) => Object.assign({ name }, p));
 // Personas
 // picks (16 "pick a corner / pick a blend" questions, in this order):
 //   q1 own  q2 health  q3 housing  q6 business  q7 schools  q10 carbon  q11 tech  q14 welfare
-//   q15 banks  q18 arts  q19 town  q22 breakthroughs  q23 transport  q26 old age  q28 news  q30 organised
+//   q15 banks  q18 everyday goods  q19 town  q22 breakthroughs  q23 starting a business  q26 inheritance
+//   q28 investment  q30 organised
 //   corner questions take C / M / P / X; blend questions (q2 q3 q6 q15) take CM / CP / MP / X; X = muddle
 // villains (8 "pick a villain" questions): q5 worries q9 inequality q13 project q17 power q21 freedom
 //   q25 common good q27 crisis q29 monopoly; take rC / rM / rP (the corner being criticised) or X
@@ -47,60 +48,60 @@ const persona = (picks, villains, order, tb) => ({ picks: picks.trim().split(/\s
 const all = (x, n) => Array(n).fill(x).join(' ');
 
 const personas = {
-    //                                                       own he  ho  bu  sc ca te we ba  ar to br tr ol ne or
-    'Anarcho-Communism':                  persona('M CM CM CM M M M M X  M M M M M M M', 'rC rP rP rC rC rC rP rC', [-2, -1, -2, -2, -2, -2], [3, 0, 0, 0]),
-    'Left Communism (General)':           persona('C CM CM CM M C M C CM M M M C C M M', 'rP rP rP rP rP rC rP rP', [-2, 0, -2, -1, 0, -2], [3, 3, 0, 0]),
+    //                                                       own he  ho  bu  sc ca te we ba  gd to br sb in iv or
+    'Anarcho-Communism':                  persona('M CM CM CM M M M M X M M M M M M M', 'rC rP rP rC rC rC rP rC', [-2, -1, -2, -2, -2, -2], [3, 0, 0, 0]),
+    'Left Communism (General)':           persona('C CM CM CM M C M C CM C M M C C C M', 'rP rP rP rP rP rC rP rP', [-2, 0, -2, -1, 0, -2], [3, 3, 0, 0]),
     'Anarcho-Syndicalism / Collectivist Anarchism':
                                           persona('M CM CM CM M M M M CM M M M M M M M', 'rP rP rP rP rP rC rP rC', [-2, -1, -2, -2, -2, -2], [3, 1, 0, 0]),
     'Democratic Confederalism / Libertarian Municipalism':
                                           persona('M CM CM CM M M M M CM M M M M M M M', 'rC rP rC rC rC rC rP rC', [-1, -1, -2, -2, -1, -2], [2, 0, 0, 0]),
     'Guild Socialism':                    persona('M CM CM CM M C M C CM M M C M C M M', all('rP', 8), [0, -1, 0, -1, 0, -1], [1, 2, 1, 1]),
-    'De Leonism':                         persona('M CM CM CM C M M C CM C M C M C M M', all('rP', 8), [-1, 0, -1, -1, 0, -1], [2, 2, 0, 0]),
-    'Mutualism':                          persona('M MP MP MP M P M M MP M M M M M M P', all('rC', 8), [-2, -2, -2, -2, -2, -1], [2, 1, 0, 0]),
-    'Communal Individualism / Egoism':    persona('P MP MP MP P X P M MP M P M M P P P', 'rC rC rC rM rM rC rC rM', [-2, -2, -2, -2, -2, -2], [2, 0, 0, 0]),
-    'Free Market Anti-Capitalism':        persona('M MP MP MP P P M M MP P P M P M P P', all('rC', 8), [-2, -2, -2, -2, -2, -1], [2, 1, 0, 0]),
+    'De Leonism':                         persona('M CM CM CM C M M C CM M M C M C M M', all('rP', 8), [-1, 0, -1, -1, 0, -1], [2, 2, 0, 0]),
+    'Mutualism':                          persona('M MP MP MP M P M M MP M M M M X M P', all('rC', 8), [-2, -2, -2, -2, -2, -1], [2, 1, 0, 0]),
+    'Communal Individualism / Egoism':    persona('P MP MP MP P X P M MP P P M P P P P', 'rC rC rC rM rM rC rC rM', [-2, -2, -2, -2, -2, -2], [2, 0, 0, 0]),
+    'Free Market Anti-Capitalism':        persona('M MP MP MP P P M M MP M P M P P M P', all('rC', 8), [-2, -2, -2, -2, -2, -1], [2, 1, 0, 0]),
     'Voluntaryism':                       persona('P MP MP MP P P P P MP P P P P P P P', all('rC', 8), [-2, -2, -2, -2, -2, 0], [1, 1, 1, 0]),
     'Anarcho-Capitalism':                 persona('P MP MP MP P P P P MP P P P P P P P', all('rC', 8), [-1, -2, -1, -2, -2, 1], [2, 1, 1, 0]),
-    'Agorism / Counter-Economics':        persona('P MP MP MP P P M M MP P P M P P M P', all('rC', 8), [-2, -2, -2, -2, -2, -2], [3, 1, 0, 0]),
+    'Agorism / Counter-Economics':        persona('P MP MP MP P P M M MP P P M P P P P', all('rC', 8), [-2, -2, -2, -2, -2, -2], [3, 1, 0, 0]),
     'Radical Propertarianism / Hoppeanism':
                                           persona('P MP MP CP P P P P MP P P P P P P P', all('rC', 8), [1, 1, 2, 1, -1, 2], [2, 0, 3, 2]),
-    'Geolibertarianism':                  persona('X CP CP CP P P P X CP P X X P P P P', 'rC rP rC rC rC rC rC rP', [-1, -2, -1, -2, -1, 0], [1, 2, 1, 0]),
-    'Minarchism / Night-Watchman State':  persona('X MP CP CP P P P P CP P P P P X P P', 'rC rC rC rC rC rC rC X', [0, -2, 0, -2, -1, 1], [1, 2, 1, 1]),
-    'Conservative Libertarianism':        persona('P MP CP CP P P P M CP P P P P M P P', 'rC rC rC rC rC rM rC rC', [1, 0, 1, 0, 0, 2], [1, 2, 2, 2]),
+    'Geolibertarianism':                  persona('X CP CP CP P P P X CP P X X P X P P', 'rC rP rC rC rC rC rC rP', [-1, -2, -1, -2, -1, 0], [1, 2, 1, 0]),
+    'Minarchism / Night-Watchman State':  persona('X MP CP CP P P P P CP P P P P P P P', 'rC rC rC rC rC rC rC X', [0, -2, 0, -2, -1, 1], [1, 2, 1, 1]),
+    'Conservative Libertarianism':        persona('P MP CP CP P P P M CP P P P P P P P', 'rC rC rC rC rC rM rC rC', [1, 0, 1, 0, 0, 2], [1, 2, 2, 2]),
     'Classical Liberalism (Lockean/Smithian)':
                                           persona('X CP CP CP C P P P CP P P C P P P P', 'rC rC rC rC X rC X rP', [-1, -2, 0, -2, 0, 1], [0, 2, 1, 1]),
     'Constitutional Republicanism / Conservative Liberalism':
-                                          persona('X CP CP CP C P C X CP X C C X X C C', 'rM rC rC rM X rM X rP', [1, 0, 1, 0, 1, 1], [0, 2, 2, 2]),
+                                          persona('X CP CP CP C P C X CP P C C X X P C', 'rM rC rC rM X rM X rP', [1, 0, 1, 0, 1, 1], [0, 2, 2, 2]),
     'Market-Oriented Liberalism / Third Way':
-                                          persona('X CP CP CP P P C C CP X C X X X C X', 'X X rC X X X X X', [0, -1, 0, -1, 1, 1], [0, 2, 1, 1]),
+                                          persona('X CP CP CP P P C C CP P C X X X P X', 'X X rC X X X X X', [0, -1, 0, -1, 1, 1], [0, 2, 1, 1]),
     'Technocratic / Managerial Liberalism':
-                                          persona('X CP CP CP C P C C CP X C C C X C C', 'rM rM rM rM X rM rM rP', [1, 0, 0, -1, 1, 1], [0, 3, 0, 1]),
+                                          persona('X CP CP CP C P C C CP P C C X X X C', 'rM rM rM rM X rM rM rP', [1, 0, 0, -1, 1, 1], [0, 3, 0, 1]),
     'Social Liberalism / Progressive Liberalism':
-                                          persona('X CP CM CP C P C C CP C X C C C C X', 'rP rP X rP X rP X rP', [-2, -2, -1, -2, 0, -1], [1, 2, 0, 1]),
+                                          persona('X CP CM CP C P C C CP P X C X X X X', 'rP rP X rP X rP X rP', [-2, -2, -1, -2, 0, -1], [1, 2, 0, 1]),
     'Radical Centrism / Syncretic Politics':
                                           persona(all('X', 16), all('X', 8), [0, 0, 0, 0, 0, 0], [1, 2, 1, 1]),
-    'Social Democracy':                   persona('C CM CM CP C P C C CP C C C C C C X', 'rP rP rP rP rP rP X rP', [-1, 0, 0, -1, 1, 0], [0, 2, 1, 1]),
-    'Democratic Socialism':               persona('C CM CM CM M C C C CM C M C C C M M', all('rP', 8), [-2, -1, -2, -2, 0, -2], [1, 2, 0, 0]),
-    'Market Socialism':                   persona('M MP MP MP C P M C MP C M C C C M P', 'rP rP rP rP rP rP X rP', [-1, -1, -1, -2, 0, -1], [1, 1, 0, 1]),
-    'Green Politics':                     persona('M CM CM MP M C C C MP C M M M C M M', 'rP rP rP rP rP rP X rP', [-1, -1, -2, -2, 0, -2], [2, 1, 0, 0]),
+    'Social Democracy':                   persona('C CM CM CP C P C C CP P C C X X X X', 'rP rP rP rP rP rP X rP', [-1, 0, 0, -1, 1, 0], [0, 2, 1, 1]),
+    'Democratic Socialism':               persona('C CM CM CM M C C C CM M M C M C M M', all('rP', 8), [-2, -1, -2, -2, 0, -2], [1, 2, 0, 0]),
+    'Market Socialism':                   persona('M MP MP MP C P M C MP M M C M X M P', 'rP rP rP rP rP rP X rP', [-1, -1, -1, -2, 0, -1], [1, 1, 0, 1]),
+    'Green Politics':                     persona('M CM CM MP M C C C MP M M M M C M M', 'rP rP rP rP rP rP X rP', [-1, -1, -2, -2, 0, -2], [2, 1, 0, 0]),
     'State Socialism (Centralised Planning Focus)':
                                           persona('C CM CM CM C C C C CM C C C C C C C', all('rP', 8), [1, 1, 1, 0, 1, 1], [2, 2, 0, 1]),
-    'State Collectivism':                 persona('C CM CM CM C C C M CM M M C C M C M', all('rP', 8), [1, 1, 2, 1, 1, 1], [2, 2, 1, 2]),
-    'National Syndicalism (Non-Fascist)': persona('M CM CM CM C C C M CM C M C C M C M', all('rP', 8), [1, 1, 2, 0, 1, 1], [2, 2, 2, 3]),
-    'Christian Democracy':                persona('X CP CM CP M X C M CP M M X X M C X', 'rP X rC rP rP X X rP', [0, 0, 1, 1, 0, 1], [0, 1, 2, 1]),
-    'Communitarianism':                   persona('M CM CM MP M M X M MP M M X M M M M', 'rP rP X rP X rP X rP', [1, 1, 1, 1, 1, 1], [1, 1, 2, 2]),
-    'Distributism':                       persona('M MP MP MP M M M M MP M M P X M M P', 'rC rP rC rP rP rP X rP', [1, 0, 1, 1, 0, 1], [1, 0, 3, 1]),
-    'Social Market Economy':              persona('X CP CP CP C P X C CP X C X X C C X', 'X rP rC X X rP X rP', [0, -1, 0, -1, 1, 1], [0, 2, 1, 1]),
-    'Paternalistic Conservatism':         persona('X CM CP CP C X C C CP C C C X C C C', 'rM X X rM rM rM X rP', [1, 0, 2, 1, 1, 1], [0, 2, 2, 2]),
-    'Traditionalist Conservatism':        persona('X MP MP CP M X X M MP M M X X M C X', 'rC rC rC rC X rM X rC', [2, 1, 2, 2, 1, 2], [0, 1, 3, 2]),
-    'National Conservatism':              persona('X CP CP CP C X C M CP C C C X M C C', 'rM rC rC rC rC rM rC rP', [2, 0, 2, 1, 1, 2], [1, 2, 2, 3]),
-    'Authoritarian Conservatism':         persona('C CM CP CP C C C C CP C C C C M C C', 'rM rM rM rM rM rM rP rM', [2, 2, 2, 2, 2, 2], [1, 2, 3, 2]),
+    'State Collectivism':                 persona('C CM CM CM C C C M CM C M C C C C M', all('rP', 8), [1, 1, 2, 1, 1, 1], [2, 2, 1, 2]),
+    'National Syndicalism (Non-Fascist)': persona('M CM CM CM C C C M CM M M C C C C M', all('rP', 8), [1, 1, 2, 0, 1, 1], [2, 2, 2, 3]),
+    'Christian Democracy':                persona('X CP CM CP M X C M CP P M X X X X X', 'rP X rC rP rP X X rP', [0, 0, 1, 1, 0, 1], [0, 1, 2, 1]),
+    'Communitarianism':                   persona('M CM CM MP M M X M MP M M X X X M M', 'rP rP X rP X rP X rP', [1, 1, 1, 1, 1, 1], [1, 1, 2, 2]),
+    'Distributism':                       persona('M MP MP MP M M M M MP M M P P P M P', 'rC rP rC rP rP rP X rP', [1, 0, 1, 1, 0, 1], [1, 0, 3, 1]),
+    'Social Market Economy':              persona('X CP CP CP C P X C CP P C X X X P X', 'X rP rC X X rP X rP', [0, -1, 0, -1, 1, 1], [0, 2, 1, 1]),
+    'Paternalistic Conservatism':         persona('X CM CP CP C X C C CP P C C X X X C', 'rM X X rM rM rM X rP', [1, 0, 2, 1, 1, 1], [0, 2, 2, 2]),
+    'Traditionalist Conservatism':        persona('X MP MP CP M X X M MP P M X P P X X', 'rC rC rC rC X rM X rC', [2, 1, 2, 2, 1, 2], [0, 1, 3, 2]),
+    'National Conservatism':              persona('X CP CP CP C X C M CP P C C P P X C', 'rM rC rC rC rC rM rC rP', [2, 0, 2, 1, 1, 2], [1, 2, 2, 3]),
+    'Authoritarian Conservatism':         persona('C CM CP CP C C C C CP P C C X P C C', 'rM rM rM rM rM rM rP rM', [2, 2, 2, 2, 2, 2], [1, 2, 3, 2]),
     'Authoritarian Capitalism (Fascist Economic Type)':
                                           persona('P CP CP CP C C C P CP P C C P P C C', all('rM', 8), [2, 2, 2, 2, 2, 2], [1, 2, 2, 3]),
     'Nationalist Corporatism (Fascist/Falangist Type)':
-                                          persona('C CM CM CP C C C C CP C C C C M C C', 'rM rP rM rM rM rM rP rP', [2, 2, 2, 2, 2, 2], [2, 2, 2, 3]),
+                                          persona('C CM CM CP C C C C CP X C C X X C C', 'rM rP rM rM rM rM rP rP', [2, 2, 2, 2, 2, 2], [2, 2, 2, 3]),
     'Nationalist Collectivism (Strasserite/NazBol Type)':
-                                          persona('C CM CM CM C C C M CM C M C C M C M', all('rP', 8), [2, 2, 2, 2, 2, 2], [3, 2, 1, 3]),
+                                          persona('C CM CM CM C C C M CM C M C C C C M', all('rP', 8), [2, 2, 2, 2, 2, 2], [3, 2, 1, 3]),
     'State Communism / Marxism-Leninism': persona('C CM CM CM C C C C CM C C C C C C C', all('rP', 8), [2, 2, 1, 0, 2, 2], [3, 2, 0, 1]),
     'Totalitarianism / Absolutism':       persona('C CM CM CM C C C C CM C C C C C C C', 'rM rP rM rM rM rM rM rM', [2, 2, 2, 2, 2, 2], [2, 3, 2, 2]),
 };

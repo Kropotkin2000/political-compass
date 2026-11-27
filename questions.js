@@ -241,14 +241,14 @@ const questions = [
     },
     {
         id: 'q18',
-        text: "Who should pay for museums, theatre and the arts?",
-        classroom: "Who should pay for museums, theatre and the arts?",
+        text: "Who should make the everyday stuff: cars, phones, toothpaste?",
+        classroom: "Who should produce everyday goods, such as cars, phones and food?",
         type: 'forcedChoice4',
         options: [
-            { text: "The state, through generous public funding so culture belongs to everyone. A committee will decide what counts as art.", classroom: "The state, through public funding, so that culture is available to everyone.", scores: PICK_C },
-            { text: "Local communities and volunteers, running their own venues and festivals. Expect an ambitious amateur musical.", classroom: "Local communities and volunteers, running their own venues and events.", scores: PICK_M },
-            { text: "Tickets, patrons and sponsors. If people value it, they'll pay for it, and the MegaCorp Pavilion is a small price.", classroom: "Ticket sales, private patrons and sponsors.", scores: PICK_P },
-            { text: "A lottery, a levy, a gala and a lot of anxious grant applications.", classroom: "A mix of public grants, lottery money, sponsorship and ticket sales.", scores: MUDDLE },
+            { text: "State enterprises, producing to a national plan. Three models of car, all of them beige, all of them on a waiting list.", classroom: "State-owned enterprises, producing according to a national plan.", scores: PICK_C },
+            { text: "Worker co-operatives and community enterprises, owned by the people who make the stuff. New product launches decided by a show of hands.", classroom: "Worker co-operatives and community-owned enterprises.", scores: PICK_M },
+            { text: "Private companies, competing to sell you things you didn't know you needed. Now available in seventeen colours.", classroom: "Private companies, competing to sell to customers.", scores: PICK_P },
+            { text: "Whoever's cheapest this week, as long as the box arrives tomorrow.", classroom: "A mix of private, co-operative and public enterprises.", scores: MUDDLE },
         ]
     },
     {
@@ -296,14 +296,14 @@ const questions = [
     },
     {
         id: 'q23',
-        text: "How should getting around town work?",
-        classroom: "How should local transport be organised?",
+        text: "Should people be free to start a business, grow it and hire staff?",
+        classroom: "Should people be free to start a business, grow it and employ staff?",
         type: 'forcedChoice4',
         options: [
-            { text: "Publicly owned buses and trains, planned as one network with one ticket. The timetable is aspirational.", classroom: "Publicly owned buses and trains, planned as a single network.", scores: PICK_C },
-            { text: "Community transport schemes, bike co-ops and car-sharing clubs. Very green, mildly smug.", classroom: "Community transport schemes, cycling co-operatives and car-sharing clubs.", scores: PICK_M },
-            { text: "Private operators and ride-hailing apps competing on price. Surge pricing builds character.", classroom: "Private operators and apps competing on price and service.", scores: PICK_P },
-            { text: "Whatever survived forty years of all three, stitched together badly.", classroom: "A mixture of public, community and private services.", scores: MUDDLE },
+            { text: "Only within the state's plan, with a licence, a permit, and a permit for the licence.", classroom: "Only in limited ways, within a plan set by the state.", scores: PICK_C },
+            { text: "Yes, but once you hire people, they become co-owners. Welcome aboard: you're all on the rota now.", classroom: "Yes, but businesses that employ people should become co-operatives owned by their workers.", scores: PICK_M },
+            { text: "Of course. Start it, grow it, sell it, buy a yacht, start another. Some ventures may end in beans on toast.", classroom: "Yes, with as few restrictions as possible.", scores: PICK_P },
+            { text: "Yes, after filling in the forms, which take slightly longer than building the business.", classroom: "Yes, within ordinary regulation.", scores: MUDDLE },
         ]
     },
     {
@@ -327,14 +327,14 @@ const questions = [
     },
     {
         id: 'q26',
-        text: "How should people be looked after in old age?",
-        classroom: "How should people be supported in old age?",
+        text: "What should happen to the money and property people leave behind when they die?",
+        classroom: "What should happen to the money and property people leave when they die?",
         type: 'forcedChoice4',
         options: [
-            { text: "A state pension and state-run care, the same for everyone and guaranteed. Assuming the Treasury is still there.", classroom: "A state pension and state-run care, the same for everyone.", scores: PICK_C },
-            { text: "Families and communities, with shared housing and local care co-ops. Hope you like your relatives.", classroom: "Families and communities, supported by local care co-operatives.", scores: PICK_M },
-            { text: "Save and invest for yourself; it's your money and your retirement. Fingers crossed for the next market crash.", classroom: "Individuals saving and investing for their own retirement.", scores: PICK_P },
-            { text: "Work until you're 74, then work it out.", classroom: "A combination of state pension, family support and private savings.", scores: MUDDLE },
+            { text: "Most of it goes to the state, for everyone's benefit. Death and taxes, efficiently combined.", classroom: "Most of it should be taxed and used by the state for everyone's benefit.", scores: PICK_C },
+            { text: "It goes back to the community: a fund, a land trust, a really very nice village hall.", classroom: "It should go to community funds, trusts or co-operatives rather than to individuals.", scores: PICK_M },
+            { text: "Whoever they leave it to. It's their stuff, and if the cat gets the house, so be it.", classroom: "Whoever they choose; people should be free to pass on what they own.", scores: PICK_P },
+            { text: "A bit to the family, a bit to the taxman, and a decade of arguments to the solicitors.", classroom: "Some to family and some in tax, through a moderate inheritance tax.", scores: MUDDLE },
         ]
     },
     {
@@ -351,14 +351,14 @@ const questions = [
     },
     {
         id: 'q28',
-        text: "What makes for good, trustworthy news?",
-        classroom: "What makes news trustworthy?",
+        text: "Where should the money to build new factories and businesses come from?",
+        classroom: "Where should the money to start and expand businesses come from?",
         type: 'forcedChoice4',
         options: [
-            { text: "A well-funded public broadcaster with a legal duty to be impartial. Reliably balanced, reliably beige.", classroom: "A well-funded public broadcaster with a legal duty to be impartial.", scores: PICK_C },
-            { text: "Non-profit outlets owned by their readers and run locally. Earnest, and slightly behind on the big stories.", classroom: "Non-profit, locally run outlets owned by their readers.", scores: PICK_M },
-            { text: "Lots of outlets competing for your attention. Choose wisely; the algorithm already has.", classroom: "Many competing outlets, with readers choosing which to trust.", scores: PICK_P },
-            { text: "None of it. We'll just argue in the comments.", classroom: "A mixture of public, non-profit and commercial media.", scores: MUDDLE },
+            { text: "A state investment plan, steering money to where the nation needs it. Spreadsheets of destiny.", classroom: "A state investment plan that directs money to where it is needed.", scores: PICK_C },
+            { text: "Workers' and community funds, pooling savings for local enterprises. The pension pot votes on everything.", classroom: "Funds pooled and controlled by workers and communities.", scores: PICK_M },
+            { text: "Private investors and the stock market, chasing returns. Up, down, up, panic, up.", classroom: "Private investors and the stock market.", scores: PICK_P },
+            { text: "Banks, mostly, after a lot of paperwork and a firm handshake.", classroom: "A mix of private investment, public banks and community funds.", scores: MUDDLE },
         ]
     },
     {
