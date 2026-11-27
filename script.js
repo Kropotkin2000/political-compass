@@ -1,5 +1,6 @@
 // script.js — The Sarcastic Political Test
-// Data lives in questions.js, ideology_summaries.js and ideology_ideal_points.js.
+// Data lives in questions.js, ideology_summaries.js, ideology_summaries_classroom.js and ideology_ideal_points.js.
+// Two tones: 'sarcastic' (the default) and 'classroom' (plain, neutral wording). Scoring is identical in both.
 
 (() => {
     'use strict';
@@ -13,13 +14,75 @@
     if (typeof questions === 'undefined' || !Array.isArray(questions) || !questions.length) return fail('questions.js not loaded or empty.');
     if (typeof ideologySummaries === 'undefined') return fail('ideology_summaries.js not loaded.');
     if (typeof ideologyIdealPoints === 'undefined') return fail('ideology_ideal_points.js not loaded.');
+    const classroomSummaries = typeof ideologySummariesClassroom !== 'undefined' ? ideologySummariesClassroom : {};
+
+    // ------------------------------------------------------------------
+    // Tone: every piece of interface text, in both versions
+    // ------------------------------------------------------------------
+    const COPY = {
+        sarcastic: {
+            title: 'The Sarcastic Political Test',
+            brand: 'Sarcastic Political Test',
+            introEyebrow: 'Very accurate. Not remotely scientific.',
+            introTitle: 'Which <em>least-worst</em> caricature are you?',
+            introLede: 'Forget left and right. This test drops you somewhere inside a triangle with three corners:',
+            lede2: 'Plus a few blunt statements on a separate question: how much <b>liberty</b> would you trade for <b>order</b>?',
+            youLabel: 'you?',
+            eyebrowOwn: 'Your gloriously flawed result',
+            eyebrowShared: 'Their gloriously flawed result',
+            sharedNote: 'Someone shared their result with you. <a href="./">Take the test yourself &rarr;</a>',
+            outro: "Consider your life choices. Or don't. We're not your dad.",
+            toastLink: 'Share link copied. Spread the despair.',
+            toastText: 'Result copied as text.',
+            toastFail: 'Copy failed. Your browser said no.',
+            shareHeader: 'My Sarcastic Political Test result:',
+            leanNote: (ex) => `Your lean is weak (${ex}% from the dead centre), so treat this label as a loose fit: several centrist labels are about equally close.`,
+            order: (a) => a < 20 ? "Don't tread on anyone, ever." : a < 40 ? 'Live and let live, mostly.' : a < 60 ? 'Rules are fine. Some rules.' : a < 80 ? 'A firm hand, for everyone else.' : 'Papers, please.',
+            extremity: (x) => x < 15 ? 'Aggressively moderate. You probably own a beige fleece.' : x < 35 ? 'Opinions, yes. Pitchforks, not yet.' : x < 60 ? 'Strong views, lightly held. Mostly strong.' : x < 80 ? 'You have a manifesto. It has footnotes.' : 'You are the corner. The corner is you.',
+            axes: {
+                c: 'Someone official will sort it out. Please fill in this form.',
+                m: "We'll all decide together. The meeting starts at 7, and 9, and 11.",
+                p: 'The market will sort it out. Terms and conditions apply.',
+            },
+        },
+        classroom: {
+            title: 'The Political Triangle: classroom edition',
+            brand: 'Political Triangle · Classroom',
+            introEyebrow: 'Classroom edition',
+            introTitle: 'Where do you sit in the <em>political triangle</em>?',
+            introLede: 'Instead of a single left-right line, this test places you inside a triangle. Each corner is a different answer to the question: who should organise society?',
+            lede2: 'A separate set of statements measures a second question: how much <b>personal liberty</b> would you trade for <b>order and security</b>?',
+            youLabel: 'you',
+            eyebrowOwn: 'Your result',
+            eyebrowShared: 'A shared result',
+            sharedNote: 'Someone shared their result with you. <a href="./?tone=classroom">Take the test yourself &rarr;</a>',
+            outro: 'No test can capture a person\'s politics completely. Use this result as a starting point for discussion, not a label.',
+            toastLink: 'Share link copied.',
+            toastText: 'Result copied as text.',
+            toastFail: 'Copying failed. Your browser blocked it.',
+            shareHeader: 'My Political Triangle result:',
+            leanNote: (ex) => `Your answers do not lean strongly in any direction (${ex}% from the centre), so several centrist positions fit about equally well.`,
+            order: (a) => a < 20 ? 'Strongly favours personal liberty.' : a < 40 ? 'Leans towards personal liberty.' : a < 60 ? 'Balances liberty and order.' : a < 80 ? 'Leans towards order and authority.' : 'Strongly favours order and authority.',
+            extremity: (x) => x < 15 ? 'Your answers are close to the centre: you mixed approaches or chose the middle option often.' : x < 35 ? 'A moderate lean in one direction.' : x < 60 ? 'A clear lean in one direction.' : x < 80 ? 'A strong lean in one direction.' : 'A very strong, consistent lean towards one corner.',
+            axes: {
+                c: 'The state organises society, through law, planning and public services.',
+                m: 'Communities organise society, through shared ownership and collective decisions.',
+                p: 'Private owners organise society, through property and markets.',
+            },
+        },
+    };
+    const TONES = Object.keys(COPY);
+    const params0 = new URLSearchParams(location.search);
+    let tone = TONES.includes(params0.get('tone')) ? params0.get('tone')
+        : (TONES.includes(localStorage.getItem('tone-mode')) ? localStorage.getItem('tone-mode') : 'sarcastic');
+    const T = (key) => COPY[tone][key];
+    const say = (item) => (tone === 'classroom' && item.classroom) || item.text;   // question or option text
+    const summaryFor = (i) => tone === 'classroom'
+        ? (classroomSummaries[i.name] || ideologySummaries[i.name] || '')
+        : (ideologySummaries[i.name] || ideologySummaries[i.broad] || 'No summary written yet.');
 
     const AXES = ['c', 'm', 'p'];
-    const AXIS_INFO = {
-        c: { name: 'Centralism', blurb: 'Someone official will sort it out. Please fill in this form.' },
-        m: { name: 'Communalism', blurb: "We'll all decide together. The meeting starts at 7, and 9, and 11." },
-        p: { name: 'Privatism', blurb: 'The market will sort it out. Terms and conditions apply.' },
-    };
+    const AXIS_NAMES = { c: 'Centralism', m: 'Communalism', p: 'Privatism' };
     const IDEOLOGIES = Object.entries(ideologyIdealPoints).map(([name, pt]) => ({ name, ...pt }));
     const BROAD_ORDER = [...new Set(IDEOLOGIES.map(i => i.broad))];
     const broadIndex = (b) => BROAD_ORDER.indexOf(b);
@@ -208,7 +271,8 @@
         el('circle', { cx, cy, r: 18, class: 'you-ring pulse' }, svg);
         el('circle', { cx, cy, r: 8, class: 'you-dot' }, svg);
         const t = el('text', { x: cx, y: cy + 34, class: 'you-label', 'text-anchor': 'middle' }, svg);
-        t.textContent = 'you?';
+        t.textContent = T('youLabel');
+        t.id = 'intro-you-label';
     }
 
     // ------------------------------------------------------------------
@@ -281,7 +345,7 @@
         optionsContainer.classList.toggle('scale', isScale(q));
         $('back-button').disabled = current === 0;
 
-        questionText.innerHTML = formatText(q.text.replace(/^Statement:\s*/, ''));
+        questionText.innerHTML = formatText(say(q).replace(/^Statement:\s*/, ''));
         optionsContainer.innerHTML = '';
         optionOrders[current].forEach((origIdx, displayIdx) => {
             const o = q.options[origIdx];
@@ -292,8 +356,7 @@
             b.setAttribute('aria-checked', answers[current] === origIdx ? 'true' : 'false');
             if (answers[current] === origIdx) b.classList.add('selected');
             b.dataset.orig = origIdx;
-            const quip = o.quip ? `<small class="opt-quip">${formatText(o.quip)}</small>` : '';
-            b.innerHTML = `<span class="key">${displayIdx + 1}</span><span class="opt-text">${o.quip ? `<b>${formatText(o.text)}</b>` : formatText(o.text)}${quip}</span>`;
+            b.innerHTML = `<span class="key">${displayIdx + 1}</span><span class="opt-text">${formatText(say(o))}</span>`;
             b.addEventListener('click', () => choose(origIdx, b));
             optionsContainer.appendChild(b);
         });
@@ -357,26 +420,13 @@
 
     let resultState = null;
 
-    function orderQuip(a) {
-        if (a < 20) return "Don't tread on anyone, ever.";
-        if (a < 40) return 'Live and let live, mostly.';
-        if (a < 60) return 'Rules are fine. Some rules.';
-        if (a < 80) return 'A firm hand, for everyone else.';
-        return 'Papers, please.';
-    }
-
-    function extremityQuip(x) {
-        if (x < 15) return 'Aggressively moderate. You probably own a beige fleece.';
-        if (x < 35) return 'Opinions, yes. Pitchforks, not yet.';
-        if (x < 60) return 'Strong views, lightly held. Mostly strong.';
-        if (x < 80) return 'You have a manifesto. It has footnotes.';
-        return 'You are the corner. The corner is you.';
-    }
+    const orderQuip = (a) => T('order')(a);
+    const extremityQuip = (x) => T('extremity')(x);
 
     function showResults(pos, { raw = null, shared = false } = {}) {
         show('results');
         $('shared-note').hidden = !shared;
-        $('results-eyebrow').textContent = shared ? 'Their gloriously flawed result' : 'Your gloriously flawed result';
+        $('results-eyebrow').textContent = shared ? T('eyebrowShared') : T('eyebrowOwn');
         $('dev-panel').hidden = !isDevMode;
         $('map-hint').textContent = isDevMode ? 'Dev mode: click or drag to move the dot.' : 'Tap any dot to read about that ideology.';
 
@@ -402,7 +452,7 @@
         const ring = el('circle', { cx: cx0, cy: cy0, r: 16, class: 'you-ring pulse' }, youLayer);
         const you = el('circle', { cx: cx0, cy: cy0, r: 8, class: 'you-dot' }, youLayer);
 
-        resultState = { pos, raw, svg, dots, linkLayer, labelLayer, ring, you, focused: null };
+        resultState = { pos, raw, shared, svg, dots, linkLayer, labelLayer, ring, you, focused: null };
 
         drawLegend();
         updateResultsView(pos, { animate: !reduceMotion && !isDevMode, firstReveal: true });
@@ -430,7 +480,7 @@
         $('result-broad').textContent = top[0].broad;
         const ex = extremity(pos);
         $('lean-note').hidden = ex >= WEAK_LEAN;
-        $('lean-note').textContent = `Your lean is weak (${ex.toFixed(0)}% from the dead centre), so treat this label as a loose fit: several centrist labels are about equally close.`;
+        $('lean-note').textContent = T('leanNote')(ex.toFixed(0));
         if (firstReveal && !reduceMotion) {
             $('result-name').classList.remove('reveal'); void $('result-name').offsetWidth; $('result-name').classList.add('reveal');
         }
@@ -492,7 +542,7 @@
         AXES.forEach(a => {
             const row = document.createElement('div');
             row.className = `mix-row mix-${a}`;
-            row.innerHTML = `<div class="mix-top"><span><b>${AXIS_INFO[a].name}</b> <small>${AXIS_INFO[a].blurb}</small></span><b>${pos[a].toFixed(0)}%</b></div><div class="meter"><div class="meter-fill" style="width:${pos[a].toFixed(1)}%"></div></div>`;
+            row.innerHTML = `<div class="mix-top"><span><b>${AXIS_NAMES[a]}</b> <small>${T('axes')[a]}</small></span><b>${pos[a].toFixed(0)}%</b></div><div class="meter"><div class="meter-fill" style="width:${pos[a].toFixed(1)}%"></div></div>`;
             mix.appendChild(row);
         });
 
@@ -528,7 +578,7 @@
         $('focus-label').textContent = isOwn ? 'Your closest match' : `Your #${rank} closest of ${IDEOLOGIES.length}`;
         $('focus-name').textContent = target.name;
         $('focus-meta').innerHTML = `<i class="sw b${broadIndex(target.broad)}"></i>${target.broad} &middot; ${d.toFixed(1)} pts from you &middot; C ${target.c} / M ${target.m} / P ${target.p} &middot; Order ${target.a}`;
-        $('focus-summary').innerHTML = formatText(ideologySummaries[target.name] || ideologySummaries[target.broad] || 'No summary written yet.');
+        $('focus-summary').innerHTML = formatText(summaryFor(target));
         $('focus-reset').hidden = isOwn;
         st.dots.forEach((dd, n) => dd.g.classList.toggle('focused', !isOwn && n === target.name));
         const card = $('focus-card');
@@ -566,7 +616,8 @@
     // ------------------------------------------------------------------
     // Sharing
     // ------------------------------------------------------------------
-    const baseUrl = () => location.href.split(/[?#]/)[0];
+    // Share links keep the classroom tone, so a class all sees the same version.
+    const baseUrl = () => location.href.split(/[?#]/)[0] + (tone === 'classroom' ? '?tone=classroom' : '');
 
     async function copy(text, okMsg) {
         try {
@@ -578,7 +629,7 @@
             document.body.appendChild(ta); ta.select();
             const ok = document.execCommand && document.execCommand('copy');
             ta.remove();
-            toast(ok ? okMsg : 'Copy failed. Your browser said no.');
+            toast(ok ? okMsg : T('toastFail'));
         }
     }
 
@@ -593,12 +644,12 @@
     }
 
     $('copy-link-button').addEventListener('click', () => {
-        copy(`${baseUrl()}#r=${encodePos(resultState.pos)}`, 'Share link copied. Spread the despair.');
+        copy(`${baseUrl()}#r=${encodePos(resultState.pos)}`, T('toastLink'));
     });
     $('copy-text-button').addEventListener('click', () => {
         const { pos, top } = resultState;
         const lines = [
-            'My Sarcastic Political Test result:',
+            T('shareHeader'),
             `${top[0].name} (${top[0].broad})`,
             `Centralism ${pos.c.toFixed(0)}% / Communalism ${pos.m.toFixed(0)}% / Privatism ${pos.p.toFixed(0)}%`,
             `Liberty or order: ${pos.a.toFixed(0)} (0 = all liberty, 100 = all order)`,
@@ -606,7 +657,7 @@
             '',
             `See it: ${baseUrl()}#r=${encodePos(pos)}`,
         ];
-        copy(lines.join('\n'), 'Result copied as text.');
+        copy(lines.join('\n'), T('toastText'));
     });
 
     // ------------------------------------------------------------------
@@ -639,8 +690,40 @@
     });
 
     // ------------------------------------------------------------------
+    // Tone switching
+    // ------------------------------------------------------------------
+    function applyTone(next, { remember = true } = {}) {
+        tone = next;
+        document.documentElement.dataset.tone = tone;
+        document.title = T('title');
+        document.querySelectorAll('[data-copy]').forEach(node => {
+            const v = T(node.dataset.copy);
+            if (typeof v === 'string') node.innerHTML = v;
+        });
+        document.querySelectorAll('[data-copy-axis]').forEach(node => { node.textContent = T('axes')[node.dataset.copyAxis]; });
+        const you = document.getElementById('intro-you-label');
+        if (you) you.textContent = T('youLabel');
+        document.querySelectorAll('.tone-switch button').forEach(b => b.setAttribute('aria-pressed', b.dataset.tone === tone ? 'true' : 'false'));
+        if (remember) {
+            localStorage.setItem('tone-mode', tone);
+            // keep the address in step, so a teacher can copy it straight from the address bar
+            const u = new URL(location.href);
+            if (tone === 'classroom') u.searchParams.set('tone', 'classroom'); else u.searchParams.delete('tone');
+            history.replaceState(null, '', u.pathname + u.search + u.hash);
+        }
+        // re-render whatever is on screen
+        if (!screens.quiz.hidden && order.length) renderQuestion('none');
+        if (!screens.results.hidden && resultState) {
+            $('results-eyebrow').textContent = resultState.shared ? T('eyebrowShared') : T('eyebrowOwn');
+            updateResultsView(resultState.pos);
+        }
+    }
+    document.querySelectorAll('.tone-switch button').forEach(b => b.addEventListener('click', () => applyTone(b.dataset.tone)));
+
+    // ------------------------------------------------------------------
     // Boot
     // ------------------------------------------------------------------
+    applyTone(tone, { remember: params0.has('tone') });
     drawIntroArt();
     const hashStr = (location.hash.match(/r=([^&]+)/) || [])[1];
     const hashPos = decodePos(hashStr);

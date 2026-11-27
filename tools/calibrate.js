@@ -10,10 +10,10 @@ const fs = require('fs'), vm = require('vm'), path = require('path');
 const dir = path.join(__dirname, '..');
 const ctx = {};
 vm.createContext(ctx);
-vm.runInContext(['questions.js', 'ideology_summaries.js', 'ideology_ideal_points.js']
+vm.runInContext(['questions.js', 'ideology_summaries.js', 'ideology_summaries_classroom.js', 'ideology_ideal_points.js']
     .map(f => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n;\n') +
-    '\n;this.Q=questions;this.S=ideologySummaries;this.IP=ideologyIdealPoints;', ctx);
-const { Q, S, IP } = ctx;
+    '\n;this.Q=questions;this.S=ideologySummaries;this.SC=ideologySummariesClassroom;this.IP=ideologyIdealPoints;', ctx);
+const { Q, S, SC, IP } = ctx;
 
 const ORDER_WEIGHT = 0.6; // must match ORDER_WEIGHT in script.js
 const NT = Q.filter(q => q.type !== 'agreeScale').length, NA = Q.length - NT;
@@ -76,6 +76,14 @@ for (const [name, key] of Object.entries(personas)) {
 const names = Object.keys(IP);
 const missing = names.filter(k => !S[k]);
 if (missing.length) { console.log('\nMissing summaries:', missing); fails++; }
+const missingC = names.filter(k => !SC[k]);
+if (missingC.length) { console.log('\nMissing classroom summaries:', missingC); fails++; }
+const strayC = Object.keys(SC).filter(k => !IP[k]);
+if (strayC.length) { console.log('\nClassroom summaries with no matching ideology:', strayC); fails++; }
+for (const q of Q) {
+    if (!q.classroom) { console.log('No classroom wording for', q.id); fails++; }
+    q.options.forEach((o, i) => { if (!o.classroom) { console.log('No classroom wording for', q.id, 'option', i + 1); fails++; } });
+}
 for (const k of names) { const p = IP[k]; if (Math.abs(p.c + p.m + p.p - 100) > 0.01) { console.log('Does not sum to 100:', k); fails++; } }
 
 // Every ideology should be reachable by someone answering with a consistent lean.
