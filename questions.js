@@ -32,13 +32,13 @@ const AGAINST_P = { c: 0.5, m: 0.5, p: 0 };
 const MUDDLE = { c: 1 / 3, m: 1 / 3, p: 1 / 3 };
 
 // Agree scale. keyed: 1 means "agree = more order", -1 means "agree = more liberty".
-// `quip` is shown under the plain label; agreeing and disagreeing are teased equally.
+// Answers run from strongly agree to strongly disagree (never shuffled); both sides are teased equally.
 const agreeScale = (keyed) => [
-    { text: "Strongly agree",    quip: "Obviously. Why is this even a question?",                scores: { a: 2 * keyed } },
-    { text: "Agree",             quip: "Yes, but I wouldn't say it at a dinner party.",          scores: { a: 1 * keyed } },
-    { text: "Shrug",             quip: "Depends who's asking. And who's watching.",              scores: { a: 0 } },
-    { text: "Disagree",          quip: "No, accompanied by a long and meaningful sigh.",         scores: { a: -1 * keyed } },
-    { text: "Strongly disagree", quip: "Absolutely not. I'm drafting a strongly worded letter.", scores: { a: -2 * keyed } },
+    { text: "Obviously. Why is this even a question?",                scores: { a: 2 * keyed } },   // strongly agree
+    { text: "Yes, but I wouldn't say it at a dinner party.",          scores: { a: 1 * keyed } },   // agree
+    { text: "Depends who's asking. And who's watching.",              scores: { a: 0 } },           // shrug
+    { text: "No, accompanied by a long and meaningful sigh.",         scores: { a: -1 * keyed } },  // disagree
+    { text: "Absolutely not. I'm drafting a strongly worded letter.", scores: { a: -2 * keyed } },  // strongly disagree
 ];
 
 const questions = [
