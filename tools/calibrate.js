@@ -207,7 +207,7 @@ console.log('\n3. CLOSEST PAIRS (distance with tie-breakers / main test only)');
 pairs.slice(0, 8).forEach(([a, b, d, d0]) => console.log(`  ${d.toFixed(0).padStart(3)} / ${d0.toFixed(0).padStart(3)}  ${short(a)} <> ${short(b)}`));
 
 // 4. territory and gaps (main test only)
-const GAP = 48;   // 'far from everything' threshold: 30 points on the old scale x 1.6 stretch
+const GAP = 34;   // 'far from everything' threshold: 30 points on the raw scale x the 1.14 stretch
 const share = {}; let empty = 0; const M = 60000;
 for (let i = 0; i < M; i++) {
     let r1 = Math.random(), r2 = Math.random(); if (r1 + r2 > 1) { r1 = 1 - r1; r2 = 1 - r2; }

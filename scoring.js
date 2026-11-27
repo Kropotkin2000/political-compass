@@ -17,11 +17,12 @@ var Scoring = (function () {
 
     var AXES = ['c', 'm', 'p'];
     var TB_DIMS = ['change', 'scale', 'trad', 'nation'];
-    // Weights below are tuned for the stretched triangle (see stretch() further down), which makes
-    // triangle distances 1.6x larger than the raw averages. Keep them in proportion if that changes.
-    var ORDER_WEIGHT = 0.96;    // how much Order counts against the triangle when matching
-    var TB_WEIGHT = 0.8;        // how much each answered tie-break measure counts
-    var CANDIDATE_MARGIN = 24;  // ideologies within this many points of the best are "close"
+    // Weights below are tuned for the stretched triangle (see stretch() further down), which with the
+    // current questions makes triangle distances about 1.14x the raw averages. Keep them in proportion
+    // if the question mix changes.
+    var ORDER_WEIGHT = 0.69;    // how much Order counts against the triangle when matching
+    var TB_WEIGHT = 0.57;       // how much each answered tie-break measure counts
+    var CANDIDATE_MARGIN = 17;  // ideologies within this many points of the best are "close"
     var MAX_CANDIDATES = 5;
     var MAX_TIEBREAKERS = 4;
     var MIN_SPREAD = 30;        // a measure is only worth asking if close matches differ by this much on it
@@ -43,19 +44,43 @@ var Scoring = (function () {
         return out;
     }
 
+    // Which corner a "pick a villain" answer blames (the corner it gives nothing to), or null for the muddle.
+    function villainOf(q, s) {
+        if (q.kind !== 'villain') return null;
+        var zero = AXES.filter(function (ax) { return !(Number(s[ax]) > 0); });
+        return zero.length === 1 ? zero[0] : null;
+    }
+
     // answers: array of option indexes, one per question in `qs` (null = unanswered)
     function position(qs, answers) {
-        var t = { c: 0, m: 0, p: 0, a: 0 }, best = { c: 0, m: 0, p: 0 }, nTri = 0, nA = 0;
+        var t = { c: 0, m: 0, p: 0, a: 0 }, best = { c: 0, m: 0, p: 0 }, nTri = 0, nA = 0, blamed = [];
         for (var i = 0; i < qs.length; i++) {
             var k = answers[i];
             if (k == null) continue;
-            var s = qs[i].options[k].scores;
-            if (isScale(qs[i])) { t.a += Number(s.a) || 0; nA++; continue; }
-            t.c += Number(s.c) || 0; t.m += Number(s.m) || 0; t.p += Number(s.p) || 0; nTri++;
-            AXES.forEach(function (ax) {
-                best[ax] += Math.max.apply(null, qs[i].options.map(function (o) { return Number(o.scores[ax]) || 0; }));
-            });
+            var q = qs[i], s = q.options[k].scores;
+            if (isScale(q)) { t.a += Number(s.a) || 0; nA++; continue; }
+            nTri++;
+            if (q.kind === 'villain') {
+                // a villain answer can, in principle, give its whole point to one corner
+                AXES.forEach(function (ax) { best[ax] += 1; });
+                var v = villainOf(q, s);
+                if (v) { blamed.push(v); continue; }    // shared out below, once we know the rest
+            } else {
+                AXES.forEach(function (ax) {
+                    best[ax] += Math.max.apply(null, q.options.map(function (o) { return Number(o.scores[ax]) || 0; }));
+                });
+            }
+            t.c += Number(s.c) || 0; t.m += Number(s.m) || 0; t.p += Number(s.p) || 0;
         }
+        // Blaming a corner pushes you straight away from it, split between the other two corners in
+        // proportion to your other answers (50/50 if those answers favour neither).
+        var base = { c: t.c, m: t.m, p: t.p };
+        blamed.forEach(function (v) {
+            var o = AXES.filter(function (ax) { return ax !== v; });
+            var x = base[o[0]], y = base[o[1]];
+            var share = x + y > 0 ? x / (x + y) : 0.5;
+            t[o[0]] += share; t[o[1]] += 1 - share;
+        });
         var pos;
         if (nTri) {
             pos = { c: t.c / nTri * 100, m: t.m / nTri * 100, p: t.p / nTri * 100 };

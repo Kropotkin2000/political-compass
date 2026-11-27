@@ -14,10 +14,13 @@
 //
 // Each answer is a point in the triangle, and your position is the average of all your points:
 //   "Pick a corner"  - one option per corner (the point sits on that corner), plus a muddle option.
-//   "Pick a villain" - one option criticising each corner (the point sits halfway along the opposite
-//                      edge, i.e. split evenly between the other two corners), plus a muddle option.
+//   "Pick a villain" - one option criticising each corner, plus a muddle option (kind: 'villain').
+//                      Blaming a corner pushes you directly away from it. The push is split between the
+//                      other two corners in proportion to how you answered the rest of the triangle
+//                      questions, so a market fan who blames the state moves towards Privatism and a
+//                      co-op fan who blames the state moves towards Communalism (see scoring.js).
 //   Muddle options sit at the dead centre.
-//   "Pick a blend"   - one option for each PAIR of corners (state + community, state + private,
+//   "Pick a blend"   - (kind: 'blend') one option for each PAIR of corners (state + community, state + private,
 //                      community + private), sitting halfway along that edge, plus a muddle option.
 //                      These let people say what mixed positions (social democracy, market socialism,
 //                      distributism...) actually think, instead of picking the nearest corner.
@@ -69,6 +72,7 @@ const questions = [
     },
     {
         id: 'q2',
+        kind: 'blend',
         text: "Someone breaks their leg. How should their treatment be arranged?",
         classroom: "How should medical treatment be organised and paid for?",
         type: 'forcedChoice4',
@@ -81,6 +85,7 @@ const questions = [
     },
     {
         id: 'q3',
+        kind: 'blend',
         text: "There aren't enough homes. What's the fix?",
         classroom: "There is a shortage of housing. What is the best solution?",
         type: 'forcedChoice4',
@@ -100,6 +105,7 @@ const questions = [
     },
     {
         id: 'q5',
+        kind: 'villain',
         text: "Which of these worries you most about the future?",
         classroom: "Which of these concerns you most about the future?",
         type: 'forcedChoice4',
@@ -112,6 +118,7 @@ const questions = [
     },
     {
         id: 'q6',
+        kind: 'blend',
         text: "Who should have the final say in how a business is run?",
         classroom: "Who should have the final say in how a business is run?",
         type: 'forcedChoice4',
@@ -143,6 +150,7 @@ const questions = [
     },
     {
         id: 'q9',
+        kind: 'villain',
         text: "Some people are vastly richer than others. What's mostly to blame?",
         classroom: "There are large differences in wealth between people. What is the main cause?",
         type: 'forcedChoice4',
@@ -186,6 +194,7 @@ const questions = [
     },
     {
         id: 'q13',
+        kind: 'villain',
         text: "When a big project goes badly wrong, the cause is usually:",
         classroom: "When large projects fail, what is usually the main cause?",
         type: 'forcedChoice4',
@@ -210,6 +219,7 @@ const questions = [
     },
     {
         id: 'q15',
+        kind: 'blend',
         text: "Who should run the banks?",
         classroom: "Who should run the banks?",
         type: 'forcedChoice4',
@@ -229,6 +239,7 @@ const questions = [
     },
     {
         id: 'q17',
+        kind: 'villain',
         text: "Who would you least want to have power over your life?",
         classroom: "Whose power over your life would concern you most?",
         type: 'forcedChoice4',
@@ -272,6 +283,7 @@ const questions = [
     },
     {
         id: 'q21',
+        kind: 'villain',
         text: "What's the biggest lie people tell themselves about freedom?",
         classroom: "Which is the greatest threat to real freedom?",
         type: 'forcedChoice4',
@@ -315,6 +327,7 @@ const questions = [
     },
     {
         id: 'q25',
+        kind: 'villain',
         text: "When someone says it's 'for the common good', who's most likely pulling a fast one?",
         classroom: "When people say something is 'for the common good', who is most likely to be misusing the phrase?",
         type: 'forcedChoice4',
@@ -339,6 +352,7 @@ const questions = [
     },
     {
         id: 'q27',
+        kind: 'villain',
         text: "In a pandemic or a flood, who tends to let people down?",
         classroom: "In a crisis such as a pandemic or a flood, which tends to let people down most?",
         type: 'forcedChoice4',
@@ -363,6 +377,7 @@ const questions = [
     },
     {
         id: 'q29',
+        kind: 'villain',
         text: "What's the most dangerous kind of monopoly?",
         classroom: "What is the most dangerous kind of monopoly?",
         type: 'forcedChoice4',

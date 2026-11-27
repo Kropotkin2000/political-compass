@@ -127,7 +127,7 @@
     const rankIdeologies = (pos) => Scoring.rank(pos, IDEOLOGIES);
     const CENTRE = Scoring.CENTRE;
     const extremity = Scoring.lean;
-    const WEAK_LEAN = 19; // below this, the result says the match is loose (tuned for the stretched triangle)
+    const WEAK_LEAN = 14; // below this, the result says the match is loose (tuned for the stretched triangle)
 
     // Main-test position from the answers given so far. `order[i]` is a question index, `ans[i]` its answer.
     function computeRaw(ord, ans) {
