@@ -387,7 +387,7 @@ main { position: relative; z-index: 1; }
 
 .mix-bars { display: grid; gap: 14px; }
 .mix-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 6px; }
-.mix-top small { color: var(--text-3); font-size: 13px; margin-left: 4px; }
+.mix-top small { display: block; color: var(--text-3); font-size: 13px; line-height: 1.4; margin-top: 2px; }
 .meter { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
 .meter-fill { height: 100%; border-radius: inherit; transition: width 1.2s var(--ease-out); }
 .mix-c .meter-fill { background: var(--c); } .mix-c .mix-top > b { color: var(--c); }
