@@ -206,17 +206,18 @@ console.log('\n3. CLOSEST PAIRS (distance with tie-breakers / main test only)');
 pairs.slice(0, 8).forEach(([a, b, d, d0]) => console.log(`  ${d.toFixed(0).padStart(3)} / ${d0.toFixed(0).padStart(3)}  ${short(a)} <> ${short(b)}`));
 
 // 4. territory and gaps (main test only)
+const GAP = 48;   // 'far from everything' threshold: 30 points on the old scale x 1.6 stretch
 const share = {}; let empty = 0; const M = 60000;
 for (let i = 0; i < M; i++) {
     let r1 = Math.random(), r2 = Math.random(); if (r1 + r2 > 1) { r1 = 1 - r1; r2 = 1 - r2; }
     const n = { c: r1 * 100, m: r2 * 100, p: (1 - r1 - r2) * 100, a: Math.random() * 100 };
     const r = Scoring.rank(n, IDEOS);
     share[r[0].name] = (share[r[0].name] || 0) + 1;
-    if (r[0].d > 30) empty++;
+    if (r[0].d > GAP) empty++;
 }
 const sh = Object.entries(share).sort((a, b) => b[1] - a[1]);
 console.log(`\n4. TERRITORY: largest ${short(sh[0][0])} ${(sh[0][1] / M * 100).toFixed(1)}%, smallest ${short(sh[sh.length - 1][0])} ${(sh[sh.length - 1][1] / M * 100).toFixed(1)}%; ` +
-    `${(empty / M * 100).toFixed(1)}% of positions are over 30 points from every ideology`);
+    `${(empty / M * 100).toFixed(1)}% of positions are over ${GAP} points from every ideology`);
 const never = names.filter(n => !share[n]);
 if (never.length) console.log('  never the closest anywhere:', never);
 

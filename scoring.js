@@ -17,28 +17,55 @@ var Scoring = (function () {
 
     var AXES = ['c', 'm', 'p'];
     var TB_DIMS = ['change', 'scale', 'trad', 'nation'];
-    var ORDER_WEIGHT = 0.6;     // how much Order counts against the triangle when matching
-    var TB_WEIGHT = 0.5;        // how much each answered tie-break measure counts
-    var CANDIDATE_MARGIN = 15;  // ideologies within this many points of the best are "close"
+    // Weights below are tuned for the stretched triangle (see stretch() further down), which makes
+    // triangle distances 1.6x larger than the raw averages. Keep them in proportion if that changes.
+    var ORDER_WEIGHT = 0.96;    // how much Order counts against the triangle when matching
+    var TB_WEIGHT = 0.8;        // how much each answered tie-break measure counts
+    var CANDIDATE_MARGIN = 24;  // ideologies within this many points of the best are "close"
     var MAX_CANDIDATES = 5;
     var MAX_TIEBREAKERS = 4;
     var MIN_SPREAD = 30;        // a measure is only worth asking if close matches differ by this much on it
 
     var isScale = function (q) { return q.type === 'agreeScale'; };
 
+    // Stretch a raw average out from the centre so that the most extreme answers possible on these
+    // questions land exactly on the corners. Without this, "pick a villain" and "pick a blend" answers
+    // (which sit halfway along an edge) cap every corner at about 75%, and nobody can ever reach one.
+    // `reach` is the highest average any single corner can get from the questions answered.
+    // Anything pushed past an edge is held on that edge.
+    function stretch(pos, reach) {
+        var mid = 100 / 3;
+        var k = reach > mid + 1e-9 ? (100 - mid) / (reach - mid) : 1;
+        var out = {};
+        AXES.forEach(function (ax) { out[ax] = Math.max(0, mid + (pos[ax] - mid) * k); });
+        var sum = (out.c + out.m + out.p) || 1;
+        AXES.forEach(function (ax) { out[ax] = out[ax] / sum * 100; });
+        return out;
+    }
+
     // answers: array of option indexes, one per question in `qs` (null = unanswered)
     function position(qs, answers) {
-        var t = { c: 0, m: 0, p: 0, a: 0 }, nTri = 0, nA = 0;
+        var t = { c: 0, m: 0, p: 0, a: 0 }, best = { c: 0, m: 0, p: 0 }, nTri = 0, nA = 0;
         for (var i = 0; i < qs.length; i++) {
             var k = answers[i];
             if (k == null) continue;
             var s = qs[i].options[k].scores;
-            if (isScale(qs[i])) { t.a += Number(s.a) || 0; nA++; }
-            else { t.c += Number(s.c) || 0; t.m += Number(s.m) || 0; t.p += Number(s.p) || 0; nTri++; }
+            if (isScale(qs[i])) { t.a += Number(s.a) || 0; nA++; continue; }
+            t.c += Number(s.c) || 0; t.m += Number(s.m) || 0; t.p += Number(s.p) || 0; nTri++;
+            AXES.forEach(function (ax) {
+                best[ax] += Math.max.apply(null, qs[i].options.map(function (o) { return Number(o.scores[ax]) || 0; }));
+            });
         }
-        var pos = nTri ? { c: t.c / nTri * 100, m: t.m / nTri * 100, p: t.p / nTri * 100 } : { c: 100 / 3, m: 100 / 3, p: 100 / 3 };
-        var sum = (pos.c + pos.m + pos.p) || 1;
-        AXES.forEach(function (ax) { pos[ax] = pos[ax] / sum * 100; });
+        var pos;
+        if (nTri) {
+            pos = { c: t.c / nTri * 100, m: t.m / nTri * 100, p: t.p / nTri * 100 };
+            var sum = (pos.c + pos.m + pos.p) || 1;
+            AXES.forEach(function (ax) { pos[ax] = pos[ax] / sum * 100; });
+            var reach = (best.c + best.m + best.p) / 3 / nTri * 100;
+            pos = stretch(pos, reach);
+        } else {
+            pos = { c: 100 / 3, m: 100 / 3, p: 100 / 3 };
+        }
         pos.a = nA ? Math.max(0, Math.min(100, (t.a / nA + 2) / 4 * 100)) : 50;
         return pos;
     }
