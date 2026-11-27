@@ -487,3 +487,9 @@ main { position: relative; z-index: 1; }
     .options.scale .option { grid-template-columns: auto 1fr; justify-items: start; text-align: left; padding: 13px 14px; }
     .options.scale .option.selected { padding: 12px 13px; }
 }
+
+/* agree-scale answers: plain label plus a sarcastic line */
+.options.scale .opt-text { display: grid; gap: 6px; }
+.options.scale .opt-text b { font-weight: 600; color: var(--text); }
+.opt-quip { font-size: 13px; line-height: 1.35; color: var(--text-3); font-style: italic; }
+.option.selected .opt-quip { color: var(--text-2); }

@@ -292,7 +292,8 @@
             b.setAttribute('aria-checked', answers[current] === origIdx ? 'true' : 'false');
             if (answers[current] === origIdx) b.classList.add('selected');
             b.dataset.orig = origIdx;
-            b.innerHTML = `<span class="key">${displayIdx + 1}</span><span class="opt-text">${formatText(o.text)}</span>`;
+            const quip = o.quip ? `<small class="opt-quip">${formatText(o.quip)}</small>` : '';
+            b.innerHTML = `<span class="key">${displayIdx + 1}</span><span class="opt-text">${o.quip ? `<b>${formatText(o.text)}</b>` : formatText(o.text)}${quip}</span>`;
             b.addEventListener('click', () => choose(origIdx, b));
             optionsContainer.appendChild(b);
         });

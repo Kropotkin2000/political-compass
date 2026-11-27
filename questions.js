@@ -32,12 +32,13 @@ const AGAINST_P = { c: 0.5, m: 0.5, p: 0 };
 const MUDDLE = { c: 1 / 3, m: 1 / 3, p: 1 / 3 };
 
 // Agree scale. keyed: 1 means "agree = more order", -1 means "agree = more liberty".
+// `quip` is shown under the plain label; agreeing and disagreeing are teased equally.
 const agreeScale = (keyed) => [
-    { text: "Strongly agree",    scores: { a: 2 * keyed } },
-    { text: "Agree",             scores: { a: 1 * keyed } },
-    { text: "Shrug",             scores: { a: 0 } },
-    { text: "Disagree",          scores: { a: -1 * keyed } },
-    { text: "Strongly disagree", scores: { a: -2 * keyed } },
+    { text: "Strongly agree",    quip: "Obviously. Why is this even a question?",                scores: { a: 2 * keyed } },
+    { text: "Agree",             quip: "Yes, but I wouldn't say it at a dinner party.",          scores: { a: 1 * keyed } },
+    { text: "Shrug",             quip: "Depends who's asking. And who's watching.",              scores: { a: 0 } },
+    { text: "Disagree",          quip: "No, accompanied by a long and meaningful sigh.",         scores: { a: -1 * keyed } },
+    { text: "Strongly disagree", quip: "Absolutely not. I'm drafting a strongly worded letter.", scores: { a: -2 * keyed } },
 ];
 
 const questions = [
@@ -127,7 +128,7 @@ const questions = [
             { text: "Governments handing out favours, bailouts and protected monopolies to their friends.", scores: AGAINST_C },
             { text: "Cosy cliques and closed networks that look after their own and keep outsiders out.", scores: AGAINST_M },
             { text: "An economy where wealth piles up for those who already have it.", scores: AGAINST_P },
-            { text: "Luck, mostly, with a bit of everything above.", scores: MUDDLE },
+            { text: "Mostly luck: who your parents were, where you were born, and which way the dice fell.", scores: MUDDLE },
         ]
     },
     {
@@ -166,7 +167,7 @@ const questions = [
             { text: "Officials who answer to nobody and never pay for their mistakes.", scores: AGAINST_C },
             { text: "Too many people with a veto, so nothing gets decided until it's too late.", scores: AGAINST_M },
             { text: "Someone cutting corners to save money and keep the share price up.", scores: AGAINST_P },
-            { text: "All of the above, plus a spreadsheet error.", scores: MUDDLE },
+            { text: "A bit of everyone's fault, plus a spreadsheet error.", scores: MUDDLE },
         ]
     },
     {
