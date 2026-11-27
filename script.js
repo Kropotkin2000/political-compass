@@ -35,99 +35,51 @@
     }
 
     // ------------------------------------------------------------------
-    // Scoring (unchanged maths from the original version)
+    // Scoring
     // ------------------------------------------------------------------
-    const STAGE1 = ['q1', 'q2', 'q3'];          // identity questions
-    const STAGE2 = ['q4', 'q5', 'q6'];          // vision questions
-    const MIN_AFFIRMATION_SIGNAL_FOR_HIGH = 2.0;
-    const DOMINANT_HIGH_SIGNAL_DIFFERENCE = 1.0;
-    const DAMPENING_FACTOR = 0.5;
-    const MAX_ACCUMULATED_ON_RESISTED_AXIS = 3.0;
+    // Triangle: every answer is a point in the triangle (see questions.js); your position is
+    // the average of your points. Order: the average of your agree-scale answers (-2..+2),
+    // rescaled to 0 (all liberty) .. 100 (all order).
+    const ORDER_WEIGHT = 0.6;   // how much Order counts when matching ideologies (tools/calibrate.js uses the same)
+    const isScale = (q) => q.type === 'agreeScale';
 
-    // [affirm/reject signals] per option of each affinity question
-    const AFFINITY = {
-        q1: [{ P: 1, rM: 1 }, { M: 1, rP: 1 }, { rP: 0.3, rM: 0.3 }],
-        q2: [{ C: 1 }, { rC: 1 }, { rC: 0.3 }],
-        q3: [{ M: 1 }, { rM: 1 }, { rM: 0.3 }],
-        q4: [{ P: 2 }, { rP: 1.5, C: 0.5 }, { rP: 1.5, M: 0.5 }, { rP: 0.5 }],
-        q5: [{ M: 2 }, { rM: 1.5, C: 0.5 }, { rM: 1.5, P: 0.5 }, { rM: 0.5 }],
-        q6: [{ C: 2 }, { rC: 1.5, M: 0.5 }, { rC: 1.5, P: 0.5 }, { rC: 0.5 }],
-    };
-
-    function dominantAxis(choices) {
-        const net = { C: 0, M: 0, P: 0 };
-        for (const id in choices) {
-            const sig = (AFFINITY[id] || [])[choices[id]] || {};
-            for (const k in sig) {
-                if (k[0] === 'r') net[k[1]] -= sig[k]; else net[k] += sig[k];
-            }
-        }
-        const high = Object.entries(net).filter(([, v]) => v >= MIN_AFFIRMATION_SIGNAL_FOR_HIGH).sort((a, b) => b[1] - a[1]);
-        if (!high.length) return null;
-        if (high.length === 1 || high[0][1] > high[1][1] + DOMINANT_HIGH_SIGNAL_DIFFERENCE) return high[0][0].toLowerCase();
-        return null;
-    }
-
-    const optScores = (o) => ({ c: Number(o.scores.c) || 0, m: Number(o.scores.m) || 0, p: Number(o.scores.p) || 0 });
-
-    // Replays a list of answers from scratch. answers[i] = original option index for questions[order[i]].
+    // Replays answers from scratch. answers[i] = original option index for questions[order[i]].
     // Because it always rebuilds, going Back can never leave the totals in a half-undone state.
     function computeRaw(order, answers) {
-        const total = { c: 0, m: 0, p: 0 };
-        const choices = {};
-        let dominant = null; // only "confirmed" after both affinity stages are answered
-        const min = { c: 0, m: 0, p: 0 }, max = { c: 0, m: 0, p: 0 };
-
+        const total = { c: 0, m: 0, p: 0, a: 0 };
+        let nTri = 0, nA = 0;
         answers.forEach((optIndex, i) => {
             if (optIndex == null) return;
             const q = questions[order[i]];
-            for (const a of AXES) {
-                const vals = q.options.map(o => optScores(o)[a]);
-                min[a] += Math.min(...vals); max[a] += Math.max(...vals);
-            }
-            let s = optScores(q.options[optIndex]);
-            const isAffinity = STAGE1.includes(q.id) || STAGE2.includes(q.id);
-            if (isAffinity) {
-                choices[q.id] = optIndex;
-                const allAnswered = [...STAGE1, ...STAGE2].every(id => id in choices);
-                if (allAnswered) dominant = dominantAxis(choices);
-            } else if (dominant) {
-                s = { ...s };
-                for (const a of AXES) {
-                    if (a === dominant || s[a] <= 0) continue;
-                    if (total[a] >= MAX_ACCUMULATED_ON_RESISTED_AXIS) s[a] = 0;
-                    else if (total[a] + s[a] > MAX_ACCUMULATED_ON_RESISTED_AXIS) s[a] = Math.max(0, MAX_ACCUMULATED_ON_RESISTED_AXIS - total[a]);
-                    else s[a] *= DAMPENING_FACTOR;
-                }
-            }
-            for (const a of AXES) total[a] += s[a];
+            const s = q.options[optIndex].scores;
+            if (isScale(q)) { total.a += Number(s.a) || 0; nA++; }
+            else { for (const ax of AXES) total[ax] += Number(s[ax]) || 0; nTri++; }
         });
-        return { total, min, max };
+        return { total, nTri, nA };
     }
 
-    function normalise({ total, min, max }) {
-        const n = {};
-        let sum = 0;
-        for (const a of AXES) {
-            const range = (max[a] - min[a]) || 1;
-            n[a] = Math.max(0, Math.min(1, (total[a] - min[a]) / range));
-            sum += n[a];
-        }
-        if (sum === 0) return { c: 100 / 3, m: 100 / 3, p: 100 / 3 };
-        for (const a of AXES) n[a] = n[a] / sum * 100;
-        return n;
+    function normalise({ total, nTri, nA }) {
+        const pos = nTri
+            ? { c: total.c / nTri * 100, m: total.m / nTri * 100, p: total.p / nTri * 100 }
+            : { c: 100 / 3, m: 100 / 3, p: 100 / 3 };
+        const sum = pos.c + pos.m + pos.p || 1;   // guard against rounding in hand-edited scores
+        for (const ax of AXES) pos[ax] = pos[ax] / sum * 100;
+        pos.a = nA ? Math.max(0, Math.min(100, (total.a / nA + 2) / 4 * 100)) : 50;
+        return pos;
     }
 
-    const dist = (a, b) => Math.hypot(a.c - b.c, a.m - b.m, a.p - b.p);
+    const triDist = (a, b) => Math.hypot(a.c - b.c, a.m - b.m, a.p - b.p);
+    const dist = (a, b) => Math.hypot(triDist(a, b), ORDER_WEIGHT * ((a.a ?? 50) - (b.a ?? 50)));
 
     function rankIdeologies(pos) {
         return IDEOLOGIES.map(i => ({ ...i, d: dist(pos, i) })).sort((a, b) => a.d - b.d);
     }
 
-    // Distance from the centre, as a share of the distance from the centre to a corner.
-    const CENTRE = { c: 100 / 3, m: 100 / 3, p: 100 / 3 };
-    const CORNER_DIST = dist(CENTRE, { c: 100, m: 0, p: 0 });
-    const extremity = (pos) => Math.min(100, dist(pos, CENTRE) / CORNER_DIST * 100);
+    // How strongly you lean: distance from the centre of the triangle, as a share of centre-to-corner.
+    const CENTRE = { c: 100 / 3, m: 100 / 3, p: 100 / 3, a: 50 };
+    const CORNER_DIST = triDist(CENTRE, { c: 100, m: 0, p: 0 });
+    const extremity = (pos) => Math.min(100, triDist(pos, CENTRE) / CORNER_DIST * 100);
+    const WEAK_LEAN = 12; // below this, the result says the match is loose
 
     // ------------------------------------------------------------------
     // Triangle geometry (C top, M bottom-left, P bottom-right)
@@ -279,18 +231,11 @@
     }
 
     function startQuiz() {
-        const idx = [...questions.keys()];
-        const affinity = [...STAGE1, ...STAGE2].map(id => questions.findIndex(q => q.id === id));
-        if (affinity.some(i => i < 0)) {
-            console.error('Affinity questions missing; asking in file order.');
-            order = idx;
-        } else {
-            order = [...affinity, ...idx.filter(i => !affinity.includes(i))];
-        }
+        order = [...questions.keys()]; // file order: the Order statements are already spread through it
         optionOrders = order.map(qi => {
             const q = questions[qi];
             const keys = [...q.options.keys()];
-            return q.type === 'agreeDisagree' ? keys : shuffle(keys);
+            return isScale(q) ? keys : shuffle(keys); // scales stay in order; everything else is shuffled
         });
         answers = new Array(order.length).fill(null);
         current = 0;
@@ -332,10 +277,11 @@
         $('progress-label').textContent = `${current + 1} / ${total}`;
         $('progress').setAttribute('aria-valuenow', current + 1);
         $('progress-fill').style.width = `${(current / total) * 100}%`;
-        $('question-kicker').textContent = current < 3 ? 'Warm-up' : current < 6 ? 'Thought experiment' : `Question ${current + 1}`;
+        $('question-kicker').textContent = isScale(q) ? 'Liberty or order?' : `Question ${current + 1}`;
+        optionsContainer.classList.toggle('scale', isScale(q));
         $('back-button').disabled = current === 0;
 
-        questionText.innerHTML = formatText(q.text);
+        questionText.innerHTML = formatText(q.text.replace(/^Statement:\s*/, ''));
         optionsContainer.innerHTML = '';
         optionOrders[current].forEach((origIdx, displayIdx) => {
             const o = q.options[origIdx];
@@ -397,16 +343,26 @@
     // ------------------------------------------------------------------
     // Results
     // ------------------------------------------------------------------
-    const encodePos = (pos) => AXES.map(a => pos[a].toFixed(1)).join(',');
+    // #r=c,m,p,order  (older 3-number links still work and get Order 50)
+    const encodePos = (pos) => [...AXES, 'a'].map(a => pos[a].toFixed(1)).join(',');
     function decodePos(str) {
         const parts = (str || '').split(',').map(Number);
-        if (parts.length !== 3 || parts.some(n => !isFinite(n) || n < 0)) return null;
+        if ((parts.length !== 3 && parts.length !== 4) || parts.some(n => !isFinite(n) || n < 0)) return null;
         const s = parts[0] + parts[1] + parts[2];
         if (s <= 0) return null;
-        return { c: parts[0] / s * 100, m: parts[1] / s * 100, p: parts[2] / s * 100 };
+        const a = parts.length === 4 ? Math.min(100, parts[3]) : 50;
+        return { c: parts[0] / s * 100, m: parts[1] / s * 100, p: parts[2] / s * 100, a };
     }
 
     let resultState = null;
+
+    function orderQuip(a) {
+        if (a < 20) return "Don't tread on anyone, ever.";
+        if (a < 40) return 'Live and let live, mostly.';
+        if (a < 60) return 'Rules are fine. Some rules.';
+        if (a < 80) return 'A firm hand, for everyone else.';
+        return 'Papers, please.';
+    }
 
     function extremityQuip(x) {
         if (x < 15) return 'Aggressively moderate. You probably own a beige fleece.';
@@ -450,7 +406,15 @@
         drawLegend();
         updateResultsView(pos, { animate: !reduceMotion && !isDevMode, firstReveal: true });
 
-        if (isDevMode) enableDrag(svg);
+        if (isDevMode) {
+            enableDrag(svg);
+            const slider = $('dev-order');
+            slider.value = pos.a;
+            slider.oninput = () => {
+                updateResultsView({ ...resultState.pos, a: Number(slider.value) });
+                history.replaceState(null, '', `${location.pathname}${location.search}#r=${encodePos(resultState.pos)}`);
+            };
+        }
     }
 
     function updateResultsView(pos, { animate = false, firstReveal = false } = {}) {
@@ -463,6 +427,9 @@
         // Headline
         $('result-name').textContent = top[0].name;
         $('result-broad').textContent = top[0].broad;
+        const ex = extremity(pos);
+        $('lean-note').hidden = ex >= WEAK_LEAN;
+        $('lean-note').textContent = `Your lean is weak (${ex.toFixed(0)}% from the dead centre), so treat this label as a loose fit: several centrist labels are about equally close.`;
         if (firstReveal && !reduceMotion) {
             $('result-name').classList.remove('reveal'); void $('result-name').offsetWidth; $('result-name').classList.add('reveal');
         }
@@ -527,7 +494,11 @@
             row.innerHTML = `<div class="mix-top"><span><b>${AXIS_INFO[a].name}</b> <small>${AXIS_INFO[a].blurb}</small></span><b>${pos[a].toFixed(0)}%</b></div><div class="meter"><div class="meter-fill" style="width:${pos[a].toFixed(1)}%"></div></div>`;
             mix.appendChild(row);
         });
-        const ex = extremity(pos);
+
+        // Liberty vs Order scale, with your marker and your top match's marker
+        $('order-scale').innerHTML = `<div class="mix-top"><span><b>Liberty or order?</b> <small>${orderQuip(pos.a)}</small></span><b>${pos.a.toFixed(0)}</b></div>
+            <div class="order-track"><span class="order-mark match-mark" style="left:${top[0].a}%" title="${top[0].name}"></span><span class="order-mark you-mark" style="left:${pos.a.toFixed(1)}%" title="You"></span></div>
+            <div class="order-ends"><span>Liberty</span><span class="order-legend"><i class="you-key"></i>You <i class="match-key"></i>${shortName(top[0].name)}</span><span>Order</span></div>`;
         $('extremity-value').textContent = `${ex.toFixed(0)}%`;
         $('extremity-fill').style.width = `${ex.toFixed(1)}%`;
         $('extremity-quip').textContent = extremityQuip(ex);
@@ -538,8 +509,8 @@
         if (isDevMode) {
             const r = st.raw;
             $('dev-readout').textContent =
-                `C ${pos.c.toFixed(2)}  M ${pos.m.toFixed(2)}  P ${pos.p.toFixed(2)}\n` +
-                (r ? `raw C ${r.total.c.toFixed(2)}  M ${r.total.m.toFixed(2)}  P ${r.total.p.toFixed(2)}\n` : '') +
+                `C ${pos.c.toFixed(2)}  M ${pos.m.toFixed(2)}  P ${pos.p.toFixed(2)}  Order ${pos.a.toFixed(1)}\n` +
+                (r ? `raw C ${r.total.c.toFixed(2)}  M ${r.total.m.toFixed(2)}  P ${r.total.p.toFixed(2)} over ${r.nTri}; order ${r.total.a} over ${r.nA}\n` : '') +
                 ranked.slice(0, 5).map(t => `${t.d.toFixed(2).padStart(6)}  ${t.name}`).join('\n');
         }
     }
@@ -555,7 +526,7 @@
         const rank = rankIdeologies(st.pos).findIndex(i => i.name === target.name) + 1;
         $('focus-label').textContent = isOwn ? 'Your closest match' : `Your #${rank} closest of ${IDEOLOGIES.length}`;
         $('focus-name').textContent = target.name;
-        $('focus-meta').innerHTML = `<i class="sw b${broadIndex(target.broad)}"></i>${target.broad} &middot; ${d.toFixed(1)} pts from you &middot; C ${target.c} / M ${target.m} / P ${target.p}`;
+        $('focus-meta').innerHTML = `<i class="sw b${broadIndex(target.broad)}"></i>${target.broad} &middot; ${d.toFixed(1)} pts from you &middot; C ${target.c} / M ${target.m} / P ${target.p} &middot; Order ${target.a}`;
         $('focus-summary').innerHTML = formatText(ideologySummaries[target.name] || ideologySummaries[target.broad] || 'No summary written yet.');
         $('focus-reset').hidden = isOwn;
         st.dots.forEach((dd, n) => dd.g.classList.toggle('focused', !isOwn && n === target.name));
@@ -581,7 +552,7 @@
             pt.x = e.clientX; pt.y = e.clientY;
             const p = pt.matrixTransform(svg.getScreenCTM().inverse());
             resultState.raw = null;
-            updateResultsView(fromXY(p.x, p.y));
+            updateResultsView({ ...fromXY(p.x, p.y), a: resultState.pos.a });
             history.replaceState(null, '', `${location.pathname}${location.search}#r=${encodePos(resultState.pos)}`);
         };
         svg.addEventListener('pointerdown', (e) => { dragging = true; svg.setPointerCapture(e.pointerId); at(e); });
@@ -629,6 +600,7 @@
             'My Sarcastic Political Test result:',
             `${top[0].name} (${top[0].broad})`,
             `Centralism ${pos.c.toFixed(0)}% / Communalism ${pos.m.toFixed(0)}% / Privatism ${pos.p.toFixed(0)}%`,
+            `Liberty or order: ${pos.a.toFixed(0)} (0 = all liberty, 100 = all order)`,
             `Also close to: ${top[1].name}, ${top[2].name}`,
             '',
             `See it: ${baseUrl()}#r=${encodePos(pos)}`,
@@ -653,7 +625,7 @@
     document.addEventListener('keydown', (e) => {
         if (screens.quiz.hidden || e.altKey || e.ctrlKey || e.metaKey) return;
         const n = parseInt(e.key, 10);
-        if (n >= 1 && n <= 4) {
+        if (n >= 1 && n <= 5) {
             const btn = optionsContainer.querySelectorAll('.option')[n - 1];
             if (btn) { e.preventDefault(); btn.click(); btn.focus(); }
         } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {

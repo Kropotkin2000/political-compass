@@ -1,329 +1,344 @@
-// questions.js (Renumbered sequentially q1-q30, q2 "Progress" removed, q_totalitarian_vision added as q6)
+// questions.js
+//
+// HOW THE SCORING WORKS
+// ---------------------
+// Triangle questions (type 'forcedChoice4') score three axes:
+//   c = Centralism   (the state organises things: public ownership, planning, public services)
+//   m = Communalism  (communities organise things: co-ops, mutual aid, collective decisions)
+//   p = Privatism    (private owners organise things: property, markets, contracts)
+//
+// Each answer is a point in the triangle, and your position is the average of all your points:
+//   "Pick a corner"  - one option per corner (the point sits on that corner), plus a muddle option.
+//   "Pick a villain" - one option criticising each corner (the point sits halfway along the opposite
+//                      edge, i.e. split evenly between the other two corners), plus a muddle option.
+//   Muddle options sit at the dead centre.
+// So answering every question with the same corner puts you exactly on that corner, and answering
+// everything with a muddle puts you exactly in the middle.
+//
+// Every corner option mocks its own downside in the same register (queues and forms / meetings and
+// rotas / fine print and inequality), so no corner is the obvious "nice" answer.
+//
+// Order vs Liberty statements (type 'agreeScale') score a separate axis, a, from -2 to +2:
+//   +a = more order and authority, -a = more personal liberty. Half the statements are keyed each way.
+//   Your Order score is the average, rescaled to 0 (all liberty) .. 100 (all order).
+//   Authoritarianism is deliberately NOT part of Centralism: you can want a big state and civil liberties.
+
+const PICK_C = { c: 1, m: 0, p: 0 };
+const PICK_M = { c: 0, m: 1, p: 0 };
+const PICK_P = { c: 0, m: 0, p: 1 };
+const AGAINST_C = { c: 0, m: 0.5, p: 0.5 };
+const AGAINST_M = { c: 0.5, m: 0, p: 0.5 };
+const AGAINST_P = { c: 0.5, m: 0.5, p: 0 };
+const MUDDLE = { c: 1 / 3, m: 1 / 3, p: 1 / 3 };
+
+// Agree scale. keyed: 1 means "agree = more order", -1 means "agree = more liberty".
+const agreeScale = (keyed) => [
+    { text: "Strongly agree",    scores: { a: 2 * keyed } },
+    { text: "Agree",             scores: { a: 1 * keyed } },
+    { text: "Shrug",             scores: { a: 0 } },
+    { text: "Disagree",          scores: { a: -1 * keyed } },
+    { text: "Strongly disagree", scores: { a: -2 * keyed } },
+];
 
 const questions = [
-    // --- STAGE 1 AFFINITY QUESTIONS (IDQs) ---
     {
-        id: 'q1', // Formerly q19_idq (Property)
-        text: "\"Private property: sacred bedrock of civilization, a nefarious scam by the powerful, or just another tedious squabble in the grand scheme of things?\"",
-        type: 'forcedChoice3',
-        options: [
-            { text: "It's the bedrock of civilization! Without it, we're all just cavemen fighting over berries. My stuff is MINE!", scores: { c: 0.1, m: -1, p: 2 } },
-            { text: "Pretty much a scam that allows a few to hoard what should belong to everyone. Time to share the 'wealth' (and the pitchforks).", scores: { c: 0, m: 2, p: -1 } },
-            { text: "Ugh, fine. So some stuff is 'mine,' some is 'ours,' and most of it is probably mortgaged to a megacorp or about to be regulated into oblivion by a committee that thinks 'economic planning' means choosing the color of next year's ration books. It's all a depressing fudge in the end, isn't it?", scores: { c: -0.1, m: -0.2, p: 0.3 } }
-        ]
-    },
-    {
-        id: 'q2', // Formerly q20_idq (State)
-        text: "\"The State: benevolent protector, the biggest gang in town, or just a very expensive, inefficient paperweight?\"",
-        type: 'forcedChoice3',
-        options: [
-            { text: "It's the only thing stopping us from total Mad Max anarchy! We NEED its wise guidance and firm hand (preferably not *too* firm on *my* neck).", scores: { c: 2, m: -0.5, p: -0.5 } },
-            { text: "Mostly a protection racket that takes our money and tells us what to do. Let's just agree to not punch each other and call it a day.", scores: { c: -1.5, m: 0.4, p: 0.4 } },
-            { text: "Right, so we 'need' the State to stop us from clubbing each other over the last Wi-Fi signal, but it'll inevitably become a self-serving behemoth staffed by petty tyrants and fueled by our despair and badly brewed coffee. Pick your poison: chaotic freedom or orderly oppression. Thrilling.", scores: { c: -0.2, m: 0.1, p: 0.0 } }
-        ]
-    },
-    {
-        id: 'q3', // Formerly q23_idq (Community Decision-Making)
-        text: "\"Community decision-making: the beautiful dream of collective wisdom, a recipe for endless arguments over lukewarm coffee, or just a way to make meetings feel eternal?\"",
-        type: 'forcedChoice3',
-        options: [
-            { text: "It's the only truly legitimate way! Power to the people (and their endless, soul-crushing meetings about the color of the bike shed)!", scores: { c: -0.5, m: 2, p: -0.5 } },
-            { text: "Give me a decisive leader or a clear market signal any day. 'Community' usually means the loudest person with the most free time gets their way, while actual work goes undone.", scores: { c: 0.4, m: -1.5, p: 0.4 } },
-            { text: "Oh, 'community input.' Yes, let's all hold hands, sing Kumbaya, and then let the loudest, most persistent busybody bulldoze their pet project through while everyone else just wants the meeting to end so they can get back to avoiding actual responsibility. It's 'democracy,' but mostly just annoying.", scores: { c: 0.1, m: -0.2, p: 0.0 } }
-        ]
-    },
-
-    // --- STAGE 2 AFFINITY QUESTIONS (Vision Questions) ---
-    {
-        id: 'q4', // Formerly q27 (AnCap Vision)
-        text: "Consider a proposed society with no state, where *all* services (defense, courts, roads) are run by competing private businesses, and all interactions are based on voluntary contracts. This vision is:",
+        id: 'q1',
+        text: "Who should own the big stuff: the railways, the power grid, the water pipes?",
         type: 'forcedChoice4',
         options: [
-            { text: "The pinnacle of human freedom and efficiency! A shining beacon where every interaction is voluntary and the only king is the Consumer. If you can't afford your private firefighter subscription, that's just natural selection at work!", scores: { c: -1, m: -0.5, p: 2 } },
-            { text: "A terrifying descent into Mad Max, but with corporate branding and better-armed private armies. You absolutely *need* a State, preferably a very large one with a monopoly on all the good weapons, to prevent this nightmare.", scores: { c: 1, m: -0.2, p: -1 } },
-            { text: "Just capitalism with the mask off: private tyrannies replacing a public one, where 'freedom' means choosing which billionaire's private law you'll be oppressed by. We need *actual* community control, not just different bosses.", scores: { c: -0.2, m: 1, p: -1 } },
-            { text: "An amusingly chaotic idea for a video game, but in reality, probably just a recipe for a really terrible HOA that eventually declares itself a sovereign nation and invades the next cul-de-sac.", scores: { c: 0.2, m: 0.2, p: -0.3 } }
+            { text: "The state. It's infrastructure for everyone, so the public should own it. The trains will still be late, but they'll be *our* late trains.", scores: PICK_C },
+            { text: "The people who use it and run it, as co-ops or local trusts. Expect a lot of annual general meetings about leaves on the line.", scores: PICK_M },
+            { text: "Private companies competing for customers. Competition keeps them sharp, and you'll get a loyalty card for your water.", scores: PICK_P },
+            { text: "Some mix of all three, renegotiated every decade by people who have never been on a train.", scores: MUDDLE },
         ]
     },
     {
-        id: 'q5', // Formerly q28 (AnCom Vision)
-        text: "Picture a society with no state, no money, where all property is held in common, and all decisions are made by community consensus, with everyone contributing as they can and taking what they need. This vision is:",
+        id: 'q2',
+        text: "Someone breaks their leg. How should their treatment be arranged?",
         type: 'forcedChoice4',
         options: [
-            { text: "Humanity's inevitable, enlightened destiny! Once we've all transcended petty selfishness (and personal hygiene concerns), we'll live in perfect, leaderless harmony, fueled by mutual aid and really good organic kale.", scores: { c: -1, m: 2, p: -0.5 } },
-            { text: "A one-way ticket to 'Lord of the Flies' with more drum circles and arguments about who used the last of the collectively-owned patchouli. Someone authoritative needs to hide the talking stick and enforce a basic chore rota, stat!", scores: { c: 1, m: -1, p: 0 } },
-            { text: "A charmingly naive fantasy that forgets most people would rather have their own damn toothbrush and the incentive to invent something cooler than another lentil recipe. 'Shared everything' usually means 'nothing good for anyone.'", scores: { c: 0, m: -1, p: 1 } },
-            { text: "An adorable concept for a small, very patient cult or a particularly ambitious improv troupe, but try running a city on 'good vibes' and a vague agreement to 'be nice.' Spoiler: it involves a lot of unwashed dishes.", scores: { c: 0.5, m: -0.5, p: 0 } }
+            { text: "A national health service, paid for from taxes and free when you need it. The wait is long, but the bill is zero.", scores: PICK_C },
+            { text: "Mutual societies and community clinics that members run together. Wonderful, once the rota for the X-ray machine is sorted.", scores: PICK_M },
+            { text: "Insurance you choose yourself, with hospitals competing for your custom. Read the small print before you fall over.", scores: PICK_P },
+            { text: "A bewildering hybrid that nobody fully understands, including the people running it.", scores: MUDDLE },
         ]
     },
     {
-        id: 'q6', // Formerly q_totalitarian_vision (NEW Totalitarian Vision Question)
-        text: "Behold! A society where The State, in its infinite wisdom and with a truly heroic number of forms to fill out, meticulously plans your breakfast, your career, your thoughts, and even the color of your government-issued socks. All for 'perfect order' and 'national unity' (and because the Central Computer said so). This glorious vision is:",
+        id: 'q3',
+        text: "There aren't enough homes. What's the fix?",
         type: 'forcedChoice4',
         options: [
-            { text: "Finally, some sensible adult supervision! If everyone just follows the meticulously detailed 500-Year Plan for Universal Compliance, we'll achieve unparalleled national synergy (and fantastic parade formations). My individual desires are a small price to pay for such magnificent, soul-stirring order!", scores: { c: 2, m: -0.75, p: -0.75 } },
-            { text: "A soul-crushing beige nightmare where 'community' means mandatory group calisthenics and 'shared purpose' means agreeing with The Leader or enjoying a re-education seminar. I'd rather take my chances with a chaotic drum circle and a poorly managed compost heap, thank you very much.", scores: { c: -1.5, m: 1, p: 0 } },
-            { text: "The ultimate bureaucratic horror show where 'efficiency' means triplicate forms for breathing and 'innovation' is a punishable offense. Give me messy freedom, the glorious risk of the market, and the right to wear socks of *any damn color I please*, even if it leads to suboptimal national sock-color harmony.", scores: { c: -1.5, m: 0, p: 1 } },
-            { text: "An amusingly terrifying premise for a B-movie, probably starring a square-jawed hero in a slightly-too-tight uniform fighting the System. In reality, any government this obsessed with control would collapse under the weight of its own paperwork and the sheer passive-aggressive resistance of people forced to eat standardized gruel.", scores: { c: -0.5, m: 0.2, p: 0.2 } }
+            { text: "The government builds them, lots of them, council-house style. They'll all look identical, but they'll exist.", scores: PICK_C },
+            { text: "Housing co-ops and community land trusts, owned by the people who live in them. The planning meetings may outlast the buildings.", scores: PICK_M },
+            { text: "Cut the red tape and let developers build what people will pay for. Brace for a lot of 'luxury studio apartments'.", scores: PICK_P },
+            { text: "Announce an ambitious target, miss it, then announce a new one.", scores: MUDDLE },
         ]
     },
-
-    // --- MAIN POOL OF QUESTIONS (q7-q30) ---
-    // These follow in their original sequence, minus the original q2.
     {
-        id: 'q7', // Originally q1
-        text: "When a big problem arises, what's your instinctive, deeply unhelpful first thought?",
+        id: 'q4',
+        text: "Statement: The police should be able to stop and search anyone they find suspicious, even without firm evidence.",
+        type: 'agreeScale',
+        options: agreeScale(1)
+    },
+    {
+        id: 'q5',
+        text: "Which of these worries you most about the future?",
         type: 'forcedChoice4',
         options: [
-            { text: "Someone really important and official should sort this out. Where's the manager of the universe?!", scores: { c: 2, m: -1, p: -1 } },
-            { text: "Ugh, if only we could form a thousand sub-committees to 'dialogue' this problem into submission! Surely a perfectly 'inclusive' process will magically yield a perfect solution, eventually.", scores: { c: -1, m: 2, p: -1 } },
-            { text: "Not my circus, not my monkeys. Unless there's a way to profit from this chaos, then it's *very much* my circus.", scores: { c: -1, m: -1, p: 2 } },
-            { text: "\"Sigh. Another one? Fine. Can someone at least Google the 'least worst' option while I make some tea and try not to think about how we're all doomed anyway?\"", scores: { c: 0.1, m: 0.1, p: 0.1 } }
-        ]
-    },
-    // Original q2 was REMOVED.
-    {
-        id: 'q8', // Originally q3
-        text: "What's generally a bigger threat to a \"good life\" (whatever that is)?",
-        type: 'forcedChoice3',
-        options: [
-            { text: "Too much messy, unpredictable individual freedom leading to societal breakdown and people putting pineapples on pizza.", scores: { c: 1, m: 0, p: -1 } },
-            { text: "Too many rules and powerful institutions telling you what to do, crushing your unique spirit under the weight of conformity.", scores: { c: -1, m: 0, p: 1 } },
-            { text: "The real danger is running out of good TV shows, or when the Wi-Fi drops. Societal threats? Please, I'm trying to binge-watch here.", scores: { c: 0.1, m: 0.1, p: 0.1 } }
+            { text: "A state that keeps growing until it runs everything, from your pension to your breakfast.", scores: AGAINST_C },
+            { text: "Everything being decided by endless committees, where whoever has the most free time wins.", scores: AGAINST_M },
+            { text: "Corporations owning everything, from your home to your data to your water supply.", scores: AGAINST_P },
+            { text: "Honestly, all three, in rotation.", scores: MUDDLE },
         ]
     },
     {
-        id: 'q9', // Originally q4 (with corrected anti-P option)
-        text: "When you hear \"the common good,\" what's your immediate, cynical translation?",
+        id: 'q6',
+        text: "Who should have the final say in how a business is run?",
         type: 'forcedChoice4',
         options: [
-            { text: "\"What the people in charge have decided is good for *them*, and by extension, 'us,' whether we like it or not.\"", scores: { c: -2, m: 0.5, p: 0.5 } },
-            { text: "\"A convenient excuse for the richest sharks to rig the game in their favor, calling their tax breaks and bailouts 'good for everyone' while they laugh all the way to their private islands.\"", scores: { c: 0.5, m: 0.5, p: -2 } },
-            { text: "\"An endless series of meetings to determine what 'the community' wants, which usually means what the loudest person with the most free time wants.\"", scores: { c: 0.5, m: -2, p: 0.5 } },
-            { text: "\"A marketing slogan used to sell us policies that primarily benefit powerful, well-connected insiders, while the rest of us get some nice-sounding platitudes and maybe a commemorative tea towel.\"", scores: { c: -0.2, m: -0.2, p: -0.2 } }
+            { text: "Within strict laws on pay, hours and safety, set and policed by the state. The inspectors' clipboards are a feature, not a bug.", scores: PICK_C },
+            { text: "The workers, through co-operative ownership or elected councils. Every decision gets a show of hands, including the coffee brand.", scores: PICK_M },
+            { text: "The owners. It's their money on the line; if you don't like it, start your own firm.", scores: PICK_P },
+            { text: "Whoever won the last round of negotiations, until the next round.", scores: MUDDLE },
         ]
     },
     {
-        id: 'q10', // Originally q5
-        text: "If society is a stage play, what's the most crucial role?",
+        id: 'q7',
+        text: "Who should run schools?",
         type: 'forcedChoice4',
         options: [
-            { text: "The Stern But Fair Director: Making sure everyone hits their marks, says their lines, and doesn't upstage the star (usually The State).", scores: { c: 2, m: -1, p: -1 } },
-            { text: "The Harmonious Ensemble Cast: Everyone supporting each other, sharing the spotlight, and creating something beautiful (and probably unprofitable) together.", scores: { c: -1, m: 2, p: -1 } },
-            { text: "The Dashing Maverick Lead: Improvising wildly, stealing every scene, and to hell with the script or the other actors. It's *their* show!", scores: { c: -1, m: -1, p: 2 } },
-            { text: "The exhausted Stage Manager, fueled by lukewarm coffee and existential dread, desperately trying to stop the sets from collapsing while the actors ad-lib increasingly bizarre plot twists.", scores: { c: 0.3, m: 0.3, p: 0.3 } }
+            { text: "The state: one national curriculum, inspected to the same standard everywhere. Consistent, with the occasional pointless worksheet.", scores: PICK_C },
+            { text: "Parents, teachers and the local community, deciding together what their children need. Prepare for a twelve-hour debate about uniforms.", scores: PICK_M },
+            { text: "Anyone who wants to open a school, with parents free to choose and the funding following the child. Bring your prospectus-decoding skills.", scores: PICK_P },
+            { text: "The current system, but with a new acronym every three years.", scores: MUDDLE },
         ]
     },
     {
-        id: 'q11', // Originally q6
-        text: "What's the more fundamental human drive?",
+        id: 'q8',
+        text: "Statement: People should be free to say things that most of us find offensive.",
+        type: 'agreeScale',
+        options: agreeScale(-1)
+    },
+    {
+        id: 'q9',
+        text: "Some people are vastly richer than others. What's mostly to blame?",
         type: 'forcedChoice4',
         options: [
-            { text: "The desperate need for order, security, and someone to tell us it's all going to be okay (even if it's a blatant, easily disproven lie).", scores: { c: 2, m: -1, p: -1 } },
-            { text: "The deep-seated urge to connect, belong, and not be a total hermit, even if other people are mostly a collection of infuriating quirks and bad opinions.", scores: { c: -1, m: 2, p: -1 } },
-            { text: "The insatiable hunger to be special, get ahead, and accumulate more shiny, status-affirming things than the next person, ideally while live-streaming it.", scores: { c: -1, m: -1, p: 2 } },
-            { text: "The relentless pursuit of the TV remote, closely followed by the profound desire to know what's for dinner. Deep stuff, I know.", scores: { c: 0.2, m: 0.2, p: 0.2 } }
+            { text: "Governments handing out favours, bailouts and protected monopolies to their friends.", scores: AGAINST_C },
+            { text: "Cosy cliques and closed networks that look after their own and keep outsiders out.", scores: AGAINST_M },
+            { text: "An economy where wealth piles up for those who already have it.", scores: AGAINST_P },
+            { text: "Luck, mostly, with a bit of everything above.", scores: MUDDLE },
         ]
     },
     {
-        id: 'q12', // Originally q7
-        text: "When faced with a complex problem, what's your go-to (probably flawed) initial strategy?",
+        id: 'q10',
+        text: "How should we cut carbon emissions?",
         type: 'forcedChoice4',
         options: [
-            { text: "\"Let's form a committee, draft a policy paper, schedule a series of consultations, and then set up a steering group to review the findings of the preliminary report. Action can wait until we have a 300-page, fully-footnoted document!\"", scores: { c: 2, m: -1, p: -1 } },
-            { text: "\"We need to talk about our *feelings* about this problem! Let's have a sharing circle, ensure everyone feels validated, maybe do some trust falls, before we even *think* about solutions that might invalidate someone's lived experience.\"", scores: { c: -1, m: 2, p: -1 } },
-            { text: "\"Screw the rules, I have money/connections/a half-baked but incredibly disruptive idea! Let me just dive in and 'move fast and break things.' What's the worst that could happen? (Famous last words).\"", scores: { c: -1, m: -1, p: 2 } },
-            { text: "\"Sigh. Okay, what's the absolute minimum we can do that looks like we're addressing this but doesn't actually require too much effort, money, or upsetting anyone important? Let's aim for 'performative competence.'\"", scores: { c: 0.3, m: 0.3, p: 0.3 } }
+            { text: "Government plans and public investment: build the green grid directly and set binding targets. Five-year plans, but for wind turbines.", scores: PICK_C },
+            { text: "Community energy co-ops run by the neighbourhoods that use the power. Solar panels on every roof, and a rota for the Tuesday meeting.", scores: PICK_M },
+            { text: "Put a price on carbon and let markets find the cheapest cuts. Efficiency, innovation, and a very smug app.", scores: PICK_P },
+            { text: "A summit, a pledge, a photo opportunity, and a follow-up summit.", scores: MUDDLE },
         ]
     },
     {
-        id: 'q13', // Originally q8
-        text: "If society had a motto, which of these cringeworthy options would be the most accurate (if depressing)?",
+        id: 'q11',
+        text: "What should happen to the giant tech platforms?",
         type: 'forcedChoice4',
         options: [
-            { text: "\"Order Above All (Even Your Happiness, And Especially Your Quirky Hobbies).\"", scores: { c: 1, m: -0.5, p: -0.5 } },
-            { text: "\"Together We Achieve... Eventually... Maybe... After A Few More Meetings About The Minutes Of The Previous Meetings.\"", scores: { c: -0.5, m: 1, p: -0.5 } },
-            { text: "\"Every Person For Themselves (And May The Person With The Best Offshore Accountant Win!).\"", scores: { c: -0.5, m: -0.5, p: 1 } },
-            { text: "\"It's Complicated, Mostly Broken, And We're All Just Pretending It Makes Sense. (Want a donut?)\"", scores: { c: 0.1, m: 0.1, p: 0.1 } }
+            { text: "Regulate them hard, or bring them into public ownership so they answer to voters rather than shareholders. Terms of service now in triplicate.", scores: PICK_C },
+            { text: "Replace them with user-owned co-operative platforms. Fewer adverts, many more forum threads about governance.", scores: PICK_M },
+            { text: "Leave them alone; if they get bad enough, a competitor will eat their lunch. Probably. Eventually.", scores: PICK_P },
+            { text: "Fine them a rounding error every few years and call it accountability.", scores: MUDDLE },
         ]
     },
     {
-        id: 'q14', // Originally q9
-        text: "The \"ideal\" economy (if such a non-disaster exists) would mostly run on:",
+        id: 'q12',
+        text: "Statement: A country needs a strong shared national identity, and newcomers should adopt it.",
+        type: 'agreeScale',
+        options: agreeScale(1)
+    },
+    {
+        id: 'q13',
+        text: "When a big project goes badly wrong, the cause is usually:",
         type: 'forcedChoice4',
         options: [
-            { text: "The State's All-Knowing Wisdom: Central planners heroically assigning production quotas for artisanal pickles and novelty socks. Maximum efficiency! (And only a *few* crippling shortages of essential goods, promise!)", scores: { c: 1.5, m: 0, p: -1 } },
-            { text: "A network of worker co-ops and 'socially responsible' B-corps, where every decision is vetted by seven ethics committees and an 'impact assessment' working group, ensuring products are 'mindfully sourced' but also three years behind schedule and cost twice as much.", scores: { c: -0.75, m: 2, p: -0.75 } },
-            { text: "The 'Invisible Hand's' Slightly Sticky Fingers: Let the market decide who gets rich and who gets to eat ramen for eternity. It's 'natural selection' for your bank account!", scores: { c: -0.5, m: -0.5, p: 1.5 } },
-            { text: "The 'Sensible Shoes' Model: A thrillingly beige tapestry of market 'dynamism' (i.e., occasional crashes), government 'oversight' (i.e., endless forms), and 'social responsibility' (i.e., feel-good PR campaigns). It's boring, but it vaguely functions, mostly by accident.", scores: { c: 0.4, m: 0.3, p: 0.8 } }
+            { text: "Officials who answer to nobody and never pay for their mistakes.", scores: AGAINST_C },
+            { text: "Too many people with a veto, so nothing gets decided until it's too late.", scores: AGAINST_M },
+            { text: "Someone cutting corners to save money and keep the share price up.", scores: AGAINST_P },
+            { text: "All of the above, plus a spreadsheet error.", scores: MUDDLE },
         ]
     },
     {
-        id: 'q15', // Originally q10
-        text: "\"Social Justice.\" What does that *actually* mean when it's not just a hashtag?",
+        id: 'q14',
+        text: "How should a society look after people who fall on hard times?",
         type: 'forcedChoice4',
         options: [
-            { text: "The State ensuring everyone is 'equal' by making sure everyone has equally little, except the party officials, who are 'more equal'.", scores: { c: 1, m: 1, p: -1 } },
-            { text: "Everyone in the 'community' feeling equally 'seen' and 'heard,' possibly through mandatory 'empathy workshops,' while systemic issues remain untouched.", scores: { c: -0.5, m: 1.5, p: -0.5 } },
-            { text: "Everyone having the 'equal opportunity' to become obscenely wealthy by exploiting others, or to fail spectacularly on their own 'merits'.", scores: { c: -0.5, m: -0.5, p: 1.5 } },
-            { text: "An annual parade, a strongly worded hashtag, and a commission to study the feasibility of forming a subcommittee to investigate the possibility of maybe doing something, someday. Plus, a new color for the awareness ribbons.", scores: { c: 0.5, m: 0.5, p: 0.5 } }
+            { text: "A guaranteed safety net from the state: benefits, pensions, the lot. You'll just need to fill in form B-47 (and B-47a).", scores: PICK_C },
+            { text: "Mutual aid: neighbours, unions, friendly societies and food co-ops looking after each other. Warm and generous, but it depends who turns up.", scores: PICK_M },
+            { text: "Growth, jobs and private charity. A rising tide lifts all boats, provided you own a boat.", scores: PICK_P },
+            { text: "A system so complicated that half the people who need help never find out they qualify.", scores: MUDDLE },
         ]
     },
-     {
-        id: 'q16', // Originally q11
-        text: "When it comes to \"individual liberty,\" what's the most common societal self-deception?",
+    {
+        id: 'q15',
+        text: "Who should run the banks?",
         type: 'forcedChoice4',
         options: [
-            { text: "Believing you're 'free' because the government 'grants' you a list of carefully curated 'rights' (which it can also 'reinterpret' or suspend the moment it becomes mildly inconvenient for those in power).", scores: { c: -1.5, m: 0.5, p: 0.5 } },
-            { text: "Thinking you're 'truly yourself' because you're part of a 'radically inclusive community' that celebrates your 'authentic self,' provided your authentic self aligns perfectly with the community's ever-shifting list of approved authenticities.", scores: { c: 0.5, m: -1.5, p: 0.5 } },
-            { text: "Assuming you're 'captain of your soul' in a 'free market' where your every click, purchase, and fleeting thought is meticulously harvested, packaged, and sold to the highest bidder by tech oligarchs.", scores: { c: 0.5, m: 0.5, p: -1.5 } },
-            { text: "The comforting illusion that our current messy system 'balances' all these freedoms perfectly, when it mostly just balances powerful interests against each other, and we get the leftovers.", scores: { c: 0.5, m: 0.5, p: 0.5 } }
+            { text: "A strong public bank and tight state control of credit. Lending in the national interest, decided in a very grey building.", scores: PICK_C },
+            { text: "Credit unions and co-operative banks owned by their members. Your loan gets approved at the members' meeting, right after the raffle.", scores: PICK_M },
+            { text: "Private banks competing freely, and the ones that blunder go bust. Your savings are your own lookout.", scores: PICK_P },
+            { text: "Private banks, until they crash, then the taxpayer, then private banks again.", scores: MUDDLE },
         ]
     },
     {
-        id: 'q17', // Originally q12
-        text: "Healthcare. How do we ensure people don't just, you know, die avoidably (without it being *too* inconvenient for the system)?",
+        id: 'q16',
+        text: "Statement: What consenting adults do in private is nobody else's business.",
+        type: 'agreeScale',
+        options: agreeScale(-1)
+    },
+    {
+        id: 'q17',
+        text: "Who would you least want to have power over your life?",
         type: 'forcedChoice4',
         options: [
-            { text: "The State Emergency Ward Model: Everyone queues for the same, slightly rusty, government-approved care. It's 'universally accessible' (if you don't mind the wait and the distinct aroma of institutional despair)! Everyone gets the same level of indifferent care!", scores: { c: 1, m: 1, p: -1 } },
-            { text: "The 'Holistic Community Care Collective': Where access is 'guaranteed' through a network of underfunded local clinics run by passionate-but-overwhelmed volunteers, offering 'empowerment' and maybe some actual medicine if they haven't run out.", scores: { c: -0.5, m: 1.5, p: -0.5 } },
-            { text: "The 'Pay-to-Live' Subscription Service: Got gold-plated insurance? Welcome to the VIP recovery suite! No? Here's an aspirin and a pamphlet on 'positive thinking'.", scores: { c: -0.5, m: -0.5, p: 1.5 } },
-            { text: "The Bureaucratic Labyrinth of Mixed Provision: A confusing maze of public options, private plans, and endless forms, where you *might* get what you need if you're persistent and lucky.", scores: { c: 0.4, m: 0.3, p: 0.8 } }
+            { text: "Officials in a distant ministry who have never met you.", scores: AGAINST_C },
+            { text: "Your neighbours, voting on how you ought to live.", scores: AGAINST_M },
+            { text: "Your landlord and your employer.", scores: AGAINST_P },
+            { text: "All of them equally, which is why I live in a shed.", scores: MUDDLE },
         ]
     },
     {
-        id: 'q18', // Originally q13
-        text: "How should society \"manage\" its \"valuable resources\" (like, say, breathable air or the last dodo)?",
+        id: 'q18',
+        text: "Who should pay for museums, theatre and the arts?",
         type: 'forcedChoice4',
         options: [
-            { text: "Appoint a Ministry of Absolutely Everything, which will issue stern directives and five-color charts on sustainable dodo farming. Problem solved!", scores: { c: 1.5, m: -0.5, p: -0.5 } },
-            { text: "Establish an 'International People's Resource Stewardship Council' with representatives from every conceivable affinity group, to 'democratically allocate' resources through endless debate and the power of strongly worded resolutions.", scores: { c: -0.5, m: 1.5, p: -0.5 } },
-            { text: "Auction off the broadcasting rights to the last dodo's extinction. The market provides! (Also, dodo nuggets, limited time only!)", scores: { c: -0.5, m: -0.5, p: 1.5 } },
-            { text: "The 'Let's Try Everything and Hope Something Sticks' approach: Forming endless committees to draft toothless regulations, while also 'incentivizing' corporations to 'be green' (wink, wink) and funding a few understaffed conservation groups. It's a masterclass in looking busy!", scores: { c: 0.5, m: 0.5, p: 0.5 } }
+            { text: "The state, through generous public funding so culture belongs to everyone. A committee will decide what counts as art.", scores: PICK_C },
+            { text: "Local communities and volunteers, running their own venues and festivals. Expect an ambitious amateur musical.", scores: PICK_M },
+            { text: "Tickets, patrons and sponsors. If people value it, they'll pay for it, and the MegaCorp Pavilion is a small price.", scores: PICK_P },
+            { text: "A lottery, a levy, a gala and a lot of anxious grant applications.", scores: MUDDLE },
         ]
     },
     {
-        id: 'q19', // Originally q14 (with corrected Community Accountability Circles)
-        text: "\"Law and Order.\" What's the least dysfunctional way to stop people from behaving like complete animals (more than usual)?",
+        id: 'q19',
+        text: "Your town must choose between a new park and a new car park. Who decides?",
         type: 'forcedChoice4',
         options: [
-            { text: "A Robocop on Every Corner: Constant surveillance, swift 'justice' (i.e., punishment), and a society so orderly it's practically embalmed.", scores: { c: 1.5, m: -0.5, p: -0.5 } },
-            { text: "Community Accountability Circles: Where offenders and victims 'dialogue' their way to 'healing,' and serious crimes are handled with 'empathy' and maybe a stern talking-to.", scores: { c: -0.5, m: 1.5, p: -0.5 } },
-            { text: "Private Security for the Rich, Darwin for the Rest: If you can afford a panic room and a mercenary army, you're golden! If not, well, 'natural selection' is a kind of order, isn't it?", scores: { c: -0.5, m: -0.5, p: 1.5 } },
-            { text: "A glorious Rube Goldberg machine of outdated laws, overworked judges, and lawyers who bill by the syllable. It occasionally stumbles into something resembling justice, mostly by accident, and always after lunch.", scores: { c: 0.8, m: 0.2, p: 0.2 } }
+            { text: "The council's planning department, using expert reports and the official long-term plan.", scores: PICK_C },
+            { text: "A town assembly where everyone gets a say and the vote is binding. Bring snacks.", scores: PICK_M },
+            { text: "Whoever owns the land. If people want a park badly enough, they can club together and buy it.", scores: PICK_P },
+            { text: "A public consultation whose result was decided before it started.", scores: MUDDLE },
         ]
     },
     {
-        id: 'q20', // Originally q15
-        text: "How should \"Big Tech\" (those friendly overlords who know your every thought) be \"handled\"?",
+        id: 'q20',
+        text: "Statement: In a real emergency, the government should be able to suspend normal rights and rules.",
+        type: 'agreeScale',
+        options: agreeScale(1)
+    },
+    {
+        id: 'q21',
+        text: "What's the biggest lie people tell themselves about freedom?",
         type: 'forcedChoice4',
         options: [
-            { text: "Nationalize them! Let The State control the algorithms for 'public good' and 'national security.' What could be more trustworthy?", scores: { c: 1.5, m: -0.5, p: -0.5 } },
-            { text: "Break them up into tiny, worker-owned digital co-ops that build 'ethical AI' and probably get bought out by a new Big Tech in six months.", scores: { c: -0.5, m: 1.5, p: -0.5 } },
-            { text: "Let them fight! May the biggest data-hoarding monopoly win! 'Innovation' means new ways to harvest your soul for ad revenue.", scores: { c: -0.5, m: -0.5, p: 1.5 } },
-            { text: "A patchwork of confusing regulations, antitrust lawsuits that take a decade, and strongly worded parliamentary inquiries that achieve very little besides good soundbites.", scores: { c: 0.4, m: 0.3, p: 0.8 } }
+            { text: "That rights granted by the state are safe, when the state can take them back whenever it likes.", scores: AGAINST_C },
+            { text: "That a close-knit community sets you free, when it comes with a thousand unwritten rules.", scores: AGAINST_M },
+            { text: "That a free market makes you free, when your rent and your boss decide most of your choices.", scores: AGAINST_P },
+            { text: "That anyone is free before their first coffee.", scores: MUDDLE },
         ]
     },
     {
-        id: 'q21', // Originally q16
-        text: "International relations. What's the most 'realistic' (i.e., depressing) way for nations to interact?",
+        id: 'q22',
+        text: "Where do the big breakthroughs come from?",
         type: 'forcedChoice4',
         options: [
-            { text: "A glorious global pecking order established by 'might makes right,' where strong nations dictate terms, weaker nations comply (or get invaded), and 'international law' is just a cute suggestion for the powerful.", scores: { c: 1.5, m: -0.5, p: -0.5 } },
-            { text: "A 'Global Federation of Sovereign Peoples' where everyone agrees to 'peace, love, and mutual understanding' via international Zoom calls, blissfully ignoring power politics until someone actually wants a valuable resource (at which point it's back to 'might makes right' but with more passive-aggressive emoji use).", scores: { c: -0.5, m: 1.5, p: -0.5 } },
-            { text: "Global Corporate Feudalism: Nations are just brands, citizens are consumers, and a few mega-corps pull all the strings from their tax-haven HQs. At least the quarterly earnings calls are consistently upbeat!", scores: { c: -0.5, m: -0.5, p: 1.5 } },
-            { text: "The 'Cautious Diplomat's Two-Step': Issuing strongly worded condemnations, signing vague international accords that everyone ignores, and generally trying to keep the global applecart from completely tipping over through a delicate balance of veiled threats and performative tea parties.", scores: { c: 0.5, m: 0.5, p: 0.5 } }
+            { text: "Publicly funded research and government missions: moon landings, the internet, vaccines. Forms in quadruplicate, results eventually.", scores: PICK_C },
+            { text: "Open collaboration, with scientists, hobbyists and communities sharing knowledge freely. Wikipedia, but for everything.", scores: PICK_M },
+            { text: "Entrepreneurs chasing profit and taking risks. For every inventor of the light bulb, a thousand crypto start-ups.", scores: PICK_P },
+            { text: "A government grant, a university lab, a corporate patent and a lawsuit about who did what.", scores: MUDDLE },
         ]
     },
     {
-        id: 'q22', // Originally q17
-        text: "\"Social progress.\" If it happens at all, it's usually because:",
+        id: 'q23',
+        text: "How should getting around town work?",
         type: 'forcedChoice4',
         options: [
-            { text: "Some stern, far-sighted (or just plain bossy) state figures, armed with five-year plans and an unshakeable belief in their own genius, drag society kicking and screaming towards a 'brighter tomorrow' (that looks suspiciously like yesterday, but with more surveillance).", scores: { c: 1.5, m: -0.5, p: -0.5 } },
-            { text: "Grassroots movements of well-meaning (and often Birkenstock-clad) activists tirelessly campaign for change, fueled by fair-trade coffee and righteous indignation, eventually annoying the establishment into making a tiny, largely symbolic concession.", scores: { c: -0.5, m: 1.5, p: -0.5 } },
-            { text: "Some 'disruptive innovator' unleashes a new app/gizmo/Ponzi scheme that accidentally reshapes society, usually while making them obscenely wealthy and leaving a trail of bewildered Luddites and 'unforeseen consequences'.", scores: { c: -0.5, m: -0.5, p: 1.5 } },
-            { text: "The 'Incremental Muddle-Through' Method: Progress happens via slow, painful compromises, a bit of reluctant state action here, some hesitant market reform there, and a vague hope that it all adds up to something slightly less awful over several decades – a process so glacial it makes tectonic plate movement look like a sprint.", scores: { c: 0.5, m: 0.5, p: 0.5 } }
+            { text: "Publicly owned buses and trains, planned as one network with one ticket. The timetable is aspirational.", scores: PICK_C },
+            { text: "Community transport schemes, bike co-ops and car-sharing clubs. Very green, mildly smug.", scores: PICK_M },
+            { text: "Private operators and ride-hailing apps competing on price. Surge pricing builds character.", scores: PICK_P },
+            { text: "Whatever survived forty years of all three, stitched together badly.", scores: MUDDLE },
         ]
     },
     {
-        id: 'q23', // Originally q18
-        text: "Education's *real* purpose in this clown show we call life is to:",
+        id: 'q24',
+        text: "Statement: Disruptive protests, like blocking roads, are a legitimate part of a free society.",
+        type: 'agreeScale',
+        options: agreeScale(-1)
+    },
+    {
+        id: 'q25',
+        text: "When someone says it's 'for the common good', who's most likely pulling a fast one?",
         type: 'forcedChoice4',
         options: [
-            { text: "Produce obedient little citizens who know the approved national narrative and won't cause too much trouble. Think of it as state-sponsored daycare with flags.", scores: { c: 1.5, m: -0.5, p: -0.5 } },
-            { text: "Create 'well-rounded individuals' who can 'think critically' (i.e., agree with their progressive teachers) and 'collaborate' on endless group projects that prepare them for... more group projects.", scores: { c: -0.5, m: 1.5, p: -0.5 } },
-            { text: "Equip individuals with 'marketable skills' so they can 'compete' in the glorious 'knowledge economy' (i.e., fight for unpaid internships).", scores: { c: -0.5, m: -0.5, p: 1.5 } },
-            { text: "Keep kids off the streets and vaguely literate, with a mix of useful stuff, useless stuff, and standardized tests, all managed by a bureaucracy that means well. Mostly.", scores: { c: 0.8, m: 0.2, p: 0.2 } }
+            { text: "Politicians and officials, quietly extending their own power.", scores: AGAINST_C },
+            { text: "Activists and committees, imposing their pet projects on everyone else.", scores: AGAINST_M },
+            { text: "Business lobbyists, dressing up their profits as public benefit.", scores: AGAINST_P },
+            { text: "Everyone, frankly. It's a phrase, not a plan.", scores: MUDDLE },
         ]
     },
-    // Original IDQs (q19_idq, q20_idq, q23_idq) are now q1, q2, q3.
-    // Original Vision questions (q27, q28) are now q4, q5.
-    // New Vision question (q_totalitarian_vision) is now q6.
     {
-        id: 'q24', // Originally q21
-        text: "Statement: \"Ultimately, individual success is purely down to personal effort and talent; blaming 'the system' is just for losers.\"",
-        type: 'agreeDisagree',
-        options: [ { text: "Agree (or at least, that's what winners say).", scores: { c: 0, m: -1, p: 2 } },
-                   { text: "Disagree (because 'the system' is obviously rigged, duh).", scores: { c: 0, m: 1.5, p: -1 } } ]
-    },
-    {
-        id: 'q25', // Originally q22
-        text: "Statement: \"A bit of chaos and radical experimentation is essential for a truly vibrant and evolving society, even if it makes the sensible people nervous.\"",
-        type: 'agreeDisagree',
-        options: [ { text: "Agree (let's burn it down and see what sprouts!).", scores: { c: -1, m: 0.5, p: 0.5 } },
-                   { text: "Disagree (stability and proven methods are underrated, you damn hippies/disruptors!).", scores: { c: 1, m: -0.5, p: -0.5 } } ]
-    },
-    {
-        id: 'q26', // Originally q24
-        text: "Statement: \"A society that doesn't have a strong, unified national identity and purpose is basically just a random collection of people waiting to fall apart.\"",
-        type: 'agreeDisagree',
-        options: [ { text: "Agree (One Nation, One Glorious Purpose... as soon as we figure out what it is this week).", scores: { c: 2, m: -0.5, p: -0.5 } },
-                   { text: "Disagree (Diversity is strength! National identity is mostly just old flags and boring songs. Let a thousand flowers bloom, etc.).", scores: { c: -1, m: 0.5, p: 0.5 } } ]
-    },
-    {
-        id: 'q27', // Originally q25
-        text: "Let's be brutally honest: if the 'government' (or whatever euphemism we're using for 'the people bossing us around') has *one* actual, non-negotiable job, it's to:",
+        id: 'q26',
+        text: "How should people be looked after in old age?",
         type: 'forcedChoice4',
         options: [
-            { text: "Grandly steer the national ship towards a Glorious Predetermined Destiny, using a very large megaphone, an army of planners, and a healthy disregard for individual preferences that 'deviate from the approved trajectory.'", scores: { c: 2, m: -1, p: -1 } },
-            { text: "Act as society's overly enthusiastic cruise director, ensuring everyone 'feels included' in endless 'enrichment activities' and 'synergy workshops,' while the actual ship slowly takes on water due to committee paralysis.", scores: { c: -1, m: 2, p: -1 } },
-            { text: "Be an almost invisible, ultra-low-budget night watchman who just stops blatant arson and grand larceny, then immediately goes back to sleep so rugged individuals can get on with building their empires (or meth labs).", scores: { c: -1, m: -1, p: 2 } },
-            { text: "Basically, keep the traffic lights working and stop society from devolving into a full-blown medieval brawl over the last Wi-Fi hotspot. Anything more is just asking for trouble and more paperwork.", scores: { c: 0.5, m: 0.2, p: 0.2 } }
+            { text: "A state pension and state-run care, the same for everyone and guaranteed. Assuming the Treasury is still there.", scores: PICK_C },
+            { text: "Families and communities, with shared housing and local care co-ops. Hope you like your relatives.", scores: PICK_M },
+            { text: "Save and invest for yourself; it's your money and your retirement. Fingers crossed for the next market crash.", scores: PICK_P },
+            { text: "Work until you're 74, then work it out.", scores: MUDDLE },
         ]
     },
     {
-        id: 'q28', // Originally q26
-        text: "Humanity's biggest, most apocalyptic-level screw-ups (climate change, pandemics, reality TV) are fundamentally the result of:",
+        id: 'q27',
+        text: "In a pandemic or a flood, who tends to let people down?",
         type: 'forcedChoice4',
         options: [
-            { text: "A catastrophic lack of centralized control and not enough PowerPoint presentations from The Experts™. If only everyone listened to the Smartest People in the Room (i.e., us), we'd have a utopia by lunchtime.", scores: { c: 2, m: -1, p: -0.5 } },
-            { text: "A tragic empathy deficit and too many people stubbornly refusing to join hands, sing campfire songs, and collectively solve everything with good intentions and locally-sourced, artisanal solutions. Also, probably capitalism.", scores: { c: -1, m: 2, p: -0.5 } },
-            { text: "Too many meddling bureaucrats, innovation-stifling regulations, and a general societal failure to just get out of the way and let brilliant, unfettered individuals and the glorious Free Market 'disrupt' us into a brighter future (with optional shareholder dividends).", scores: { c: -0.5, m: -0.5, p: 2 } },
-            { text: "The depressing fact that humans are, by and large, short-sighted, mildly corruptible, and easily distracted by shiny objects. We're basically clever monkeys with anxiety and car keys; 'solving' things permanently is a bit much to ask.", scores: { c: 0.2, m: 0.2, p: 0.2 } }
-        ]
-    },
-    // Original q27 and q28 are now q4 and q5 (Stage 2 Affinity)
-    {
-        id: 'q29', // Originally q29
-        text: "The fact that some people have private jets and gold-plated bidets while others are using newspapers for insulation is, from a societal perspective:",
-        type: 'forcedChoice4',
-        options: [
-            { text: "A situation the State must carefully 'manage' – not to eliminate wealth (Heavens, no! We need our loyal oligarchs!), but to tax just enough to prevent outright revolution while ensuring the 'right' people stay comfortable.", scores: { c: 1, m: 0.5, p: -1 } },
-            { text: "An outrageous moral failing and clear proof of a rigged, exploitative system! Time to sharpen the guillotines, redistribute the jets, and ensure everyone has at least a cooperatively-owned, ethically-sourced bidet.", scores: { c: -0.5, m: 1.5, p: -1.5 } },
-            { text: "The beautiful, natural outcome of some people being brilliant, hard-working geniuses and others being... less so. As long as the jets were acquired 'legally' (i.e., through shrewd market plays or a really good inheritance), it's just the free market doing its inspiring work!", scores: { c: -0.5, m: -1.5, p: 2 } },
-            { text: "Frankly, inevitable and a bit depressing, but probably not fixable without making things even worse. Best to focus on a robust-ish charity sector and hope the jet-owners occasionally feel a pang of guilt and donate some spare bidet parts.", scores: { c: 0.2, m: 0.3, p: 0.4 } }
+            { text: "The government: slow, rigid, and fond of contradictory guidance.", scores: AGAINST_C },
+            { text: "Local groups: big hearts, no capacity, and three rival group chats.", scores: AGAINST_M },
+            { text: "Businesses: hiking the price of everything people suddenly need.", scores: AGAINST_P },
+            { text: "Everyone at first, then everyone gets slightly better at it.", scores: MUDDLE },
         ]
     },
     {
-        id: 'q30', // Originally q30
-        text: "Beyond just stopping people from engaging in enthusiastic axe-murder, society's legal system should primarily exist to:",
+        id: 'q28',
+        text: "What makes for good, trustworthy news?",
         type: 'forcedChoice4',
         options: [
-            { text: "Diligently uphold The Nation's Sacred Values, codify The One True Path to Good Citizenship, and gently (or not-so-gently) guide the populace away from 'undesirable' thoughts and behaviors. For their own moral hygiene, of course.", scores: { c: 1.5, m: -0.25, p: -0.75 } },
-            { text: "Serve as a dynamic tool for communities to achieve restorative justice, ensure equitable access to all resources (especially the good snacks), and constantly evolve through participatory public forums to reflect the People's ever-changing sense of 'fairness.'", scores: { c: -0.75, m: 1.5, p: -0.25 } },
-            { text: "Meticulously define and ruthlessly protect individual rights – especially the right to own vast quantities of stuff and enter into incredibly complex, probably exploitative contracts. Everything else is just statist fluff.", scores: { c: -0.75, m: -0.25, p: 1.5 } },
-            { text: "Provide a somewhat stable, mostly understandable (if you have three law degrees) framework so businesses can sue each other and the rest of us have a vague idea of what's likely to get us thrown in jail this week. It's not pretty, but it's (sort of) order.", scores: { c: 0.3, m: 0.1, p: 0.3 } }
+            { text: "A well-funded public broadcaster with a legal duty to be impartial. Reliably balanced, reliably beige.", scores: PICK_C },
+            { text: "Non-profit outlets owned by their readers and run locally. Earnest, and slightly behind on the big stories.", scores: PICK_M },
+            { text: "Lots of outlets competing for your attention. Choose wisely; the algorithm already has.", scores: PICK_P },
+            { text: "None of it. We'll just argue in the comments.", scores: MUDDLE },
         ]
-    }
+    },
+    {
+        id: 'q29',
+        text: "What's the most dangerous kind of monopoly?",
+        type: 'forcedChoice4',
+        options: [
+            { text: "The state's monopoly on law, force and money.", scores: AGAINST_C },
+            { text: "A tight-knit group that controls who gets in and who gets a say.", scores: AGAINST_M },
+            { text: "A corporation so big that nobody can challenge it.", scores: AGAINST_P },
+            { text: "The board game, given what it does to families at Christmas.", scores: MUDDLE },
+        ]
+    },
+    {
+        id: 'q30',
+        text: "In a well-run society, most things get organised by:",
+        type: 'forcedChoice4',
+        options: [
+            { text: "Public institutions, with clear laws and long-term plans.", scores: PICK_C },
+            { text: "People co-operating directly with their neighbours and co-workers.", scores: PICK_M },
+            { text: "Individuals making their own choices and deals in a free market.", scores: PICK_P },
+            { text: "Muddling through, which has worked about as well as anything so far.", scores: MUDDLE },
+        ]
+    },
 ];
