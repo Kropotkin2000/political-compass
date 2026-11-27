@@ -516,3 +516,11 @@ main { position: relative; z-index: 1; }
 :root[data-tone="classroom"] { --blob-alpha: .22; }
 :root[data-tone="classroom"][data-theme="light"] { --blob-alpha: .14; }
 :root[data-tone="classroom"] .twinkle { animation: none; opacity: .85; }
+
+/* ---------- Tie-breakers and the two newer families ---------- */
+:root { --b8: #f472b6; --b9: #4ade80; }
+:root[data-theme="light"] { --b8: #db2777; --b9: #16a34a; }
+.b8 { fill: var(--b8); background: var(--b8); } .b9 { fill: var(--b9); background: var(--b9); }
+.tb-scales { margin-top: 18px; display: grid; gap: 14px; }
+.tb-track { background: linear-gradient(90deg, var(--text-3), var(--text-2)); opacity: .55; }
+.options.tiebreak .option .key { border-style: dashed; }

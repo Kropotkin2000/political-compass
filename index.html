@@ -8,8 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <!-- Bump ?v= on all six links whenever you change any of these files, so browsers fetch them together. -->
-    <link rel="stylesheet" href="style.css?v=2026-11-27c">
+    <!-- Bump ?v= on all seven links whenever you change any of these files, so browsers fetch them together. -->
+    <link rel="stylesheet" href="style.css?v=2026-11-28a">
 </head>
 <body>
     <div class="aurora" aria-hidden="true">
@@ -50,7 +50,7 @@
                     </ul>
                     <p class="lede lede-2" data-copy="lede2">Plus a few blunt statements on a separate question: how much <b>liberty</b> would you trade for <b>order</b>?</p>
                     <button id="start-button" class="cta" type="button">Start the test <span aria-hidden="true">&rarr;</span></button>
-                    <p class="fineprint">30 questions &middot; about 6 minutes &middot; keys 1&ndash;5 to answer, &larr; to go back</p>
+                    <p class="fineprint">30 questions, plus up to 4 tie-breakers &middot; about 7 minutes &middot; keys 1&ndash;5 to answer, &larr; to go back</p>
                 </div>
                 <div class="intro-art" aria-hidden="true">
                     <svg id="intro-triangle" class="tri" viewBox="0 0 400 370"></svg>
@@ -87,7 +87,7 @@
 
             <div class="results-grid">
                 <div class="map-panel">
-                    <svg id="result-triangle" class="tri tri-large" viewBox="0 0 400 370" role="img" aria-label="Your position in the political triangle, with all 36 ideologies plotted"></svg>
+                    <svg id="result-triangle" class="tri tri-large" viewBox="0 0 400 370" role="img" aria-label="Your position in the political triangle, with all 42 ideologies plotted"></svg>
                     <p class="map-hint" id="map-hint">Tap any dot to read about that ideology.</p>
                     <div id="legend" class="legend"></div>
                 </div>
@@ -111,6 +111,7 @@
                         <h4>Your mix</h4>
                         <div id="mix-bars" class="mix-bars"></div>
                         <div id="order-scale" class="order-scale"></div>
+                        <div id="tb-scales" class="tb-scales" hidden></div>
                         <div class="extremity">
                             <div class="extremity-row"><span>Distance from the dead centre</span><b id="extremity-value"></b></div>
                             <div class="meter"><div id="extremity-fill" class="meter-fill"></div></div>
@@ -139,10 +140,11 @@
 
     <div id="toast" class="toast" role="status" hidden></div>
 
-    <script src="questions.js?v=2026-11-27c"></script>
-    <script src="ideology_summaries.js?v=2026-11-27c"></script>
-    <script src="ideology_summaries_classroom.js?v=2026-11-27c"></script>
-    <script src="ideology_ideal_points.js?v=2026-11-27c"></script>
-    <script src="script.js?v=2026-11-27c"></script>
+    <script src="scoring.js?v=2026-11-28a"></script>
+    <script src="questions.js?v=2026-11-28a"></script>
+    <script src="ideology_summaries.js?v=2026-11-28a"></script>
+    <script src="ideology_summaries_classroom.js?v=2026-11-28a"></script>
+    <script src="ideology_ideal_points.js?v=2026-11-28a"></script>
+    <script src="script.js?v=2026-11-28a"></script>
 </body>
 </html>

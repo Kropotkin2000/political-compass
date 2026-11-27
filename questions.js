@@ -17,6 +17,10 @@
 //   "Pick a villain" - one option criticising each corner (the point sits halfway along the opposite
 //                      edge, i.e. split evenly between the other two corners), plus a muddle option.
 //   Muddle options sit at the dead centre.
+//   "Pick a blend"   - one option for each PAIR of corners (state + community, state + private,
+//                      community + private), sitting halfway along that edge, plus a muddle option.
+//                      These let people say what mixed positions (social democracy, market socialism,
+//                      distributism...) actually think, instead of picking the nearest corner.
 // So answering every question with the same corner puts you exactly on that corner, and answering
 // everything with a muddle puts you exactly in the middle.
 //
@@ -35,6 +39,10 @@ const AGAINST_C = { c: 0, m: 0.5, p: 0.5 };
 const AGAINST_M = { c: 0.5, m: 0, p: 0.5 };
 const AGAINST_P = { c: 0.5, m: 0.5, p: 0 };
 const MUDDLE = { c: 1 / 3, m: 1 / 3, p: 1 / 3 };
+// "Pick a blend" answers sit halfway along an edge: two corners combined.
+const BLEND_CM = { c: 0.5, m: 0.5, p: 0 };   // state + community
+const BLEND_CP = { c: 0.5, m: 0, p: 0.5 };   // state + private
+const BLEND_MP = { c: 0, m: 0.5, p: 0.5 };   // community + private
 
 // Agree scale. keyed: 1 means "agree = more order", -1 means "agree = more liberty".
 // Answers run from strongly agree to strongly disagree (never shuffled); both sides are teased equally.
@@ -65,9 +73,9 @@ const questions = [
         classroom: "How should medical treatment be organised and paid for?",
         type: 'forcedChoice4',
         options: [
-            { text: "A national health service, paid for from taxes and free when you need it. The wait is long, but the bill is zero.", classroom: "A national health service, funded by taxes and free when you use it.", scores: PICK_C },
-            { text: "Mutual societies and community clinics that members run together. Wonderful, once the rota for the X-ray machine is sorted.", classroom: "Mutual societies and community clinics, run by and for their members.", scores: PICK_M },
-            { text: "Insurance you choose yourself, with hospitals competing for your custom. Read the small print before you fall over.", classroom: "Insurance and providers chosen by individuals in a competitive market.", scores: PICK_P },
+            { text: "A national health service, run locally by elected community health boards. Free at the point of use, discussed at length at the point of governance.", classroom: "A national health service, run locally by elected community health boards.", scores: BLEND_CM },
+            { text: "Compulsory public insurance, with private hospitals competing for your custom. Universal cover, glossy brochures.", classroom: "Compulsory public insurance, with private and public hospitals competing for patients.", scores: BLEND_CP },
+            { text: "Mutual insurers owned by their members, competing for members. Your premium comes with voting rights you will never use.", classroom: "Mutual insurers owned by their members, competing with each other for members.", scores: BLEND_MP },
             { text: "A bewildering hybrid that nobody fully understands, including the people running it.", classroom: "A mixed system combining public, mutual and private provision.", scores: MUDDLE },
         ]
     },
@@ -77,9 +85,9 @@ const questions = [
         classroom: "There is a shortage of housing. What is the best solution?",
         type: 'forcedChoice4',
         options: [
-            { text: "The government builds them, lots of them, council-house style. They'll all look identical, but they'll exist.", classroom: "The government should build large numbers of public homes.", scores: PICK_C },
-            { text: "Housing co-ops and community land trusts, owned by the people who live in them. The planning meetings may outlast the buildings.", classroom: "Support housing co-operatives and community land trusts owned by their residents.", scores: PICK_M },
-            { text: "Cut the red tape and let developers build what people will pay for. Brace for a lot of 'luxury studio apartments'.", classroom: "Reduce planning restrictions so that private developers can build more.", scores: PICK_P },
+            { text: "Council homes, built by the state and run by tenants' associations. The roof gets fixed once the subcommittee agrees on a roofer.", classroom: "Public housing built by the state and managed by tenants' associations.", scores: BLEND_CM },
+            { text: "The government sets the targets and the subsidies, and private builders do the building. Ribbon-cutting ceremonies all round.", classroom: "The government sets targets and offers subsidies, and private developers build the homes.", scores: BLEND_CP },
+            { text: "Housing co-ops and self-build groups buying land on the open market. Your neighbours are also your landlords, and your builders.", classroom: "Housing co-operatives and self-build groups buying land on the open market.", scores: BLEND_MP },
             { text: "Announce an ambitious target, miss it, then announce a new one.", classroom: "Combine public building, community schemes and private development.", scores: MUDDLE },
         ]
     },
@@ -108,9 +116,9 @@ const questions = [
         classroom: "Who should have the final say in how a business is run?",
         type: 'forcedChoice4',
         options: [
-            { text: "Within strict laws on pay, hours and safety, set and policed by the state. The inspectors' clipboards are a feature, not a bug.", classroom: "Owners and managers, but within strict laws on pay, hours and safety that the state sets and enforces.", scores: PICK_C },
-            { text: "The workers, through co-operative ownership or elected councils. Every decision gets a show of hands, including the coffee brand.", classroom: "The workers, through co-operative ownership or elected workplace councils.", scores: PICK_M },
-            { text: "The owners. It's their money on the line; if you don't like it, start your own firm.", classroom: "The owners, because they invest the money and carry the risk.", scores: PICK_P },
+            { text: "Publicly owned firms, run day to day by elected councils of workers. The state owns the factory; the canteen menu is put to a vote.", classroom: "Publicly owned firms, managed day to day by elected councils of their workers.", scores: BLEND_CM },
+            { text: "The owners, within strict laws on pay, hours and safety set by the state. Freedom to manage, subject to an inspector with a clipboard.", classroom: "The owners, but within strict laws on pay, hours and safety that the state sets and enforces.", scores: BLEND_CP },
+            { text: "Worker co-operatives competing in an open market. Everyone's a boss, and everyone's worried about the quarterly figures.", classroom: "Worker co-operatives, owned by their workers and competing in an open market.", scores: BLEND_MP },
             { text: "Whoever won the last round of negotiations, until the next round.", classroom: "It should be negotiated between owners, workers and government.", scores: MUDDLE },
         ]
     },
@@ -206,10 +214,10 @@ const questions = [
         classroom: "Who should run the banks?",
         type: 'forcedChoice4',
         options: [
-            { text: "A strong public bank and tight state control of credit. Lending in the national interest, decided in a very grey building.", classroom: "A strong public bank, with the state directing where credit goes.", scores: PICK_C },
-            { text: "Credit unions and co-operative banks owned by their members. Your loan gets approved at the members' meeting, right after the raffle.", classroom: "Credit unions and co-operative banks owned by their members.", scores: PICK_M },
-            { text: "Private banks competing freely, and the ones that blunder go bust. Your savings are your own lookout.", classroom: "Private banks competing freely, with failing banks allowed to collapse.", scores: PICK_P },
-            { text: "Private banks, until they crash, then the taxpayer, then private banks again.", classroom: "Private banks regulated by the state, with public rescue in a crisis.", scores: MUDDLE },
+            { text: "A public bank that lends through local councils and community funds. Your loan is approved by a committee of your neighbours, on behalf of the Treasury.", classroom: "A public bank that lends through local councils and community funds.", scores: BLEND_CM },
+            { text: "Private banks, tightly regulated, with the state as lender of last resort. Profits are private; the safety net is very public.", classroom: "Private banks, closely regulated, with the state as lender of last resort.", scores: BLEND_CP },
+            { text: "Credit unions and building societies competing with each other. Banking with a members' newsletter.", classroom: "Credit unions and mutual building societies, competing with each other.", scores: BLEND_MP },
+            { text: "Whichever one has a cash machine nearest the chip shop.", classroom: "A mixture of public, mutual and private banks.", scores: MUDDLE },
         ]
     },
     {
@@ -375,6 +383,122 @@ const questions = [
             { text: "People co-operating directly with their neighbours and co-workers.", classroom: "People co-operating directly with their neighbours and co-workers.", scores: PICK_M },
             { text: "Individuals making their own choices and deals in a free market.", classroom: "Individuals making their own choices and agreements in a free market.", scores: PICK_P },
             { text: "Muddling through, which has worked about as well as anything so far.", classroom: "A mix of all three, adjusted over time.", scores: MUDDLE },
+        ]
+    },
+];
+
+// ------------------------------------------------------------------
+// TIE-BREAKERS
+// Asked after the main test, and only when they would separate your closest matches (see scoring.js).
+// Each one measures a single thing on a 0..100 scale; the options are in order and never shuffled.
+//   change: 0 = gradual reform .. 100 = revolution
+//   scale:  0 = local .. 100 = national / global
+//   trad:   0 = secular, progressive .. 100 = religious, traditional
+//   nation: 0 = humanity or class .. 100 = nation first
+// ------------------------------------------------------------------
+const tiebreakers = [
+    {
+        id: 't1',
+        dim: 'change',
+        text: "How should big changes to society happen?",
+        classroom: "How should major changes to society be made?",
+        type: 'tiebreak',
+        options: [
+            { text: "Slowly, through elections and compromise. Ten-year plans for five-minute fixes.", classroom: "Gradually, through elections, law and compromise.", value: 0 },
+            { text: "Steady pressure: campaigns, unions, petitions and the occasional sternly worded march.", classroom: "Through sustained pressure such as campaigns, unions and protest, alongside elections.", value: 33 },
+            { text: "Build the new world alongside the old one until the old one is redundant. Very patient. Slightly smug.", classroom: "By building new institutions alongside the existing ones until they replace them.", value: 67 },
+            { text: "Tear it down and start again. Bring a hammer.", classroom: "Through revolution, replacing the existing system rather than reforming it.", value: 100 },
+        ]
+    },
+    {
+        id: 't2',
+        dim: 'change',
+        text: "The current system:",
+        classroom: "Which comes closest to your view of the current political and economic system?",
+        type: 'tiebreak',
+        options: [
+            { text: "Mostly works. Tweak it gently and don't spill the tea.", classroom: "It mostly works and needs careful improvement.", value: 0 },
+            { text: "Needs serious repairs, but the foundations are sound.", classroom: "It needs major reform, but it can be fixed.", value: 33 },
+            { text: "Is broken in ways no amount of reform can reach.", classroom: "It has deep flaws that reform alone cannot fix.", value: 67 },
+            { text: "Should be dismantled. All of it. Preferably by Thursday.", classroom: "It should be replaced entirely.", value: 100 },
+        ]
+    },
+    {
+        id: 't3',
+        dim: 'scale',
+        text: "At what level should most decisions be made?",
+        classroom: "At what level should most decisions be made?",
+        type: 'tiebreak',
+        options: [
+            { text: "The street. If it can't be settled over the garden fence, it's too big.", classroom: "In the neighbourhood or the workplace.", value: 0 },
+            { text: "The town or region: big enough to matter, small enough to complain to.", classroom: "In the town, city or region.", value: 33 },
+            { text: "The nation. One set of rules, one very long queue.", classroom: "By the national government.", value: 67 },
+            { text: "The whole planet. Global problems, global committees, terrible time zones.", classroom: "By international or global institutions.", value: 100 },
+        ]
+    },
+    {
+        id: 't4',
+        dim: 'scale',
+        text: "Who do you trust most to get things right?",
+        classroom: "Which do you trust most to make good decisions?",
+        type: 'tiebreak',
+        options: [
+            { text: "People I know by name.", classroom: "People and groups I know personally.", value: 0 },
+            { text: "My local council, mostly, on a good day.", classroom: "Local and regional bodies.", value: 33 },
+            { text: "The national government, eventually.", classroom: "National institutions.", value: 67 },
+            { text: "International bodies of experts, ideally with very good translators.", classroom: "International institutions and agreements.", value: 100 },
+        ]
+    },
+    {
+        id: 't5',
+        dim: 'trad',
+        text: "What role should religion and tradition play in public life?",
+        classroom: "What role should religion and tradition play in public life?",
+        type: 'tiebreak',
+        options: [
+            { text: "None. Keep the hymns out of parliament.", classroom: "None; public life should be strictly secular.", value: 0 },
+            { text: "Respect them, but make the laws from reason and evidence.", classroom: "They should be respected, but laws should be based on reason and evidence.", value: 33 },
+            { text: "They hold society together, so the state should give them a hand.", classroom: "They hold society together and deserve public support.", value: 67 },
+            { text: "They should guide the law. Some rules are older than any parliament.", classroom: "They should shape the country's laws and values.", value: 100 },
+        ]
+    },
+    {
+        id: 't6',
+        dim: 'trad',
+        text: "Should society actively promote traditional family life?",
+        classroom: "Should society actively encourage traditional family structures?",
+        type: 'tiebreak',
+        options: [
+            { text: "No. Families come in all shapes, and some of them are three cats.", classroom: "No; people should form families however they choose.", value: 0 },
+            { text: "Support every family equally, including the odd ones.", classroom: "Society should support all kinds of family equally.", value: 33 },
+            { text: "Gently, yes. A stable marriage never hurt anyone (citation needed).", classroom: "Yes; marriage and traditional families deserve encouragement.", value: 67 },
+            { text: "Yes. Mum, dad, kids, Sunday roast. Non-negotiable.", classroom: "Yes, strongly; traditional family structures should be actively promoted.", value: 100 },
+        ]
+    },
+    {
+        id: 't7',
+        dim: 'nation',
+        text: "Who do you owe your first loyalty to?",
+        classroom: "Who do you owe your first loyalty to?",
+        type: 'tiebreak',
+        options: [
+            { text: "Humanity. Borders are lines somebody drew on a map.", classroom: "Humanity as a whole.", value: 0 },
+            { text: "People who share my cause, my class or my faith, wherever they live.", classroom: "People who share my class, faith or cause, wherever they live.", value: 33 },
+            { text: "My country, though not at everyone else's expense.", classroom: "My country, while respecting other countries.", value: 67 },
+            { text: "My nation, first and always. The anthem gives me goosebumps.", classroom: "My nation, above all.", value: 100 },
+        ]
+    },
+    {
+        id: 't8',
+        dim: 'nation',
+        text: "Should the economy be run mainly to make the nation strong?",
+        classroom: "Should the economy be run mainly to strengthen the nation?",
+        type: 'tiebreak',
+        options: [
+            { text: "No. Money doesn't have a flag; trade with whoever.", classroom: "No; people should trade freely, whatever their nationality.", value: 0 },
+            { text: "Mostly no, but keep an eye on the strategic stuff.", classroom: "Mostly no, although some strategic industries need protection.", value: 33 },
+            { text: "Largely yes: protect national industries and jobs.", classroom: "Largely yes; national industries and jobs should be protected.", value: 67 },
+            { text: "Absolutely. The economy exists to serve the nation.", classroom: "Yes; the economy should serve national strength above all.", value: 100 },
         ]
     },
 ];

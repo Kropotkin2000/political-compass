@@ -39,6 +39,12 @@
             leanNote: (ex) => `Your lean is weak (${ex}% from the dead centre), so treat this label as a loose fit: several centrist labels are about equally close.`,
             order: (a) => a < 20 ? "Don't tread on anyone, ever." : a < 40 ? 'Live and let live, mostly.' : a < 60 ? 'Rules are fine. Some rules.' : a < 80 ? 'A firm hand, for everyone else.' : 'Papers, please.',
             extremity: (x) => x < 15 ? 'Aggressively moderate. You probably own a beige fleece.' : x < 35 ? 'Opinions, yes. Pitchforks, not yet.' : x < 60 ? 'Strong views, lightly held. Mostly strong.' : x < 80 ? 'You have a manifesto. It has footnotes.' : 'You are the corner. The corner is you.',
+            tbScales: {
+                change: ['Reform or revolution?', 'Gentle tweaks', 'Bring a hammer'],
+                scale: ['How big should decisions be?', 'Over the fence', 'The whole planet'],
+                trad: ['Tradition?', 'Keep the hymns out', 'Sunday roast, non-negotiable'],
+                nation: ['Nation or world?', 'Humanity', 'Anthem goosebumps'],
+            },
             axes: {
                 c: 'Someone official will sort it out. Please fill in this form.',
                 m: "We'll all decide together. The meeting starts at 7, and 9, and 11.",
@@ -64,6 +70,12 @@
             leanNote: (ex) => `Your answers do not lean strongly in any direction (${ex}% from the centre), so several centrist positions fit about equally well.`,
             order: (a) => a < 20 ? 'Strongly favours personal liberty.' : a < 40 ? 'Leans towards personal liberty.' : a < 60 ? 'Balances liberty and order.' : a < 80 ? 'Leans towards order and authority.' : 'Strongly favours order and authority.',
             extremity: (x) => x < 15 ? 'Your answers are close to the centre: you mixed approaches or chose the middle option often.' : x < 35 ? 'A moderate lean in one direction.' : x < 60 ? 'A clear lean in one direction.' : x < 80 ? 'A strong lean in one direction.' : 'A very strong, consistent lean towards one corner.',
+            tbScales: {
+                change: ['How change should happen', 'Gradual reform', 'Revolution'],
+                scale: ['Level of decision-making', 'Local', 'National or global'],
+                trad: ['Religion and tradition', 'Secular', 'Traditional'],
+                nation: ['National loyalty', 'Humanity', 'Nation first'],
+            },
             axes: {
                 c: 'The state organises society, through law, planning and public services.',
                 m: 'Communities organise society, through shared ownership and collective decisions.',
@@ -84,8 +96,15 @@
     const AXES = ['c', 'm', 'p'];
     const AXIS_NAMES = { c: 'Centralism', m: 'Communalism', p: 'Privatism' };
     const IDEOLOGIES = Object.entries(ideologyIdealPoints).map(([name, pt]) => ({ name, ...pt }));
+    // Each family keeps a fixed colour (b0..b9 in style.css), whatever order the file lists them in.
+    const BROAD_COLOUR = {
+        'Libertarian Socialism / Social Anarchism': 0, 'Propertarianism / Individualist Libertarianism': 1,
+        'Individualist Anarchism': 2, 'Statism': 3, 'Authoritarian Socialism / State Collectivism': 4,
+        'Classical Liberalism / Constitutionalism': 5, 'Democratic Socialism': 6, 'Centrism / Mixed Economy Ideologies': 7,
+        'Christian Democracy / Communitarianism': 8, 'Green Politics': 9,
+    };
     const BROAD_ORDER = [...new Set(IDEOLOGIES.map(i => i.broad))];
-    const broadIndex = (b) => BROAD_ORDER.indexOf(b);
+    const broadIndex = (b) => (b in BROAD_COLOUR ? BROAD_COLOUR[b] : BROAD_ORDER.indexOf(b) % 10);
 
     const params = new URLSearchParams(location.search);
     const isDevMode = params.get('dev') === 'true';
@@ -98,51 +117,23 @@
     }
 
     // ------------------------------------------------------------------
-    // Scoring
+    // Scoring: all the maths lives in scoring.js, shared with tools/calibrate.js
     // ------------------------------------------------------------------
-    // Triangle: every answer is a point in the triangle (see questions.js); your position is
-    // the average of your points. Order: the average of your agree-scale answers (-2..+2),
-    // rescaled to 0 (all liberty) .. 100 (all order).
-    const ORDER_WEIGHT = 0.6;   // how much Order counts when matching ideologies (tools/calibrate.js uses the same)
-    const isScale = (q) => q.type === 'agreeScale';
-
-    // Replays answers from scratch. answers[i] = original option index for questions[order[i]].
-    // Because it always rebuilds, going Back can never leave the totals in a half-undone state.
-    function computeRaw(order, answers) {
-        const total = { c: 0, m: 0, p: 0, a: 0 };
-        let nTri = 0, nA = 0;
-        answers.forEach((optIndex, i) => {
-            if (optIndex == null) return;
-            const q = questions[order[i]];
-            const s = q.options[optIndex].scores;
-            if (isScale(q)) { total.a += Number(s.a) || 0; nA++; }
-            else { for (const ax of AXES) total[ax] += Number(s[ax]) || 0; nTri++; }
-        });
-        return { total, nTri, nA };
-    }
-
-    function normalise({ total, nTri, nA }) {
-        const pos = nTri
-            ? { c: total.c / nTri * 100, m: total.m / nTri * 100, p: total.p / nTri * 100 }
-            : { c: 100 / 3, m: 100 / 3, p: 100 / 3 };
-        const sum = pos.c + pos.m + pos.p || 1;   // guard against rounding in hand-edited scores
-        for (const ax of AXES) pos[ax] = pos[ax] / sum * 100;
-        pos.a = nA ? Math.max(0, Math.min(100, (total.a / nA + 2) / 4 * 100)) : 50;
-        return pos;
-    }
-
-    const triDist = (a, b) => Math.hypot(a.c - b.c, a.m - b.m, a.p - b.p);
-    const dist = (a, b) => Math.hypot(triDist(a, b), ORDER_WEIGHT * ((a.a ?? 50) - (b.a ?? 50)));
-
-    function rankIdeologies(pos) {
-        return IDEOLOGIES.map(i => ({ ...i, d: dist(pos, i) })).sort((a, b) => a.d - b.d);
-    }
-
-    // How strongly you lean: distance from the centre of the triangle, as a share of centre-to-corner.
-    const CENTRE = { c: 100 / 3, m: 100 / 3, p: 100 / 3, a: 50 };
-    const CORNER_DIST = triDist(CENTRE, { c: 100, m: 0, p: 0 });
-    const extremity = (pos) => Math.min(100, triDist(pos, CENTRE) / CORNER_DIST * 100);
+    if (typeof Scoring === 'undefined') return fail('scoring.js not loaded.');
+    const TIEBREAKERS = typeof tiebreakers !== 'undefined' ? tiebreakers : [];
+    const isScale = Scoring.isScale;
+    const triDist = Scoring.triDist;
+    const dist = Scoring.distance;
+    const rankIdeologies = (pos) => Scoring.rank(pos, IDEOLOGIES);
+    const CENTRE = Scoring.CENTRE;
+    const extremity = Scoring.lean;
     const WEAK_LEAN = 12; // below this, the result says the match is loose
+
+    // Main-test position from the answers given so far. `order[i]` is a question index, `ans[i]` its answer.
+    function computeRaw(ord, ans) {
+        return { qs: ord.map(i => questions[i]), ans: ans.slice(0, ord.length) };
+    }
+    function normalise(raw) { return Scoring.position(raw.qs, raw.ans); }
 
     // ------------------------------------------------------------------
     // Triangle geometry (C top, M bottom-left, P bottom-right)
@@ -280,8 +271,10 @@
     // ------------------------------------------------------------------
     let order = [];        // question indices in the order asked
     let optionOrders = []; // shuffled option order per question, fixed for the run
-    let answers = [];      // chosen original option index per position
-    let current = 0;
+    let answers = [];      // chosen original option index per position (main test)
+    let tbList = [];       // tie-breaker questions chosen for this person (asked after the main test)
+    let tbAnswers = {};    // tie-breaker answers by question id; kept if you go back and come forward again
+    let current = 0;       // 0..order.length-1 = main test, then order.length.. = tie-breakers
     let advancing = false;
     let miniDot = null;
 
@@ -302,6 +295,8 @@
             return isScale(q) ? keys : shuffle(keys); // scales stay in order; everything else is shuffled
         });
         answers = new Array(order.length).fill(null);
+        tbList = [];
+        tbAnswers = {};
         current = 0;
         history.replaceState(null, '', location.pathname + location.search);
         show('quiz');
@@ -316,10 +311,21 @@
     }
 
     function livePosition() {
-        const answered = answers.slice(0, current).some(a => a != null);
+        const upTo = Math.min(current, order.length);
+        const answered = answers.slice(0, upTo).some(a => a != null);
         if (!answered) return CENTRE;
-        return normalise(computeRaw(order, answers.slice(0, current)));
+        return normalise(computeRaw(order, answers.slice(0, upTo)));
     }
+
+    // The question at a step, whether main test or tie-breaker
+    const inTiebreak = (step) => step >= order.length;
+    const stepQuestion = (step) => inTiebreak(step) ? tbList[step - order.length] : questions[order[step]];
+    const stepAnswer = (step) => inTiebreak(step) ? tbAnswers[stepQuestion(step).id] : answers[step];
+    const stepOptionOrder = (step) => inTiebreak(step) ? [...stepQuestion(step).options.keys()] : optionOrders[step];
+    const TB_KICKER = {
+        sarcastic: { change: 'Tie-breaker: reform or revolution?', scale: 'Tie-breaker: how big?', trad: 'Tie-breaker: tradition', nation: 'Tie-breaker: nation or world?' },
+        classroom: { change: 'Tie-breaker: how change happens', scale: 'Tie-breaker: level of decision-making', trad: 'Tie-breaker: religion and tradition', nation: 'Tie-breaker: national loyalty' },
+    };
 
     function updateLive() {
         const pos = livePosition();
@@ -336,25 +342,29 @@
     }
 
     function renderQuestion(direction) {
-        const q = questions[order[current]];
+        const q = stepQuestion(current);
         const total = order.length;
-        $('progress-label').textContent = `${current + 1} / ${total}`;
-        $('progress').setAttribute('aria-valuenow', current + 1);
-        $('progress-fill').style.width = `${(current / total) * 100}%`;
-        $('question-kicker').textContent = isScale(q) ? 'Liberty or order?' : `Question ${current + 1}`;
+        const tb = inTiebreak(current);
+        const tbNum = current - order.length + 1;
+        $('progress-label').textContent = tb ? `+${tbNum} / ${tbList.length}` : `${current + 1} / ${total}`;
+        $('progress').setAttribute('aria-valuenow', Math.min(current + 1, total));
+        $('progress-fill').style.width = `${tb ? 100 : (current / total) * 100}%`;
+        $('question-kicker').textContent = tb ? TB_KICKER[tone][q.dim] : isScale(q) ? 'Liberty or order?' : `Question ${current + 1}`;
         optionsContainer.classList.toggle('scale', isScale(q));
+        optionsContainer.classList.toggle('tiebreak', tb);
         $('back-button').disabled = current === 0;
 
         questionText.innerHTML = formatText(say(q).replace(/^Statement:\s*/, ''));
         optionsContainer.innerHTML = '';
-        optionOrders[current].forEach((origIdx, displayIdx) => {
+        const chosen = stepAnswer(current);
+        stepOptionOrder(current).forEach((origIdx, displayIdx) => {
             const o = q.options[origIdx];
             const b = document.createElement('button');
             b.type = 'button';
             b.className = 'option';
             b.setAttribute('role', 'radio');
-            b.setAttribute('aria-checked', answers[current] === origIdx ? 'true' : 'false');
-            if (answers[current] === origIdx) b.classList.add('selected');
+            b.setAttribute('aria-checked', chosen === origIdx ? 'true' : 'false');
+            if (chosen === origIdx) b.classList.add('selected');
             b.dataset.orig = origIdx;
             b.innerHTML = `<span class="key">${displayIdx + 1}</span><span class="opt-text">${formatText(say(o))}</span>`;
             b.addEventListener('click', () => choose(origIdx, b));
@@ -372,7 +382,8 @@
     function choose(origIdx, button) {
         if (advancing) return;
         advancing = true;
-        answers[current] = origIdx;
+        if (inTiebreak(current)) tbAnswers[stepQuestion(current).id] = origIdx;
+        else answers[current] = origIdx;
         optionsContainer.querySelectorAll('.option').forEach(o => {
             const on = o === button;
             o.classList.toggle('selected', on);
@@ -380,7 +391,13 @@
         });
         setTimeout(() => {
             advancing = false;
-            if (current + 1 >= order.length) {
+            if (current === order.length - 1) {
+                // end of the main test: pick tie-breakers for whoever this person is closest to
+                const pos = normalise(computeRaw(order, answers));
+                const ids = Scoring.chooseTiebreakers(pos, IDEOLOGIES, TIEBREAKERS);
+                tbList = ids.map(id => TIEBREAKERS.find(t => t.id === id));
+            }
+            if (current + 1 >= order.length + tbList.length) {
                 finishQuiz();
             } else {
                 current++;
@@ -398,7 +415,9 @@
     function finishQuiz() {
         $('progress-fill').style.width = '100%';
         const raw = computeRaw(order, answers);
-        const pos = normalise(raw);
+        const asked = {};
+        tbList.forEach(q => { if (tbAnswers[q.id] != null) asked[q.id] = tbAnswers[q.id]; });
+        const pos = Scoring.withTiebreaks(normalise(raw), TIEBREAKERS, asked);
         history.replaceState(null, '', `${location.pathname}${location.search}#r=${encodePos(pos)}`);
         try { sessionStorage.setItem('ownResult', encodePos(pos)); } catch (e) { /* private mode */ }
         showResults(pos, { raw, shared: false });
@@ -407,15 +426,25 @@
     // ------------------------------------------------------------------
     // Results
     // ------------------------------------------------------------------
-    // #r=c,m,p,order  (older 3-number links still work and get Order 50)
-    const encodePos = (pos) => [...AXES, 'a'].map(a => pos[a].toFixed(1)).join(',');
+    // #r=c,m,p,order[,change,scale,trad,nation]  ('-' = not asked). Older 3- and 4-number links still work.
+    const encodePos = (pos) => {
+        const base = [...AXES, 'a'].map(a => pos[a].toFixed(1));
+        const tb = Scoring.TB_DIMS.map(d => pos[d] == null ? '-' : Math.round(pos[d]));
+        return (tb.some(v => v !== '-') ? base.concat(tb) : base).join(',');
+    };
     function decodePos(str) {
-        const parts = (str || '').split(',').map(Number);
-        if ((parts.length !== 3 && parts.length !== 4) || parts.some(n => !isFinite(n) || n < 0)) return null;
+        const raw = (str || '').split(',');
+        const parts = raw.slice(0, 4).map(Number);
+        if ((raw.length !== 3 && raw.length !== 4 && raw.length !== 8) || parts.some(n => !isFinite(n) || n < 0)) return null;
         const s = parts[0] + parts[1] + parts[2];
         if (s <= 0) return null;
         const a = parts.length === 4 ? Math.min(100, parts[3]) : 50;
-        return { c: parts[0] / s * 100, m: parts[1] / s * 100, p: parts[2] / s * 100, a };
+        const pos = { c: parts[0] / s * 100, m: parts[1] / s * 100, p: parts[2] / s * 100, a };
+        if (raw.length === 8) Scoring.TB_DIMS.forEach((d, i) => {
+            const v = Number(raw[4 + i]);
+            if (raw[4 + i] !== '-' && isFinite(v)) pos[d] = Math.max(0, Math.min(100, v));
+        });
+        return pos;
     }
 
     let resultState = null;
@@ -550,6 +579,15 @@
         $('order-scale').innerHTML = `<div class="mix-top"><span><b>Liberty or order?</b> <small>${orderQuip(pos.a)}</small></span><b>${pos.a.toFixed(0)}</b></div>
             <div class="order-track"><span class="order-mark match-mark" style="left:${top[0].a}%" title="${top[0].name}"></span><span class="order-mark you-mark" style="left:${pos.a.toFixed(1)}%" title="You"></span></div>
             <div class="order-ends"><span>Liberty</span><span class="order-legend"><i class="you-key"></i>You <i class="match-key"></i>${shortName(top[0].name)}</span><span>Order</span></div>`;
+        // Tie-break measures, if any were asked
+        const TBL = T('tbScales');
+        $('tb-scales').innerHTML = Scoring.TB_DIMS.filter(d => pos[d] != null).map(d => {
+            const m = top[0][d] == null ? 50 : top[0][d];
+            return `<div class="tb-row"><div class="mix-top"><span><b>${TBL[d][0]}</b></span></div>
+                <div class="order-track tb-track"><span class="order-mark match-mark" style="left:${m}%" title="${top[0].name}"></span><span class="order-mark you-mark" style="left:${pos[d].toFixed(1)}%" title="You"></span></div>
+                <div class="order-ends"><span>${TBL[d][1]}</span><span>${TBL[d][2]}</span></div></div>`;
+        }).join('');
+        $('tb-scales').hidden = !Scoring.TB_DIMS.some(d => pos[d] != null);
         $('extremity-value').textContent = `${ex.toFixed(0)}%`;
         $('extremity-fill').style.width = `${ex.toFixed(1)}%`;
         $('extremity-quip').textContent = extremityQuip(ex);
@@ -560,8 +598,9 @@
         if (isDevMode) {
             const r = st.raw;
             $('dev-readout').textContent =
-                `C ${pos.c.toFixed(2)}  M ${pos.m.toFixed(2)}  P ${pos.p.toFixed(2)}  Order ${pos.a.toFixed(1)}\n` +
-                (r ? `raw C ${r.total.c.toFixed(2)}  M ${r.total.m.toFixed(2)}  P ${r.total.p.toFixed(2)} over ${r.nTri}; order ${r.total.a} over ${r.nA}\n` : '') +
+                `C ${pos.c.toFixed(2)}  M ${pos.m.toFixed(2)}  P ${pos.p.toFixed(2)}  Order ${pos.a.toFixed(1)}` +
+                Scoring.TB_DIMS.filter(d => pos[d] != null).map(d => `  ${d} ${pos[d].toFixed(0)}`).join('') + '\n' +
+                (r ? `answered ${r.ans.filter(x => x != null).length} main questions; tie-breakers asked: ${tbList.map(q => q.id).join(', ') || 'none'}\n` : '') +
                 ranked.slice(0, 5).map(t => `${t.d.toFixed(2).padStart(6)}  ${t.name}`).join('\n');
         }
     }
@@ -589,9 +628,9 @@
     function drawLegend() {
         const lg = $('legend');
         lg.innerHTML = '';
-        BROAD_ORDER.forEach((b, k) => {
+        BROAD_ORDER.forEach((b) => {
             const s = document.createElement('span');
-            s.innerHTML = `<i class="sw b${k}"></i>${b}`;
+            s.innerHTML = `<i class="sw b${broadIndex(b)}"></i>${b}`;
             lg.appendChild(s);
         });
     }
@@ -603,7 +642,8 @@
             pt.x = e.clientX; pt.y = e.clientY;
             const p = pt.matrixTransform(svg.getScreenCTM().inverse());
             resultState.raw = null;
-            updateResultsView({ ...fromXY(p.x, p.y), a: resultState.pos.a });
+            const keep = {}; ['a', ...Scoring.TB_DIMS].forEach(k => { if (resultState.pos[k] != null) keep[k] = resultState.pos[k]; });
+            updateResultsView({ ...fromXY(p.x, p.y), ...keep });
             history.replaceState(null, '', `${location.pathname}${location.search}#r=${encodePos(resultState.pos)}`);
         };
         svg.addEventListener('pointerdown', (e) => { dragging = true; svg.setPointerCapture(e.pointerId); at(e); });
@@ -653,6 +693,7 @@
             `${top[0].name} (${top[0].broad})`,
             `Centralism ${pos.c.toFixed(0)}% / Communalism ${pos.m.toFixed(0)}% / Privatism ${pos.p.toFixed(0)}%`,
             `Liberty or order: ${pos.a.toFixed(0)} (0 = all liberty, 100 = all order)`,
+            ...Scoring.TB_DIMS.filter(d => pos[d] != null).map(d => `${T('tbScales')[d][0]}: ${Math.round(pos[d])} (0 = ${T('tbScales')[d][1].toLowerCase()}, 100 = ${T('tbScales')[d][2].toLowerCase()})`),
             `Also close to: ${top[1].name}, ${top[2].name}`,
             '',
             `See it: ${baseUrl()}#r=${encodePos(pos)}`,
