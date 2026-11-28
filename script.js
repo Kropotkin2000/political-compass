@@ -24,7 +24,7 @@
             title: 'The Sarcastic Political Test',
             brand: 'Sarcastic Political Test',
             introEyebrow: "Answer as the least worst, or the most tolerable caricature. Good luck, you'll need it.",
-            introTitle: 'Which least-worst caricature are you?',
+            introTitle: 'Which <em>least-worst</em> caricature are you?',
             introLede: 'Left and right are for people who own one shoe. This test drops you somewhere inside a triangle with three corners:',
             lede2: 'Plus a few blunt statements on a separate question: how much <b>liberty</b> would you trade for <b>order</b>?',
             youLabel: 'you?',
@@ -57,7 +57,7 @@
             title: 'The Political Triangle: classroom edition',
             brand: 'Political Triangle (classroom edition)',
             introEyebrow: 'Choose the answer closest to your own view. There are no right or wrong answers.',
-            introTitle: 'Where do you sit in the political triangle?',
+            introTitle: 'Where do you sit in the <em>political triangle</em>?',
             introLede: 'Instead of a single left-right line, this test places you inside a triangle. Each corner is a different answer to the question: who should organise society?',
             lede2: 'A separate set of statements measures a second question: how much <b>personal liberty</b> would you trade for <b>order and security</b>?',
             youLabel: 'you',
@@ -229,10 +229,12 @@
         window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
     }
 
-    // Remembers which corner leads (exposed as --lead for styling)
+    // Moves the background colour blobs towards the current position
     function tintBackground(pos) {
-        const lead = AXES.reduce((x, y) => (pos[y] > pos[x] ? y : x), 'c');
-        document.documentElement.style.setProperty('--lead', `var(--${lead})`);
+        const r = document.documentElement.style;
+        r.setProperty('--wc', (0.25 + pos.c / 100 * 1.1).toFixed(3));
+        r.setProperty('--wm', (0.25 + pos.m / 100 * 1.1).toFixed(3));
+        r.setProperty('--wp', (0.25 + pos.p / 100 * 1.1).toFixed(3));
     }
 
     // ------------------------------------------------------------------
@@ -240,11 +242,6 @@
     // ------------------------------------------------------------------
     function applyTheme(theme) {
         document.documentElement.dataset.theme = theme;
-        const btn = $('theme-toggle');
-        if (btn) {
-            btn.textContent = theme === 'dark' ? 'Lights on' : 'Lights off';
-            btn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
-        }
     }
     const savedTheme = localStorage.getItem('theme');
     applyTheme(savedTheme || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
@@ -262,10 +259,11 @@
         const g = el('g', {}, svg);
         IDEOLOGIES.forEach((i, k) => {
             const [x, y] = toXY(i);
-            el('circle', { cx: x, cy: y, r: 4.5, class: `ideo-dot b${broadIndex(i.broad)}` }, g);
+            const dot = el('circle', { cx: x, cy: y, r: 4.5, class: `ideo-dot b${broadIndex(i.broad)} twinkle` }, g);
+            dot.style.animationDelay = `${(k * 0.37) % 4}s`;
         });
         const [cx, cy] = toXY(CENTRE);
-        el('circle', { cx, cy, r: 18, class: 'you-ring' }, svg);
+        el('circle', { cx, cy, r: 18, class: 'you-ring pulse' }, svg);
         el('circle', { cx, cy, r: 8, class: 'you-dot' }, svg);
         const t = el('text', { x: cx, y: cy + 34, class: 'you-label', 'text-anchor': 'middle' }, svg);
         t.textContent = T('youLabel');
@@ -484,7 +482,7 @@
         });
 
         const [cx0, cy0] = toXY(CENTRE);
-        const ring = el('circle', { cx: cx0, cy: cy0, r: 16, class: 'you-ring' }, youLayer);
+        const ring = el('circle', { cx: cx0, cy: cy0, r: 16, class: 'you-ring pulse' }, youLayer);
         const you = el('circle', { cx: cx0, cy: cy0, r: 8, class: 'you-dot' }, youLayer);
 
         resultState = { pos, raw, shared, svg, dots, linkLayer, labelLayer, ring, you, focused: null };
