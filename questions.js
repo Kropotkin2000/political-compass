@@ -60,14 +60,14 @@ const agreeScale = (keyed) => [
 const questions = [
     {
         id: 'q1',
-        text: "Who should own the big stuff: the railways, the power grid, the water pipes?",
+        text: "Railways, power grids, water pipes: sacred public trust, the people's property, or a nice little earner?",
         classroom: "Who should own major infrastructure, such as railways, the power grid and the water supply?",
         type: 'forcedChoice4',
         options: [
-            { text: "The state. It's infrastructure for everyone, so the public should own it. The trains will still be late, but they'll be *our* late trains.", classroom: "The state, so that essential services are run for the public rather than for profit.", scores: PICK_C },
-            { text: "The people who use it and run it, as co-ops or local trusts. Expect a lot of annual general meetings about leaves on the line.", classroom: "The people who use and work in them, through co-operatives or local trusts.", scores: PICK_M },
-            { text: "Private companies competing for customers. Competition keeps them sharp, and you'll get a loyalty card for your water.", classroom: "Private companies, competing for customers to keep services efficient.", scores: PICK_P },
-            { text: "Some mix of all three, renegotiated every decade by people who have never been on a train.", classroom: "A mix of public, community and private ownership, decided case by case.", scores: MUDDLE },
+            { text: "Nationalise the lot. Trains, pipes, pylons. If it hums, the state should own it, and the humming should be state-approved.", classroom: "The state, so that essential services are run for the public rather than for profit.", scores: PICK_C },
+            { text: "Hand it to the workers and the passengers! We'll run the railway by consensus. The 07:42 leaves when everyone feels heard.", classroom: "The people who use and work in them, through co-operatives or local trusts.", scores: PICK_M },
+            { text: "Sell it. All of it. If granny can't afford the water bill, granny should have invested in water.", classroom: "Private companies, competing for customers to keep services efficient.", scores: PICK_P },
+            { text: "Whoever owns it, it'll be late, broken and somehow my fault.", classroom: "A mix of public, community and private ownership, decided case by case.", scores: MUDDLE },
         ]
     },
     {
@@ -77,10 +77,10 @@ const questions = [
         classroom: "How should medical treatment be organised and paid for?",
         type: 'forcedChoice4',
         options: [
-            { text: "A national health service, run locally by elected community health boards. Free at the point of use, discussed at length at the point of governance.", classroom: "A national health service, run locally by elected community health boards.", scores: BLEND_CM },
-            { text: "Compulsory public insurance, with private hospitals competing for your custom. Universal cover, glossy brochures.", classroom: "Compulsory public insurance, with private and public hospitals competing for patients.", scores: BLEND_CP },
-            { text: "Mutual insurers owned by their members, competing for members. Your premium comes with voting rights you will never use.", classroom: "Mutual insurers owned by their members, competing with each other for members.", scores: BLEND_MP },
-            { text: "A bewildering hybrid that nobody fully understands, including the people running it.", classroom: "A mixed system combining public, mutual and private provision.", scores: MUDDLE },
+            { text: "One national health service, run by local boards of ordinary people. Yes, the dentist is elected. No, you can't recall them mid-filling.", classroom: "A national health service, run locally by elected community health boards.", scores: BLEND_CM },
+            { text: "Everyone's insured by law, then the hospitals fight over you like seagulls over chips. It's called choice. Pick a seagull.", classroom: "Compulsory public insurance, with private and public hospitals competing for patients.", scores: BLEND_CP },
+            { text: "Mutual insurers owned by us members, competing for us members. Four AGMs this month and my knee still isn't covered.", classroom: "Mutual insurers owned by their members, competing with each other for members.", scores: BLEND_MP },
+            { text: "A bewildering hybrid nobody understands, least of all the people running it. Please hold.", classroom: "A mixed system combining public, mutual and private provision.", scores: MUDDLE },
         ]
     },
     {
@@ -90,10 +90,10 @@ const questions = [
         classroom: "There is a shortage of housing. What is the best solution?",
         type: 'forcedChoice4',
         options: [
-            { text: "Council homes, built by the state and run by tenants' associations. The roof gets fixed once the subcommittee agrees on a roofer.", classroom: "Public housing built by the state and managed by tenants' associations.", scores: BLEND_CM },
-            { text: "The government sets the targets and the subsidies, and private builders do the building. Ribbon-cutting ceremonies all round.", classroom: "The government sets targets and offers subsidies, and private developers build the homes.", scores: BLEND_CP },
-            { text: "Housing co-ops and self-build groups buying land on the open market. Your neighbours are also your landlords, and your builders.", classroom: "Housing co-operatives and self-build groups buying land on the open market.", scores: BLEND_MP },
-            { text: "Announce an ambitious target, miss it, then announce a new one.", classroom: "Combine public building, community schemes and private development.", scores: MUDDLE },
+            { text: "Council houses run by tenants' committees. You get a home, plus a lifelong feud with number 12 about the bins.", classroom: "Public housing built by the state and managed by tenants' associations.", scores: BLEND_CM },
+            { text: "The government sets targets and hands out subsidies. Developers build homes and pocket the subsidies. Everyone wins! The developers win.", classroom: "The government sets targets and offers subsidies, and private developers build the homes.", scores: BLEND_CP },
+            { text: "Housing co-ops buying land on the open market. We're our own landlords now, so there's nobody left to blame. Terrifying.", classroom: "Housing co-operatives and self-build groups buying land on the open market.", scores: BLEND_MP },
+            { text: "Announce a target, miss it, blame the last lot, announce a bigger target.", classroom: "Combine public building, community schemes and private development.", scores: MUDDLE },
         ]
     },
     {
@@ -106,14 +106,14 @@ const questions = [
     {
         id: 'q5',
         kind: 'villain',
-        text: "Which of these worries you most about the future?",
+        text: "What keeps you up at night?",
         classroom: "Which of these concerns you most about the future?",
         type: 'forcedChoice4',
         options: [
-            { text: "A state that keeps growing until it runs everything, from your pension to your breakfast.", classroom: "Government growing too powerful and controlling too much of daily life.", scores: AGAINST_C },
-            { text: "Everything being decided by endless committees, where whoever has the most free time wins.", classroom: "Decisions being taken over by small groups who dominate meetings and committees.", scores: AGAINST_M },
-            { text: "Corporations owning everything, from your home to your data to your water supply.", classroom: "Large corporations owning and controlling more and more of the economy.", scores: AGAINST_P },
-            { text: "Honestly, all three, in rotation.", classroom: "All of these, about equally.", scores: MUDDLE },
+            { text: "A state that keeps growing until it's choosing my breakfast and naming my children.", classroom: "Government growing too powerful and controlling too much of daily life.", scores: AGAINST_C },
+            { text: "Endless committees, run by whoever has the most free time and the loudest voice. It's always Brenda.", classroom: "Decisions being taken over by small groups who dominate meetings and committees.", scores: AGAINST_M },
+            { text: "Corporations owning everything: my house, my data, my water, and eventually my soul (terms apply).", classroom: "Large corporations owning and controlling more and more of the economy.", scores: AGAINST_P },
+            { text: "All three, in rotation, depending on what I read this morning.", classroom: "All of these, about equally.", scores: MUDDLE },
         ]
     },
     {
@@ -123,10 +123,10 @@ const questions = [
         classroom: "Who should have the final say in how a business is run?",
         type: 'forcedChoice4',
         options: [
-            { text: "Publicly owned firms, run day to day by elected councils of workers. The state owns the factory; the canteen menu is put to a vote.", classroom: "Publicly owned firms, managed day to day by elected councils of their workers.", scores: BLEND_CM },
-            { text: "The owners, within strict laws on pay, hours and safety set by the state. Freedom to manage, subject to an inspector with a clipboard.", classroom: "The owners, but within strict laws on pay, hours and safety that the state sets and enforces.", scores: BLEND_CP },
-            { text: "Worker co-operatives competing in an open market. Everyone's a boss, and everyone's worried about the quarterly figures.", classroom: "Worker co-operatives, owned by their workers and competing in an open market.", scores: BLEND_MP },
-            { text: "Whoever won the last round of negotiations, until the next round.", classroom: "It should be negotiated between owners, workers and government.", scores: MUDDLE },
+            { text: "The state owns the factory, the workers' council runs it. Production quotas by decree, canteen menu by referendum.", classroom: "Publicly owned firms, managed day to day by elected councils of their workers.", scores: BLEND_CM },
+            { text: "Owners call the shots, inside a fat rulebook of labour law. The bosses keep their yachts; the workers keep their fingers.", classroom: "The owners, but within strict laws on pay, hours and safety that the state sets and enforces.", scores: BLEND_CP },
+            { text: "Worker co-ops slugging it out in an open market. We're all bosses now, and we all have to sack ourselves when sales are down.", classroom: "Worker co-operatives, owned by their workers and competing in an open market.", scores: BLEND_MP },
+            { text: "Whoever won the last strike, until the next one.", classroom: "It should be negotiated between owners, workers and government.", scores: MUDDLE },
         ]
     },
     {
@@ -135,10 +135,10 @@ const questions = [
         classroom: "Who should run schools?",
         type: 'forcedChoice4',
         options: [
-            { text: "The state: one national curriculum, inspected to the same standard everywhere. Consistent, with the occasional pointless worksheet.", classroom: "The state, with a national curriculum and the same standards everywhere.", scores: PICK_C },
-            { text: "Parents, teachers and the local community, deciding together what their children need. Prepare for a twelve-hour debate about uniforms.", classroom: "Parents, teachers and the local community, deciding together.", scores: PICK_M },
-            { text: "Anyone who wants to open a school, with parents free to choose and the funding following the child. Bring your prospectus-decoding skills.", classroom: "Independent providers, with parents free to choose and funding following the child.", scores: PICK_P },
-            { text: "The current system, but with a new acronym every three years.", classroom: "A mix of national standards, local input and parental choice.", scores: MUDDLE },
+            { text: "One national curriculum, tested to destruction. Every child in the land reading the same page on the same day. Glorious.", classroom: "The state, with a national curriculum and the same standards everywhere.", scores: PICK_C },
+            { text: "Parents and teachers decide together what children learn! Seven hundred people, one curriculum, no survivors.", classroom: "Parents, teachers and the local community, deciding together.", scores: PICK_M },
+            { text: "Let schools compete and parents shop around. If your kid's school goes bust, that's the market teaching them a lesson.", classroom: "Independent providers, with parents free to choose and funding following the child.", scores: PICK_P },
+            { text: "Doesn't matter. My kid will learn to vape behind the bike sheds either way.", classroom: "A mix of national standards, local input and parental choice.", scores: MUDDLE },
         ]
     },
     {
@@ -151,13 +151,13 @@ const questions = [
     {
         id: 'q9',
         kind: 'villain',
-        text: "Some people are vastly richer than others. What's mostly to blame?",
+        text: "Some people have private jets; some people have mould. Whose fault is that?",
         classroom: "There are large differences in wealth between people. What is the main cause?",
         type: 'forcedChoice4',
         options: [
-            { text: "Governments handing out favours, bailouts and protected monopolies to their friends.", classroom: "Governments granting favours, bailouts and protected positions to the well-connected.", scores: AGAINST_C },
-            { text: "Cosy cliques and closed networks that look after their own and keep outsiders out.", classroom: "Closed networks that look after their own members and keep outsiders out.", scores: AGAINST_M },
-            { text: "An economy where wealth piles up for those who already have it.", classroom: "Markets that let wealth build up among those who already have it.", scores: AGAINST_P },
+            { text: "Governments handing bailouts and cushy monopolies to their mates. Same school, same club, same tax haven.", classroom: "Governments granting favours, bailouts and protected positions to the well-connected.", scores: AGAINST_C },
+            { text: "Cosy cliques and closed shops that look after their own and slam the door on everyone else.", classroom: "Closed networks that look after their own members and keep outsiders out.", scores: AGAINST_M },
+            { text: "A rigged economy where money makes money and the rest of us make do.", classroom: "Markets that let wealth build up among those who already have it.", scores: AGAINST_P },
             { text: "Mostly luck: who your parents were, where you were born, and which way the dice fell.", classroom: "Mainly luck and circumstance, such as family background and place of birth.", scores: MUDDLE },
         ]
     },
@@ -167,10 +167,10 @@ const questions = [
         classroom: "How should we reduce carbon emissions?",
         type: 'forcedChoice4',
         options: [
-            { text: "Government plans and public investment: build the green grid directly and set binding targets. Five-year plans, but for wind turbines.", classroom: "Government planning and public investment, with binding targets.", scores: PICK_C },
-            { text: "Community energy co-ops run by the neighbourhoods that use the power. Solar panels on every roof, and a rota for the Tuesday meeting.", classroom: "Local community energy projects and co-operatives.", scores: PICK_M },
-            { text: "Put a price on carbon and let markets find the cheapest cuts. Efficiency, innovation, and a very smug app.", classroom: "Put a price on carbon and let markets find the cheapest ways to cut emissions.", scores: PICK_P },
-            { text: "A summit, a pledge, a photo opportunity, and a follow-up summit.", classroom: "International agreements that combine several approaches.", scores: MUDDLE },
+            { text: "A Ministry of Weather. Binding targets, five-year plans, and inspectors who can smell a diesel at forty paces.", classroom: "Government planning and public investment, with binding targets.", scores: PICK_C },
+            { text: "Community energy co-ops on every street. We'll save the planet one passive-aggressive meeting about solar panels at a time.", classroom: "Local community energy projects and co-operatives.", scores: PICK_M },
+            { text: "Slap a price on carbon and let the market sort it. The rich keep their jets and buy a forest to feel better.", classroom: "Put a price on carbon and let markets find the cheapest ways to cut emissions.", scores: PICK_P },
+            { text: "A summit. A pledge. A photo. A follow-up summit. A slightly sadder photo.", classroom: "International agreements that combine several approaches.", scores: MUDDLE },
         ]
     },
     {
@@ -179,10 +179,10 @@ const questions = [
         classroom: "What should happen to the largest technology companies?",
         type: 'forcedChoice4',
         options: [
-            { text: "Regulate them hard, or bring them into public ownership so they answer to voters rather than shareholders. Terms of service now in triplicate.", classroom: "Strict regulation or public ownership, so that they answer to elected governments.", scores: PICK_C },
-            { text: "Replace them with user-owned co-operative platforms. Fewer adverts, many more forum threads about governance.", classroom: "Replace them with platforms owned co-operatively by their users.", scores: PICK_M },
-            { text: "Leave them alone; if they get bad enough, a competitor will eat their lunch. Probably. Eventually.", classroom: "Leave them to market competition, which will challenge them if they fail their users.", scores: PICK_P },
-            { text: "Fine them a rounding error every few years and call it accountability.", classroom: "Moderate regulation and occasional fines, much as now.", scores: MUDDLE },
+            { text: "Nationalise them. The algorithm should answer to the state, which would never misuse a database of everyone's secrets.", classroom: "Strict regulation or public ownership, so that they answer to elected governments.", scores: PICK_C },
+            { text: "Tear them down and build user-owned co-op platforms. Fewer adverts, endless threads about the moderation policy's moderation policy.", classroom: "Replace them with platforms owned co-operatively by their users.", scores: PICK_M },
+            { text: "Leave them alone. If they get evil enough, some kid in a garage will disrupt them. Any day now.", classroom: "Leave them to market competition, which will challenge them if they fail their users.", scores: PICK_P },
+            { text: "Fine them a rounding error every few years and call it justice.", classroom: "Moderate regulation and occasional fines, much as now.", scores: MUDDLE },
         ]
     },
     {
@@ -199,9 +199,9 @@ const questions = [
         classroom: "When large projects fail, what is usually the main cause?",
         type: 'forcedChoice4',
         options: [
-            { text: "Officials who answer to nobody and never pay for their mistakes.", classroom: "Officials who are not held accountable for their decisions.", scores: AGAINST_C },
-            { text: "Too many people with a veto, so nothing gets decided until it's too late.", classroom: "Too many groups able to block decisions, causing delay.", scores: AGAINST_M },
-            { text: "Someone cutting corners to save money and keep the share price up.", classroom: "Cutting costs in order to increase profits.", scores: AGAINST_P },
+            { text: "Officials who answer to nobody and get promoted after every fiasco.", classroom: "Officials who are not held accountable for their decisions.", scores: AGAINST_C },
+            { text: "Too many people with a veto. By the time everyone agrees, the bridge has already fallen down.", classroom: "Too many groups able to block decisions, causing delay.", scores: AGAINST_M },
+            { text: "Some genius cutting corners to keep the share price up. The bridge was always going to fall down.", classroom: "Cutting costs in order to increase profits.", scores: AGAINST_P },
             { text: "A bit of everyone's fault, plus a spreadsheet error.", classroom: "A combination of factors, often including simple human error.", scores: MUDDLE },
         ]
     },
@@ -211,10 +211,10 @@ const questions = [
         classroom: "How should a society support people who fall on hard times?",
         type: 'forcedChoice4',
         options: [
-            { text: "A guaranteed safety net from the state: benefits, pensions, the lot. You'll just need to fill in form B-47 (and B-47a).", classroom: "A guaranteed safety net from the state: benefits, pensions and services.", scores: PICK_C },
-            { text: "Mutual aid: neighbours, unions, friendly societies and food co-ops looking after each other. Warm and generous, but it depends who turns up.", classroom: "Mutual aid through neighbours, unions, friendly societies and community groups.", scores: PICK_M },
-            { text: "Growth, jobs and private charity. A rising tide lifts all boats, provided you own a boat.", classroom: "Economic growth, jobs and voluntary private charity.", scores: PICK_P },
-            { text: "A system so complicated that half the people who need help never find out they qualify.", classroom: "A combination of state support, community help and private charity.", scores: MUDDLE },
+            { text: "A big state safety net, cradle to grave, in triplicate. Lose form B-47 and the grave comes sooner than planned.", classroom: "A guaranteed safety net from the state: benefits, pensions and services.", scores: PICK_C },
+            { text: "Mutual aid! Neighbours looking after neighbours. Unless you're the neighbour nobody likes. Then, good luck.", classroom: "Mutual aid through neighbours, unions, friendly societies and community groups.", scores: PICK_M },
+            { text: "Get a job. Then get a better job. Charity exists for the rest, and the rest should be grateful.", classroom: "Economic growth, jobs and voluntary private charity.", scores: PICK_P },
+            { text: "A system so complicated that half the people who need help never find out they're allowed to ask.", classroom: "A combination of state support, community help and private charity.", scores: MUDDLE },
         ]
     },
     {
@@ -224,9 +224,9 @@ const questions = [
         classroom: "Who should run the banks?",
         type: 'forcedChoice4',
         options: [
-            { text: "A public bank that lends through local councils and community funds. Your loan is approved by a committee of your neighbours, on behalf of the Treasury.", classroom: "A public bank that lends through local councils and community funds.", scores: BLEND_CM },
-            { text: "Private banks, tightly regulated, with the state as lender of last resort. Profits are private; the safety net is very public.", classroom: "Private banks, closely regulated, with the state as lender of last resort.", scores: BLEND_CP },
-            { text: "Credit unions and building societies competing with each other. Banking with a members' newsletter.", classroom: "Credit unions and mutual building societies, competing with each other.", scores: BLEND_MP },
+            { text: "A people's bank, lending through the town council. Your mortgage gets approved by a committee of your nosiest neighbours.", classroom: "A public bank that lends through local councils and community funds.", scores: BLEND_CM },
+            { text: "Private banks, tightly regulated, rescued by the taxpayer whenever they set themselves on fire. Which is often.", classroom: "Private banks, closely regulated, with the state as lender of last resort.", scores: BLEND_CP },
+            { text: "Credit unions and building societies, competing politely. Banking, with a members' newsletter and a raffle.", classroom: "Credit unions and mutual building societies, competing with each other.", scores: BLEND_MP },
             { text: "Whichever one has a cash machine nearest the chip shop.", classroom: "A mixture of public, mutual and private banks.", scores: MUDDLE },
         ]
     },
@@ -244,9 +244,9 @@ const questions = [
         classroom: "Whose power over your life would concern you most?",
         type: 'forcedChoice4',
         options: [
-            { text: "Officials in a distant ministry who have never met you.", classroom: "Government officials who have never met you.", scores: AGAINST_C },
-            { text: "Your neighbours, voting on how you ought to live.", classroom: "Your neighbours, voting on how you should live.", scores: AGAINST_M },
-            { text: "Your landlord and your employer.", classroom: "Your landlord and your employer.", scores: AGAINST_P },
+            { text: "Officials in a distant ministry who've never met me and never will.", classroom: "Government officials who have never met you.", scores: AGAINST_C },
+            { text: "My neighbours, voting on how I should live. I've seen their gardens. No.", classroom: "Your neighbours, voting on how you should live.", scores: AGAINST_M },
+            { text: "My landlord and my boss. Between them they own my time and my roof.", classroom: "Your landlord and your employer.", scores: AGAINST_P },
             { text: "All of them equally, which is why I live in a shed.", classroom: "All of them, about equally.", scores: MUDDLE },
         ]
     },
@@ -256,22 +256,22 @@ const questions = [
         classroom: "Who should produce everyday goods, such as cars, phones and food?",
         type: 'forcedChoice4',
         options: [
-            { text: "State enterprises, producing to a national plan. Three models of car, all of them beige, all of them on a waiting list.", classroom: "State-owned enterprises, producing according to a national plan.", scores: PICK_C },
-            { text: "Worker co-operatives and community enterprises, owned by the people who make the stuff. New product launches decided by a show of hands.", classroom: "Worker co-operatives and community-owned enterprises.", scores: PICK_M },
-            { text: "Private companies, competing to sell you things you didn't know you needed. Now available in seventeen colours.", classroom: "Private companies, competing to sell to customers.", scores: PICK_P },
-            { text: "Whoever's cheapest this week, as long as the box arrives tomorrow.", classroom: "A mix of private, co-operative and public enterprises.", scores: MUDDLE },
+            { text: "State factories building to the national plan. Three models of car, all beige, nine-year waiting list. Worth it.", classroom: "State-owned enterprises, producing according to a national plan.", scores: PICK_C },
+            { text: "Worker co-ops make everything. The toothpaste is ethically sourced, democratically flavoured, and costs eleven quid.", classroom: "Worker co-operatives and community-owned enterprises.", scores: PICK_M },
+            { text: "Private companies selling me things I didn't know I needed, in seventeen colours. I'll take all seventeen.", classroom: "Private companies, competing to sell to customers.", scores: PICK_P },
+            { text: "Whoever's cheapest, as long as the box turns up tomorrow.", classroom: "A mix of private, co-operative and public enterprises.", scores: MUDDLE },
         ]
     },
     {
         id: 'q19',
-        text: "Your town must choose between a new park and a new car park. Who decides?",
+        text: "Your town must choose between a new park and a new car park. Who gets to decide, God help us?",
         classroom: "A town must choose between a new park and a new car park. Who should decide?",
         type: 'forcedChoice4',
         options: [
-            { text: "The council's planning department, using expert reports and the official long-term plan.", classroom: "The council's planners, using expert advice and a long-term plan.", scores: PICK_C },
-            { text: "A town assembly where everyone gets a say and the vote is binding. Bring snacks.", classroom: "A town meeting where every resident can vote and the result is binding.", scores: PICK_M },
-            { text: "Whoever owns the land. If people want a park badly enough, they can club together and buy it.", classroom: "The owner of the land, who can sell it to whoever values it most.", scores: PICK_P },
-            { text: "A public consultation whose result was decided before it started.", classroom: "A public consultation, followed by a council decision.", scores: MUDDLE },
+            { text: "The council planners, following the thirty-year strategic framework. You may submit comments, which will be filed.", classroom: "The council's planners, using expert advice and a long-term plan.", scores: PICK_C },
+            { text: "A town assembly where everybody votes! Bring snacks, a camping chair and your fiercest opinion about bollards.", classroom: "A town meeting where every resident can vote and the result is binding.", scores: PICK_M },
+            { text: "Whoever owns the land. Want a park? Club together and buy it, you freeloading hippies.", classroom: "The owner of the land, who can sell it to whoever values it most.", scores: PICK_P },
+            { text: "A public consultation whose result was decided six months before it started.", classroom: "A public consultation, followed by a council decision.", scores: MUDDLE },
         ]
     },
     {
@@ -288,9 +288,9 @@ const questions = [
         classroom: "Which is the greatest threat to real freedom?",
         type: 'forcedChoice4',
         options: [
-            { text: "That rights granted by the state are safe, when the state can take them back whenever it likes.", classroom: "Rights granted by the state can also be taken away by the state.", scores: AGAINST_C },
-            { text: "That a close-knit community sets you free, when it comes with a thousand unwritten rules.", classroom: "Close-knit communities put pressure on people to conform.", scores: AGAINST_M },
-            { text: "That a free market makes you free, when your rent and your boss decide most of your choices.", classroom: "Depending on landlords and employers limits people's real choices.", scores: AGAINST_P },
+            { text: "That your rights are safe because the state wrote them down. It wrote them in pencil.", classroom: "Rights granted by the state can also be taken away by the state.", scores: AGAINST_C },
+            { text: "That a close-knit community sets you free. Try leaving one.", classroom: "Close-knit communities put pressure on people to conform.", scores: AGAINST_M },
+            { text: "That the free market makes you free. Tell that to your rent.", classroom: "Depending on landlords and employers limits people's real choices.", scores: AGAINST_P },
             { text: "That anyone is free before their first coffee.", classroom: "No single one; it depends on the situation.", scores: MUDDLE },
         ]
     },
@@ -300,9 +300,9 @@ const questions = [
         classroom: "Where do major scientific and technological breakthroughs mostly come from?",
         type: 'forcedChoice4',
         options: [
-            { text: "Publicly funded research and government missions: moon landings, the internet, vaccines. Forms in quadruplicate, results eventually.", classroom: "Publicly funded research and government-led missions.", scores: PICK_C },
-            { text: "Open collaboration, with scientists, hobbyists and communities sharing knowledge freely. Wikipedia, but for everything.", classroom: "Open collaboration and freely shared knowledge.", scores: PICK_M },
-            { text: "Entrepreneurs chasing profit and taking risks. For every inventor of the light bulb, a thousand crypto start-ups.", classroom: "Entrepreneurs and companies investing in pursuit of profit.", scores: PICK_P },
+            { text: "Government missions: moon landings, the internet, vaccines. Name one thing a billionaire invented that wasn't a worse taxi.", classroom: "Publicly funded research and government-led missions.", scores: PICK_C },
+            { text: "Open collaboration and freely shared knowledge. Wikipedia, but for everything, with edit wars about everything.", classroom: "Open collaboration and freely shared knowledge.", scores: PICK_M },
+            { text: "Entrepreneurs chasing profit. For every light bulb, a thousand crypto start-ups. That's the price of genius, baby.", classroom: "Entrepreneurs and companies investing in pursuit of profit.", scores: PICK_P },
             { text: "A government grant, a university lab, a corporate patent and a lawsuit about who did what.", classroom: "A combination of public research, collaboration and private investment.", scores: MUDDLE },
         ]
     },
@@ -312,10 +312,10 @@ const questions = [
         classroom: "Should people be free to start a business, grow it and employ staff?",
         type: 'forcedChoice4',
         options: [
-            { text: "Only within the state's plan, with a licence, a permit, and a permit for the licence.", classroom: "Only in limited ways, within a plan set by the state.", scores: PICK_C },
-            { text: "Yes, but once you hire people, they become co-owners. Welcome aboard: you're all on the rota now.", classroom: "Yes, but businesses that employ people should become co-operatives owned by their workers.", scores: PICK_M },
-            { text: "Of course. Start it, grow it, sell it, buy a yacht, start another. Some ventures may end in beans on toast.", classroom: "Yes, with as few restrictions as possible.", scores: PICK_P },
-            { text: "Yes, after filling in the forms, which take slightly longer than building the business.", classroom: "Yes, within ordinary regulation.", scores: MUDDLE },
+            { text: "Only within the national plan. Fill in form E-1, wait for the licence, then apply for a licence to use the licence.", classroom: "Only in limited ways, within a plan set by the state.", scores: PICK_C },
+            { text: "Sure, but the moment you hire someone, they own half of it. Welcome to the board, comrade.", classroom: "Yes, but businesses that employ people should become co-operatives owned by their workers.", scores: PICK_M },
+            { text: "Start it, grow it, sell it, buy a yacht, start another. Some of you will end up eating beans. That's the deal.", classroom: "Yes, with as few restrictions as possible.", scores: PICK_P },
+            { text: "Yes, after the paperwork, which takes longer than building the business.", classroom: "Yes, within ordinary regulation.", scores: MUDDLE },
         ]
     },
     {
@@ -332,10 +332,10 @@ const questions = [
         classroom: "When people say something is 'for the common good', who is most likely to be misusing the phrase?",
         type: 'forcedChoice4',
         options: [
-            { text: "Politicians and officials, quietly extending their own power.", classroom: "Politicians and officials seeking more power.", scores: AGAINST_C },
-            { text: "Activists and committees, imposing their pet projects on everyone else.", classroom: "Activists and committees promoting their own priorities.", scores: AGAINST_M },
-            { text: "Business lobbyists, dressing up their profits as public benefit.", classroom: "Business lobbyists presenting private interests as public benefit.", scores: AGAINST_P },
-            { text: "Everyone, frankly. It's a phrase, not a plan.", classroom: "Anyone can misuse it; it depends on the case.", scores: MUDDLE },
+            { text: "Politicians and officials, quietly helping themselves to a bit more power.", classroom: "Politicians and officials seeking more power.", scores: AGAINST_C },
+            { text: "Activists and committees, ramming their pet projects down everyone's throats.", classroom: "Activists and committees promoting their own priorities.", scores: AGAINST_M },
+            { text: "Business lobbyists, dressing up their profits as a public service.", classroom: "Business lobbyists presenting private interests as public benefit.", scores: AGAINST_P },
+            { text: "Everyone. It's a phrase, not a plan.", classroom: "Anyone can misuse it; it depends on the case.", scores: MUDDLE },
         ]
     },
     {
@@ -344,10 +344,10 @@ const questions = [
         classroom: "What should happen to the money and property people leave when they die?",
         type: 'forcedChoice4',
         options: [
-            { text: "Most of it goes to the state, for everyone's benefit. Death and taxes, efficiently combined.", classroom: "Most of it should be taxed and used by the state for everyone's benefit.", scores: PICK_C },
-            { text: "It goes back to the community: a fund, a land trust, a really very nice village hall.", classroom: "It should go to community funds, trusts or co-operatives rather than to individuals.", scores: PICK_M },
-            { text: "Whoever they leave it to. It's their stuff, and if the cat gets the house, so be it.", classroom: "Whoever they choose; people should be free to pass on what they own.", scores: PICK_P },
-            { text: "A bit to the family, a bit to the taxman, and a decade of arguments to the solicitors.", classroom: "Some to family and some in tax, through a moderate inheritance tax.", scores: MUDDLE },
+            { text: "Most of it goes to the state. Death and taxes, together at last, the way nature intended.", classroom: "Most of it should be taxed and used by the state for everyone's benefit.", scores: PICK_C },
+            { text: "Back to the community. Grandad's house becomes a really very nice village hall. He'd have hated it. Tough.", classroom: "It should go to community funds, trusts or co-operatives rather than to individuals.", scores: PICK_M },
+            { text: "Whoever they leave it to. It's their stuff. If the cat gets the mansion, the cat gets the mansion.", classroom: "Whoever they choose; people should be free to pass on what they own.", scores: PICK_P },
+            { text: "A bit to the family, a bit to the taxman, and a decade of screaming at the solicitor.", classroom: "Some to family and some in tax, through a moderate inheritance tax.", scores: MUDDLE },
         ]
     },
     {
@@ -357,10 +357,10 @@ const questions = [
         classroom: "In a crisis such as a pandemic or a flood, which tends to let people down most?",
         type: 'forcedChoice4',
         options: [
-            { text: "The government: slow, rigid, and fond of contradictory guidance.", classroom: "Government, which can be slow, rigid and inconsistent.", scores: AGAINST_C },
-            { text: "Local groups: big hearts, no capacity, and three rival group chats.", classroom: "Local groups, which are willing but often lack capacity and coordination.", scores: AGAINST_M },
-            { text: "Businesses: hiking the price of everything people suddenly need.", classroom: "Businesses, which may raise prices on essential goods.", scores: AGAINST_P },
-            { text: "Everyone at first, then everyone gets slightly better at it.", classroom: "All of them at first, though each improves with experience.", scores: MUDDLE },
+            { text: "The government: slow, rigid, and fond of contradictory press conferences.", classroom: "Government, which can be slow, rigid and inconsistent.", scores: AGAINST_C },
+            { text: "Local groups: big hearts, no capacity, three rival group chats.", classroom: "Local groups, which are willing but often lack capacity and coordination.", scores: AGAINST_M },
+            { text: "Businesses: suddenly hand sanitiser costs forty quid.", classroom: "Businesses, which may raise prices on essential goods.", scores: AGAINST_P },
+            { text: "Everyone, at first. Then everyone gets slightly less useless.", classroom: "All of them at first, though each improves with experience.", scores: MUDDLE },
         ]
     },
     {
@@ -369,10 +369,10 @@ const questions = [
         classroom: "Where should the money to start and expand businesses come from?",
         type: 'forcedChoice4',
         options: [
-            { text: "A state investment plan, steering money to where the nation needs it. Spreadsheets of destiny.", classroom: "A state investment plan that directs money to where it is needed.", scores: PICK_C },
-            { text: "Workers' and community funds, pooling savings for local enterprises. The pension pot votes on everything.", classroom: "Funds pooled and controlled by workers and communities.", scores: PICK_M },
-            { text: "Private investors and the stock market, chasing returns. Up, down, up, panic, up.", classroom: "Private investors and the stock market.", scores: PICK_P },
-            { text: "Banks, mostly, after a lot of paperwork and a firm handshake.", classroom: "A mix of private investment, public banks and community funds.", scores: MUDDLE },
+            { text: "A state investment plan. The Ministry knows where the money should go. The Ministry always knows.", classroom: "A state investment plan that directs money to where it is needed.", scores: PICK_C },
+            { text: "Workers' pension funds and community pots. Every investment voted on by people who've never seen a balance sheet.", classroom: "Funds pooled and controlled by workers and communities.", scores: PICK_M },
+            { text: "Private investors and the stock market. Up, down, up, panic, up. Mostly up. Usually.", classroom: "Private investors and the stock market.", scores: PICK_P },
+            { text: "Banks, after a lot of paperwork and a very firm handshake.", classroom: "A mix of private investment, public banks and community funds.", scores: MUDDLE },
         ]
     },
     {
@@ -382,10 +382,10 @@ const questions = [
         classroom: "What is the most dangerous kind of monopoly?",
         type: 'forcedChoice4',
         options: [
-            { text: "The state's monopoly on law, force and money.", classroom: "The state's monopoly on law, force and money.", scores: AGAINST_C },
-            { text: "A tight-knit group that controls who gets in and who gets a say.", classroom: "A closed group that controls who may join and who has a say.", scores: AGAINST_M },
-            { text: "A corporation so big that nobody can challenge it.", classroom: "A corporation too large for anyone to challenge.", scores: AGAINST_P },
-            { text: "The board game, given what it does to families at Christmas.", classroom: "Any monopoly can be dangerous; it depends how it is used.", scores: MUDDLE },
+            { text: "The state's monopoly on law, force and money. Try competing with that.", classroom: "The state's monopoly on law, force and money.", scores: AGAINST_C },
+            { text: "A clique that decides who's in and who's out, and calls it community.", classroom: "A closed group that controls who may join and who has a say.", scores: AGAINST_M },
+            { text: "A corporation so big the law is just another supplier.", classroom: "A corporation too large for anyone to challenge.", scores: AGAINST_P },
+            { text: "The board game. Think what it's done to families at Christmas.", classroom: "Any monopoly can be dangerous; it depends how it is used.", scores: MUDDLE },
         ]
     },
     {
@@ -394,10 +394,10 @@ const questions = [
         classroom: "In a well-run society, most things are organised by:",
         type: 'forcedChoice4',
         options: [
-            { text: "Public institutions, with clear laws and long-term plans.", classroom: "Public institutions, with clear laws and long-term plans.", scores: PICK_C },
-            { text: "People co-operating directly with their neighbours and co-workers.", classroom: "People co-operating directly with their neighbours and co-workers.", scores: PICK_M },
-            { text: "Individuals making their own choices and deals in a free market.", classroom: "Individuals making their own choices and agreements in a free market.", scores: PICK_P },
-            { text: "Muddling through, which has worked about as well as anything so far.", classroom: "A mix of all three, adjusted over time.", scores: MUDDLE },
+            { text: "Public institutions, clear laws and long plans. Someone sensible in charge. Ideally someone like me.", classroom: "Public institutions, with clear laws and long-term plans.", scores: PICK_C },
+            { text: "People co-operating directly with their neighbours and co-workers. You'll love it. You'll have to.", classroom: "People co-operating directly with their neighbours and co-workers.", scores: PICK_M },
+            { text: "Individuals making their own deals in a free market. If you lost, you weren't free enough.", classroom: "Individuals making their own choices and agreements in a free market.", scores: PICK_P },
+            { text: "Muddling through. It's worked about as well as anything, which says a lot about everything.", classroom: "A mix of all three, adjusted over time.", scores: MUDDLE },
         ]
     },
 ];

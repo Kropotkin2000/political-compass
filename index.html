@@ -7,16 +7,11 @@
     <meta name="description" content="A three-cornered, deeply unscientific political test. Centralism, Communalism or Privatism: pick your least-worst caricature.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Public+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
     <!-- Bump ?v= on all seven links whenever you change any of these files, so browsers fetch them together. -->
-    <link rel="stylesheet" href="style.css?v=2026-11-28e">
+    <link rel="stylesheet" href="style.css?v=2026-11-29b">
 </head>
 <body>
-    <div class="aurora" aria-hidden="true">
-        <span class="blob blob-c"></span>
-        <span class="blob blob-m"></span>
-        <span class="blob blob-p"></span>
-    </div>
 
     <header class="topbar">
         <div class="brand-wrap">
@@ -29,10 +24,7 @@
             </button>
         </div>
         <div class="topbar-right">
-        <button id="theme-toggle" class="icon-button" type="button" aria-label="Toggle dark mode">
-            <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/></svg>
-            <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11Z"/></svg>
-        </button>
+        <button id="theme-toggle" class="lights" type="button" aria-pressed="false">Lights off</button>
         </div>
     </header>
 
@@ -41,17 +33,17 @@
         <section id="screen-intro" class="screen" aria-labelledby="intro-title">
             <div class="intro-grid">
                 <div class="intro-copy">
-                    <p class="eyebrow" data-copy="introEyebrow">Very accurate. Not remotely scientific.</p>
-                    <h1 id="intro-title" data-copy="introTitle">Which <em>least-worst</em> caricature are you?</h1>
-                    <p class="lede" data-copy="introLede">Forget left and right. This test drops you somewhere inside a triangle with three corners:</p>
+                    <h1 id="intro-title" data-copy="introTitle">Which least-worst caricature are you?</h1>
+                    <p class="tagline" data-copy="introEyebrow">Answer as the least worst, or the most tolerable caricature. Good luck, you'll need it.</p>
+                    <p class="lede" data-copy="introLede">Left and right are for people who own one shoe. This test drops you somewhere inside a triangle with three corners:</p>
                     <ul class="corner-list">
                         <li class="corner-c"><b>Centralism</b> <span data-copy-axis="c">Someone official will sort it out. Please fill in this form.</span></li>
                         <li class="corner-m"><b>Communalism</b> <span data-copy-axis="m">We'll all decide together. The meeting starts at 7, and 9, and 11.</span></li>
                         <li class="corner-p"><b>Privatism</b> <span data-copy-axis="p">The market will sort it out. Terms and conditions apply.</span></li>
                     </ul>
                     <p class="lede lede-2" data-copy="lede2">Plus a few blunt statements on a separate question: how much <b>liberty</b> would you trade for <b>order</b>?</p>
-                    <button id="start-button" class="cta" type="button">Start the test <span aria-hidden="true">&rarr;</span></button>
-                    <p class="fineprint">30 questions, plus up to 4 tie-breakers &middot; about 7 minutes &middot; keys 1&ndash;5 to answer, &larr; to go back</p>
+                    <button id="start-button" class="cta" type="button">Start the test</button>
+                    <p class="fineprint">30 questions, plus up to 4 tie-breakers. About 7 minutes. Keys 1 to 5 answer; the left arrow key goes back.</p>
                 </div>
                 <div class="intro-art" aria-hidden="true">
                     <svg id="intro-triangle" class="tri" viewBox="0 0 400 370"></svg>
@@ -62,7 +54,7 @@
         <!-- ============ QUIZ ============ -->
         <section id="screen-quiz" class="screen" hidden aria-live="polite">
             <div class="quiz-head">
-                <button id="back-button" class="ghost" type="button"><span aria-hidden="true">&larr;</span> Back</button>
+                <button id="back-button" class="ghost" type="button">Back</button>
                 <div class="progress" role="progressbar" aria-valuemin="1" aria-valuemax="30" aria-valuenow="1" id="progress">
                     <div class="progress-fill" id="progress-fill"></div>
                 </div>
@@ -79,11 +71,12 @@
         <!-- ============ RESULTS ============ -->
         <section id="screen-results" class="screen" hidden>
             <div class="results-hero">
-                <p id="results-eyebrow" class="eyebrow">Your gloriously flawed result</p>
+                <p id="results-eyebrow" class="results-kicker">Your gloriously flawed results</p>
                 <h1 id="result-name" class="result-name"></h1>
                 <p id="result-broad" class="chip"></p>
+                <p id="results-sub" class="results-sub" data-copy="resultsSub">Remember, this is mostly for amusement. Or despair.</p>
                 <p id="lean-note" class="lean-note" hidden></p>
-                <p id="shared-note" class="shared-note" hidden data-copy="sharedNote">Someone shared their result with you. <a href="./">Take the test yourself &rarr;</a></p>
+                <p id="shared-note" class="shared-note" hidden data-copy="sharedNote">Someone wants you to know what they are. <a href="./">Find out what you are</a>, if you dare.</p>
             </div>
 
             <div class="results-grid">
@@ -99,7 +92,7 @@
                         <h3 id="focus-name"></h3>
                         <p id="focus-meta" class="focus-meta"></p>
                         <p id="focus-summary" class="focus-summary"></p>
-                        <button id="focus-reset" class="ghost small" type="button" hidden>&larr; Back to your match</button>
+                        <button id="focus-reset" class="ghost small" type="button" hidden>Back to your match</button>
                     </article>
 
                     <div class="block">
@@ -141,11 +134,11 @@
 
     <div id="toast" class="toast" role="status" hidden></div>
 
-    <script src="scoring.js?v=2026-11-28e"></script>
-    <script src="questions.js?v=2026-11-28e"></script>
-    <script src="ideology_summaries.js?v=2026-11-28e"></script>
-    <script src="ideology_summaries_classroom.js?v=2026-11-28e"></script>
-    <script src="ideology_ideal_points.js?v=2026-11-28e"></script>
-    <script src="script.js?v=2026-11-28e"></script>
+    <script src="scoring.js?v=2026-11-29b"></script>
+    <script src="questions.js?v=2026-11-29b"></script>
+    <script src="ideology_summaries.js?v=2026-11-29b"></script>
+    <script src="ideology_summaries_classroom.js?v=2026-11-29b"></script>
+    <script src="ideology_ideal_points.js?v=2026-11-29b"></script>
+    <script src="script.js?v=2026-11-29b"></script>
 </body>
 </html>

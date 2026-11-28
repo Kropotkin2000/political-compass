@@ -23,22 +23,24 @@
         sarcastic: {
             title: 'The Sarcastic Political Test',
             brand: 'Sarcastic Political Test',
-            introEyebrow: 'Very accurate. Not remotely scientific.',
-            introTitle: 'Which <em>least-worst</em> caricature are you?',
-            introLede: 'Forget left and right. This test drops you somewhere inside a triangle with three corners:',
+            introEyebrow: "Answer as the least worst, or the most tolerable caricature. Good luck, you'll need it.",
+            introTitle: 'Which least-worst caricature are you?',
+            introLede: 'Left and right are for people who own one shoe. This test drops you somewhere inside a triangle with three corners:',
             lede2: 'Plus a few blunt statements on a separate question: how much <b>liberty</b> would you trade for <b>order</b>?',
             youLabel: 'you?',
-            eyebrowOwn: 'Your gloriously flawed result',
-            eyebrowShared: 'Their gloriously flawed result',
-            sharedNote: 'Someone shared their result with you. <a href="./">Take the test yourself &rarr;</a>',
+            eyebrowOwn: 'Your gloriously flawed results',
+            eyebrowShared: 'Their gloriously flawed results',
+            resultsSub: 'Remember, this is mostly for amusement. Or despair.',
+            lastKicker: 'Last proper question. Then your glorious doom.',
+            sharedNote: 'Someone wants you to know what they are. <a href="./">Find out what you are</a>, if you dare.',
             outro: "Consider your life choices. Or don't. We're not your dad.",
             toastLink: 'Share link copied. Spread the despair.',
             toastText: 'Result copied as text.',
             toastFail: 'Copy failed. Your browser said no.',
             shareHeader: 'My Sarcastic Political Test result:',
-            leanNote: (ex) => `Your lean is weak (${ex}% from the dead centre), so treat this label as a loose fit: several centrist labels are about equally close.`,
+            leanNote: (ex) => `You are ${ex}% of the way out of the dead centre, which is to say: barely. Several centrist labels fit you equally badly.`,
             order: (a) => a < 20 ? "Don't tread on anyone, ever." : a < 40 ? 'Live and let live, mostly.' : a < 60 ? 'Rules are fine. Some rules.' : a < 80 ? 'A firm hand, for everyone else.' : 'Papers, please.',
-            extremity: (x) => x < 15 ? 'Aggressively moderate. You probably own a beige fleece.' : x < 35 ? 'Opinions, yes. Pitchforks, not yet.' : x < 60 ? 'Strong views, lightly held. Mostly strong.' : x < 80 ? 'You have a manifesto. It has footnotes.' : 'You are the corner. The corner is you.',
+            extremity: (x) => x < 15 ? 'Aggressively moderate. Your strongest political opinion is about parking.' : x < 35 ? 'Opinions, yes. Pitchforks, not yet. Give it a bad week.' : x < 60 ? 'Strong views. You have ruined at least one family dinner.' : x < 80 ? 'You have a manifesto. It has footnotes. Nobody has read them.' : 'You are the corner. The corner is you. Please come out occasionally.',
             tbScales: {
                 change: ['Reform or revolution?', 'Gentle tweaks', 'Bring a hammer'],
                 scale: ['How big should decisions be?', 'Over the fence', 'The whole planet'],
@@ -53,15 +55,17 @@
         },
         classroom: {
             title: 'The Political Triangle: classroom edition',
-            brand: 'Political Triangle · Classroom',
-            introEyebrow: 'Classroom edition',
-            introTitle: 'Where do you sit in the <em>political triangle</em>?',
+            brand: 'Political Triangle (classroom edition)',
+            introEyebrow: 'Choose the answer closest to your own view. There are no right or wrong answers.',
+            introTitle: 'Where do you sit in the political triangle?',
             introLede: 'Instead of a single left-right line, this test places you inside a triangle. Each corner is a different answer to the question: who should organise society?',
             lede2: 'A separate set of statements measures a second question: how much <b>personal liberty</b> would you trade for <b>order and security</b>?',
             youLabel: 'you',
             eyebrowOwn: 'Your result',
             eyebrowShared: 'A shared result',
-            sharedNote: 'Someone shared their result with you. <a href="./?tone=classroom">Take the test yourself &rarr;</a>',
+            resultsSub: '',
+            lastKicker: 'Question 30 of 30',
+            sharedNote: 'Someone shared their result with you. <a href="./?tone=classroom">Take the test yourself</a>.',
             outro: 'No test can capture a person\'s politics completely. Use this result as a starting point for discussion, not a label.',
             toastLink: 'Share link copied.',
             toastText: 'Result copied as text.',
@@ -162,24 +166,48 @@
     const SVGNS = 'http://www.w3.org/2000/svg';
     const el = (tag, attrs = {}, parent) => {
         const e = document.createElementNS(SVGNS, tag);
-        for (const k in attrs) e.setAttribute(k, attrs[k]);
+        for (const k in attrs) if (attrs[k] != null) e.setAttribute(k, attrs[k]);
         if (parent) parent.appendChild(e);
         return e;
     };
 
+    // A hand-drawn circle: a loop that overshoots its start, the way a pen circles an answer.
+    function penCircle(cx, cy, r) {
+        const pts = [];
+        for (let i = 0; i <= 26; i++) {
+            const t = -0.6 + i / 26 * (Math.PI * 2 + 0.9);
+            const rr = r * (1 + 0.06 * Math.sin(t * 3) + (i > 22 ? 0.08 : 0));
+            pts.push(`${(cx + rr * Math.cos(t)).toFixed(1)},${(cy + rr * 0.86 * Math.sin(t)).toFixed(1)}`);
+        }
+        return 'M' + pts.join(' L');
+    }
+
+    // The triangle is printed like a three-colour risograph: each corner is a separate ink that is
+    // strongest at its own corner and fades out towards the opposite edge. Where inks overlap they
+    // multiply, so blended positions literally show blended colours. Each plate is nudged by a pixel
+    // or so, the way real riso plates never quite line up.
+    const PLATE_NUDGE = { c: [0.9, -0.6], m: [-1.1, 0.5], p: [0.6, 0.9] };
     function drawTriangleBase(svg, { grid = true, labels = true, idPrefix = 't' } = {}) {
         svg.innerHTML = '';
         const defs = el('defs', {}, svg);
-        const grad = el('linearGradient', { id: `${idPrefix}-fill`, x1: '0', y1: '0', x2: '0', y2: '1' }, defs);
-        el('stop', { offset: '0', 'stop-color': 'var(--c)', 'stop-opacity': '0.16' }, grad);
-        el('stop', { offset: '1', 'stop-color': 'var(--surface-2)', 'stop-opacity': '0.0' }, grad);
-        const gradL = el('linearGradient', { id: `${idPrefix}-fill2`, x1: '0', y1: '0', x2: '1', y2: '0' }, defs);
-        el('stop', { offset: '0', 'stop-color': 'var(--m)', 'stop-opacity': '0.16' }, gradL);
-        el('stop', { offset: '1', 'stop-color': 'var(--p)', 'stop-opacity': '0.16' }, gradL);
-
         const pts = [V.c, V.m, V.p].map(v => v.join(',')).join(' ');
-        el('polygon', { points: pts, fill: `url(#${idPrefix}-fill2)`, class: 'tri-face' }, svg);
-        el('polygon', { points: pts, fill: `url(#${idPrefix}-fill)`, class: 'tri-face' }, svg);
+        // riso grain: knock random specks out of the ink, so it reads as ink on paper rather than a gradient
+        const grain = el('filter', { id: `${idPrefix}-grain`, x: '0', y: '0', width: '100%', height: '100%' }, defs);
+        el('feTurbulence', { type: 'fractalNoise', baseFrequency: '1.1', numOctaves: '1', seed: '7', result: 'n' }, grain);
+        el('feColorMatrix', { in: 'n', type: 'matrix', values: '0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.2 1.75', result: 'speck' }, grain);
+        el('feComposite', { in: 'SourceGraphic', in2: 'speck', operator: 'in' }, grain);
+        const plates = el('g', { class: 'plates', filter: idPrefix === 'mini' ? null : `url(#${idPrefix}-grain)` }, svg);
+        AXES.forEach(ax => {
+            const [vx, vy] = V[ax];
+            const others = AXES.filter(o => o !== ax).map(o => V[o]);
+            const ex = (others[0][0] + others[1][0]) / 2, ey = (others[0][1] + others[1][1]) / 2;
+            const g = el('linearGradient', { id: `${idPrefix}-ink-${ax}`, gradientUnits: 'userSpaceOnUse', x1: vx, y1: vy, x2: ex, y2: ey }, defs);
+            el('stop', { offset: '0', 'stop-color': `var(--${ax})`, 'stop-opacity': '1' }, g);
+            el('stop', { offset: '0.55', 'stop-color': `var(--${ax})`, 'stop-opacity': '0.35' }, g);
+            el('stop', { offset: '1', 'stop-color': `var(--${ax})`, 'stop-opacity': '0' }, g);
+            const [nx, ny] = PLATE_NUDGE[ax];
+            el('polygon', { points: pts, fill: `url(#${idPrefix}-ink-${ax})`, class: `plate plate-${ax}`, transform: `translate(${nx} ${ny})` }, plates);
+        });
 
         if (grid) {
             const g = el('g', { class: 'tri-grid' }, svg);
@@ -203,9 +231,9 @@
                 const t = el('text', { x, y, class: `tri-label ${cls}`, 'text-anchor': anchor }, svg);
                 t.textContent = txt;
             };
-            lab('Centralism', V.c[0], V.c[1] - 10, 'lab-c', 'middle');
-            lab('Communalism', V.m[0] - 2, V.m[1] + 24, 'lab-m', 'start');
-            lab('Privatism', V.p[0] + 2, V.p[1] + 24, 'lab-p', 'end');
+            lab('Centralism', V.c[0], V.c[1] - 12, 'lab-c', 'middle');
+            lab('Communalism', V.m[0] - 4, V.m[1] + 26, 'lab-m', 'start');
+            lab('Privatism', V.p[0] + 4, V.p[1] + 26, 'lab-p', 'end');
         }
         return svg;
     }
@@ -225,12 +253,10 @@
         window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
     }
 
-    // Moves the background colour blobs towards the current position
+    // The strongest corner's ink becomes the second printing plate for big type (see .result-name)
     function tintBackground(pos) {
-        const r = document.documentElement.style;
-        r.setProperty('--wc', (0.25 + pos.c / 100 * 1.1).toFixed(3));
-        r.setProperty('--wm', (0.25 + pos.m / 100 * 1.1).toFixed(3));
-        r.setProperty('--wp', (0.25 + pos.p / 100 * 1.1).toFixed(3));
+        const lead = AXES.reduce((x, y) => (pos[y] > pos[x] ? y : x), 'c');
+        document.documentElement.style.setProperty('--lead', `var(--${lead})`);
     }
 
     // ------------------------------------------------------------------
@@ -238,9 +264,14 @@
     // ------------------------------------------------------------------
     function applyTheme(theme) {
         document.documentElement.dataset.theme = theme;
+        const btn = $('theme-toggle');
+        if (btn) {
+            btn.textContent = theme === 'dark' ? 'Lights on' : 'Lights off';
+            btn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+        }
     }
     const savedTheme = localStorage.getItem('theme');
-    applyTheme(savedTheme || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
+    applyTheme(savedTheme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
     $('theme-toggle').addEventListener('click', () => {
         const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
         applyTheme(next);
@@ -255,13 +286,12 @@
         const g = el('g', {}, svg);
         IDEOLOGIES.forEach((i, k) => {
             const [x, y] = toXY(i);
-            const dot = el('circle', { cx: x, cy: y, r: 4.5, class: `ideo-dot b${broadIndex(i.broad)} twinkle` }, g);
-            dot.style.animationDelay = `${(k * 0.37) % 4}s`;
+            el('circle', { cx: x, cy: y, r: 3.6, class: 'ideo-dot' }, g);
         });
         const [cx, cy] = toXY(CENTRE);
-        el('circle', { cx, cy, r: 18, class: 'you-ring pulse' }, svg);
-        el('circle', { cx, cy, r: 8, class: 'you-dot' }, svg);
-        const t = el('text', { x: cx, y: cy + 34, class: 'you-label', 'text-anchor': 'middle' }, svg);
+        el('path', { d: penCircle(cx, cy, 17), class: 'you-ring' }, svg);
+        el('circle', { cx, cy, r: 4.5, class: 'you-dot' }, svg);
+        const t = el('text', { x: cx + 22, y: cy + 30, class: 'you-label', 'text-anchor': 'start' }, svg);
         t.textContent = T('youLabel');
         t.id = 'intro-you-label';
     }
@@ -349,7 +379,7 @@
         $('progress-label').textContent = tb ? `+${tbNum} / ${tbList.length}` : `${current + 1} / ${total}`;
         $('progress').setAttribute('aria-valuenow', Math.min(current + 1, total));
         $('progress-fill').style.width = `${tb ? 100 : (current / total) * 100}%`;
-        $('question-kicker').textContent = tb ? TB_KICKER[tone][q.dim] : isScale(q) ? 'Liberty or order?' : `Question ${current + 1}`;
+        $('question-kicker').textContent = tb ? TB_KICKER[tone][q.dim] : isScale(q) ? 'Liberty or order?' : current === total - 1 ? T('lastKicker') : `Question ${current + 1}`;
         optionsContainer.classList.toggle('scale', isScale(q));
         optionsContainer.classList.toggle('tiebreak', tb);
         $('back-button').disabled = current === 0;
@@ -478,8 +508,9 @@
         });
 
         const [cx0, cy0] = toXY(CENTRE);
-        const ring = el('circle', { cx: cx0, cy: cy0, r: 16, class: 'you-ring pulse' }, youLayer);
-        const you = el('circle', { cx: cx0, cy: cy0, r: 8, class: 'you-dot' }, youLayer);
+        // "you" is circled in pen; the ring is drawn round the origin and moved with a transform
+        const ring = el('path', { d: penCircle(0, 0, 16), class: 'you-ring', transform: `translate(${cx0} ${cy0})` }, youLayer);
+        const you = el('circle', { cx: cx0, cy: cy0, r: 5, class: 'you-dot' }, youLayer);
 
         resultState = { pos, raw, shared, svg, dots, linkLayer, labelLayer, ring, you, focused: null };
 
@@ -518,7 +549,7 @@
         const [x, y] = toXY(pos);
         const move = () => {
             st.you.setAttribute('cx', x); st.you.setAttribute('cy', y);
-            st.ring.setAttribute('cx', x); st.ring.setAttribute('cy', y);
+            st.ring.setAttribute('transform', `translate(${x} ${y})`);
         };
         if (animate) {
             st.svg.classList.add('animating');
@@ -616,7 +647,7 @@
         const rank = rankIdeologies(st.pos).findIndex(i => i.name === target.name) + 1;
         $('focus-label').textContent = isOwn ? 'Your closest match' : `Your #${rank} closest of ${IDEOLOGIES.length}`;
         $('focus-name').textContent = target.name;
-        $('focus-meta').innerHTML = `<i class="sw b${broadIndex(target.broad)}"></i>${target.broad} &middot; ${d.toFixed(1)} pts from you &middot; C ${target.c} / M ${target.m} / P ${target.p} &middot; Order ${target.a}`;
+        $('focus-meta').textContent = `${target.broad}. ${d.toFixed(0)} points from you. Centralism ${target.c}, communalism ${target.m}, privatism ${target.p}, order ${target.a}.`;
         $('focus-summary').innerHTML = formatText(summaryFor(target));
         $('focus-reset').hidden = isOwn;
         st.dots.forEach((dd, n) => dd.g.classList.toggle('focused', !isOwn && n === target.name));
