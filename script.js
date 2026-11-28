@@ -171,113 +171,6 @@
         return e;
     };
 
-
-    // ------------------------------------------------------------------
-    // Political colour: every position in the triangle has its own colour
-    // ------------------------------------------------------------------
-    // Hue = the direction you lean from the centre; intensity = how far you lean.
-    // Corner hues (OKLCH): Centralism red, Communalism teal, Privatism amber. Between corners the hue runs
-    // all the way round the spectrum: state -> community through magenta and violet, community -> market
-    // through green, market -> state through orange. The dead centre is grey.
-    const HUE_LOOP = [  // [loop position, hue]: 0 = Centralism, 1 = Communalism, 2 = Privatism, 3 = back to Centralism
-        [0, 22], [1, -170], [2, 75 - 360], [3, 22 - 360],
-    ];
-    function hueAt(t) {
-        for (let i = 0; i < HUE_LOOP.length - 1; i++) {
-            const [a, ha] = HUE_LOOP[i], [b, hb] = HUE_LOOP[i + 1];
-            if (t <= b) return ((ha + (hb - ha) * (t - a) / (b - a)) % 360 + 360) % 360;
-        }
-        return 22;
-    }
-    // where on the loop a position points, and how far out it is (0 = centre, 1 = on an edge)
-    function leanOf(pos) {
-        const c = pos.c, m = pos.m, p = pos.p, low = Math.min(c, m, p);
-        const reach = Math.max(0, Math.min(1, 1 - low / (100 / 3)));
-        let t;
-        if (low === p) t = 0 + (m - low) / Math.max(1e-9, (c - low) + (m - low));       // between C and M
-        else if (low === c) t = 1 + (p - low) / Math.max(1e-9, (m - low) + (p - low));   // between M and P
-        else t = 2 + (c - low) / Math.max(1e-9, (p - low) + (c - low));                  // between P and C
-        return { t, reach };
-    }
-    // OKLCH -> sRGB (0..255), for painting the triangle pixel by pixel
-    function oklchToRgb(L, C, h) {
-        const hr = h * Math.PI / 180, a = C * Math.cos(hr), b = C * Math.sin(hr);
-        const l_ = L + 0.3963377774 * a + 0.2158037573 * b, m_ = L - 0.1055613458 * a - 0.0638541728 * b, s_ = L - 0.0894841775 * a - 1.2914855480 * b;
-        const l = l_ ** 3, m = m_ ** 3, s = s_ ** 3;
-        const lin = [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s];
-        return lin.map(v => { v = Math.max(0, Math.min(1, v)); return Math.round(255 * (v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055)); });
-    }
-    // Lightness and peak chroma for each use, per theme
-    const PALETTE = {
-        dark:  { page: [0.27, 0.13], map: [0.66, 0.19], accent: [0.80, 0.16], swatch: [0.70, 0.18] },
-        light: { page: [0.90, 0.11], map: [0.74, 0.17], accent: [0.56, 0.19], swatch: [0.66, 0.18] },
-    };
-    const themeName = () => (document.documentElement.dataset.theme === 'light' ? 'light' : 'dark');
-    function colourOf(pos, use, theme = themeName()) {
-        const { t, reach } = leanOf(pos);
-        const [L, Cmax] = PALETTE[theme][use];
-        return { L, C: Cmax * Math.pow(reach, 0.8), h: hueAt(t) };
-    }
-    const css = ({ L, C, h }) => `oklch(${(L * 100).toFixed(1)}% ${C.toFixed(3)} ${h.toFixed(1)})`;
-    const swatch = (i) => `<i class="sw" style="background:${css(colourOf(i, 'swatch'))}"></i>`;
-
-    // The page takes on your colour: louder the further you lean.
-    function paintPage(pos) {
-        const r = document.documentElement.style;
-        r.setProperty('--page', css(colourOf(pos, 'page')));
-        const acc = colourOf(pos, 'accent');
-        // keep the accent readable even when you're dead centre
-        r.setProperty('--accent', css({ L: acc.L, C: Math.max(acc.C, 0.12), h: acc.h }));
-    }
-
-    // While the intro is showing, the page colour slowly travels round the spectrum.
-    let introSpin = null;
-    function startIntroSpin() {
-        stopIntroSpin();
-        if (reduceMotion) { paintPage({ c: 60, m: 20, p: 20 }); return; }
-        const t0 = performance.now();
-        const tick = (now) => {
-            const t = ((now - t0) / 14000) % 3;     // once round every 42 seconds
-            const blend = (k) => Math.max(0, 1 - Math.min(Math.abs(t - k), Math.abs(t - k - 3), Math.abs(t - k + 3)));
-            const w = { c: blend(0), m: blend(1), p: blend(2) };
-            const sum = w.c + w.m + w.p;
-            const edge = { c: w.c / sum * 100, m: w.m / sum * 100, p: w.p / sum * 100 };
-            const k = 0.7;  // 70% of the way out from the centre
-            paintPage({ c: 100 / 3 + (edge.c - 100 / 3) * k, m: 100 / 3 + (edge.m - 100 / 3) * k, p: 100 / 3 + (edge.p - 100 / 3) * k });
-            introSpin = requestAnimationFrame(tick);
-        };
-        introSpin = requestAnimationFrame(tick);
-    }
-    function stopIntroSpin() { if (introSpin) cancelAnimationFrame(introSpin); introSpin = null; }
-
-    // The triangle itself is painted as the full colour map, cached per theme.
-    const mapCache = {};
-    function colourMap(theme) {
-        if (mapCache[theme]) return mapCache[theme];
-        const W = 400, Hh = 370, S = 2;
-        const cv = document.createElement('canvas');
-        cv.width = W * S; cv.height = Hh * S;
-        const ctx = cv.getContext('2d');
-        const img = ctx.createImageData(cv.width, cv.height);
-        const [x1, y1] = V.c, [x2, y2] = V.m, [x3, y3] = V.p;
-        const det = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
-        for (let py = 0; py < cv.height; py++) {
-            for (let px = 0; px < cv.width; px++) {
-                const x = (px + 0.5) / S, y = (py + 0.5) / S;
-                const c = ((y2 - y3) * (x - x3) + (x3 - x2) * (y - y3)) / det;
-                const m = ((y3 - y1) * (x - x3) + (x1 - x3) * (y - y3)) / det;
-                const p = 1 - c - m;
-                if (c < -0.004 || m < -0.004 || p < -0.004) continue;
-                const col = colourOf({ c: Math.max(0, c) * 100, m: Math.max(0, m) * 100, p: Math.max(0, p) * 100 }, 'map', theme);
-                const [r, g, b] = oklchToRgb(col.L, col.C, col.h);
-                const i = (py * cv.width + px) * 4;
-                img.data[i] = r; img.data[i + 1] = g; img.data[i + 2] = b; img.data[i + 3] = 255;
-            }
-        }
-        ctx.putImageData(img, 0, 0);
-        return (mapCache[theme] = cv.toDataURL());
-    }
-
     function drawTriangleBase(svg, { grid = true, labels = true, idPrefix = 't' } = {}) {
         svg.innerHTML = '';
         const defs = el('defs', {}, svg);
@@ -289,7 +182,8 @@
         el('stop', { offset: '1', 'stop-color': 'var(--p)', 'stop-opacity': '0.16' }, gradL);
 
         const pts = [V.c, V.m, V.p].map(v => v.join(',')).join(' ');
-        el('image', { href: colourMap(themeName()), x: 0, y: 0, width: 400, height: 370, preserveAspectRatio: 'none', class: 'tri-map' }, svg);
+        el('polygon', { points: pts, fill: `url(#${idPrefix}-fill2)`, class: 'tri-face' }, svg);
+        el('polygon', { points: pts, fill: `url(#${idPrefix}-fill)`, class: 'tri-face' }, svg);
 
         if (grid) {
             const g = el('g', { class: 'tri-grid' }, svg);
@@ -332,17 +226,16 @@
     function show(name) {
         for (const k in screens) screens[k].hidden = k !== name;
         document.body.dataset.screen = name;
-        if (name === 'intro') startIntroSpin(); else stopIntroSpin();
         window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
     }
 
-    // The page takes on the colour of your current position (the intro spins through them instead)
+    // Moves the background colour blobs towards the current position
     function tintBackground(pos) {
-        stopIntroSpin();
-        lastTint = pos;
-        paintPage(pos);
+        const r = document.documentElement.style;
+        r.setProperty('--wc', (0.25 + pos.c / 100 * 1.1).toFixed(3));
+        r.setProperty('--wm', (0.25 + pos.m / 100 * 1.1).toFixed(3));
+        r.setProperty('--wp', (0.25 + pos.p / 100 * 1.1).toFixed(3));
     }
-    let lastTint = null;
 
     // ------------------------------------------------------------------
     // Theme
@@ -356,14 +249,7 @@
         const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
         applyTheme(next);
         localStorage.setItem('theme', next);
-        repaintForTheme();
     });
-    function repaintForTheme() {
-        drawIntroArt();
-        if (!screens.quiz.hidden && order.length) drawMini(), updateLive();
-        if (!screens.results.hidden && resultState) showResults(resultState.pos, { raw: resultState.raw, shared: resultState.shared });
-        if (!screens.intro.hidden) startIntroSpin(); else if (lastTint) paintPage(lastTint);
-    }
 
     // ------------------------------------------------------------------
     // Intro art: all ideologies twinkling inside the triangle
@@ -683,7 +569,7 @@
         top.forEach((t, k) => {
             const li = document.createElement('li');
             const closeness = Math.max(6, 100 - (t.d / Math.max(maxD * 1.6, 25)) * 100);
-            li.innerHTML = `<button type="button" class="match"><span class="match-name">${swatch(t)}${t.name}</span><span class="match-d">${t.d.toFixed(1)} pts away</span><span class="bar"><span style="width:${closeness.toFixed(0)}%"></span></span></button>`;
+            li.innerHTML = `<button type="button" class="match"><span class="match-name"><i class="sw b${broadIndex(t.broad)}"></i>${t.name}</span><span class="match-d">${t.d.toFixed(1)} pts away</span><span class="bar"><span style="width:${closeness.toFixed(0)}%"></span></span></button>`;
             li.querySelector('button').addEventListener('click', () => focusIdeology(t.name));
             if (k === 0) li.classList.add('first');
             list.appendChild(li);
@@ -740,7 +626,7 @@
         const rank = rankIdeologies(st.pos).findIndex(i => i.name === target.name) + 1;
         $('focus-label').textContent = isOwn ? 'Your closest match' : `Your #${rank} closest of ${IDEOLOGIES.length}`;
         $('focus-name').textContent = target.name;
-        $('focus-meta').innerHTML = `${swatch(target)}${target.broad}. ${d.toFixed(0)} points from you. Centralism ${target.c}, communalism ${target.m}, privatism ${target.p}, order ${target.a}.`;
+        $('focus-meta').innerHTML = `<i class="sw b${broadIndex(target.broad)}"></i>${target.broad}. ${d.toFixed(0)} points from you. Centralism ${target.c}, communalism ${target.m}, privatism ${target.p}, order ${target.a}.`;
         $('focus-summary').innerHTML = formatText(summaryFor(target));
         $('focus-reset').hidden = isOwn;
         st.dots.forEach((dd, n) => dd.g.classList.toggle('focused', !isOwn && n === target.name));
