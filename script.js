@@ -171,43 +171,19 @@
         return e;
     };
 
-    // A hand-drawn circle: a loop that overshoots its start, the way a pen circles an answer.
-    function penCircle(cx, cy, r) {
-        const pts = [];
-        for (let i = 0; i <= 26; i++) {
-            const t = -0.6 + i / 26 * (Math.PI * 2 + 0.9);
-            const rr = r * (1 + 0.06 * Math.sin(t * 3) + (i > 22 ? 0.08 : 0));
-            pts.push(`${(cx + rr * Math.cos(t)).toFixed(1)},${(cy + rr * 0.86 * Math.sin(t)).toFixed(1)}`);
-        }
-        return 'M' + pts.join(' L');
-    }
-
-    // The triangle is printed like a three-colour risograph: each corner is a separate ink that is
-    // strongest at its own corner and fades out towards the opposite edge. Where inks overlap they
-    // multiply, so blended positions literally show blended colours. Each plate is nudged by a pixel
-    // or so, the way real riso plates never quite line up.
-    const PLATE_NUDGE = { c: [0.9, -0.6], m: [-1.1, 0.5], p: [0.6, 0.9] };
     function drawTriangleBase(svg, { grid = true, labels = true, idPrefix = 't' } = {}) {
         svg.innerHTML = '';
         const defs = el('defs', {}, svg);
+        const grad = el('linearGradient', { id: `${idPrefix}-fill`, x1: '0', y1: '0', x2: '0', y2: '1' }, defs);
+        el('stop', { offset: '0', 'stop-color': 'var(--c)', 'stop-opacity': '0.16' }, grad);
+        el('stop', { offset: '1', 'stop-color': 'var(--surface-2)', 'stop-opacity': '0.0' }, grad);
+        const gradL = el('linearGradient', { id: `${idPrefix}-fill2`, x1: '0', y1: '0', x2: '1', y2: '0' }, defs);
+        el('stop', { offset: '0', 'stop-color': 'var(--m)', 'stop-opacity': '0.16' }, gradL);
+        el('stop', { offset: '1', 'stop-color': 'var(--p)', 'stop-opacity': '0.16' }, gradL);
+
         const pts = [V.c, V.m, V.p].map(v => v.join(',')).join(' ');
-        // riso grain: knock random specks out of the ink, so it reads as ink on paper rather than a gradient
-        const grain = el('filter', { id: `${idPrefix}-grain`, x: '0', y: '0', width: '100%', height: '100%' }, defs);
-        el('feTurbulence', { type: 'fractalNoise', baseFrequency: '1.1', numOctaves: '1', seed: '7', result: 'n' }, grain);
-        el('feColorMatrix', { in: 'n', type: 'matrix', values: '0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.2 1.75', result: 'speck' }, grain);
-        el('feComposite', { in: 'SourceGraphic', in2: 'speck', operator: 'in' }, grain);
-        const plates = el('g', { class: 'plates', filter: idPrefix === 'mini' ? null : `url(#${idPrefix}-grain)` }, svg);
-        AXES.forEach(ax => {
-            const [vx, vy] = V[ax];
-            const others = AXES.filter(o => o !== ax).map(o => V[o]);
-            const ex = (others[0][0] + others[1][0]) / 2, ey = (others[0][1] + others[1][1]) / 2;
-            const g = el('linearGradient', { id: `${idPrefix}-ink-${ax}`, gradientUnits: 'userSpaceOnUse', x1: vx, y1: vy, x2: ex, y2: ey }, defs);
-            el('stop', { offset: '0', 'stop-color': `var(--${ax})`, 'stop-opacity': '1' }, g);
-            el('stop', { offset: '0.55', 'stop-color': `var(--${ax})`, 'stop-opacity': '0.35' }, g);
-            el('stop', { offset: '1', 'stop-color': `var(--${ax})`, 'stop-opacity': '0' }, g);
-            const [nx, ny] = PLATE_NUDGE[ax];
-            el('polygon', { points: pts, fill: `url(#${idPrefix}-ink-${ax})`, class: `plate plate-${ax}`, transform: `translate(${nx} ${ny})` }, plates);
-        });
+        el('polygon', { points: pts, fill: `url(#${idPrefix}-fill2)`, class: 'tri-face' }, svg);
+        el('polygon', { points: pts, fill: `url(#${idPrefix}-fill)`, class: 'tri-face' }, svg);
 
         if (grid) {
             const g = el('g', { class: 'tri-grid' }, svg);
@@ -231,9 +207,9 @@
                 const t = el('text', { x, y, class: `tri-label ${cls}`, 'text-anchor': anchor }, svg);
                 t.textContent = txt;
             };
-            lab('Centralism', V.c[0], V.c[1] - 12, 'lab-c', 'middle');
-            lab('Communalism', V.m[0] - 4, V.m[1] + 26, 'lab-m', 'start');
-            lab('Privatism', V.p[0] + 4, V.p[1] + 26, 'lab-p', 'end');
+            lab('Centralism', V.c[0], V.c[1] - 10, 'lab-c', 'middle');
+            lab('Communalism', V.m[0] - 2, V.m[1] + 24, 'lab-m', 'start');
+            lab('Privatism', V.p[0] + 2, V.p[1] + 24, 'lab-p', 'end');
         }
         return svg;
     }
@@ -253,7 +229,7 @@
         window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
     }
 
-    // The strongest corner's ink becomes the second printing plate for big type (see .result-name)
+    // Remembers which corner leads (exposed as --lead for styling)
     function tintBackground(pos) {
         const lead = AXES.reduce((x, y) => (pos[y] > pos[x] ? y : x), 'c');
         document.documentElement.style.setProperty('--lead', `var(--${lead})`);
@@ -271,7 +247,7 @@
         }
     }
     const savedTheme = localStorage.getItem('theme');
-    applyTheme(savedTheme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+    applyTheme(savedTheme || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
     $('theme-toggle').addEventListener('click', () => {
         const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
         applyTheme(next);
@@ -286,12 +262,12 @@
         const g = el('g', {}, svg);
         IDEOLOGIES.forEach((i, k) => {
             const [x, y] = toXY(i);
-            el('circle', { cx: x, cy: y, r: 3.6, class: 'ideo-dot' }, g);
+            el('circle', { cx: x, cy: y, r: 4.5, class: `ideo-dot b${broadIndex(i.broad)}` }, g);
         });
         const [cx, cy] = toXY(CENTRE);
-        el('path', { d: penCircle(cx, cy, 17), class: 'you-ring' }, svg);
-        el('circle', { cx, cy, r: 4.5, class: 'you-dot' }, svg);
-        const t = el('text', { x: cx + 22, y: cy + 30, class: 'you-label', 'text-anchor': 'start' }, svg);
+        el('circle', { cx, cy, r: 18, class: 'you-ring' }, svg);
+        el('circle', { cx, cy, r: 8, class: 'you-dot' }, svg);
+        const t = el('text', { x: cx, y: cy + 34, class: 'you-label', 'text-anchor': 'middle' }, svg);
         t.textContent = T('youLabel');
         t.id = 'intro-you-label';
     }
@@ -508,9 +484,8 @@
         });
 
         const [cx0, cy0] = toXY(CENTRE);
-        // "you" is circled in pen; the ring is drawn round the origin and moved with a transform
-        const ring = el('path', { d: penCircle(0, 0, 16), class: 'you-ring', transform: `translate(${cx0} ${cy0})` }, youLayer);
-        const you = el('circle', { cx: cx0, cy: cy0, r: 5, class: 'you-dot' }, youLayer);
+        const ring = el('circle', { cx: cx0, cy: cy0, r: 16, class: 'you-ring' }, youLayer);
+        const you = el('circle', { cx: cx0, cy: cy0, r: 8, class: 'you-dot' }, youLayer);
 
         resultState = { pos, raw, shared, svg, dots, linkLayer, labelLayer, ring, you, focused: null };
 
@@ -549,7 +524,7 @@
         const [x, y] = toXY(pos);
         const move = () => {
             st.you.setAttribute('cx', x); st.you.setAttribute('cy', y);
-            st.ring.setAttribute('transform', `translate(${x} ${y})`);
+            st.ring.setAttribute('cx', x); st.ring.setAttribute('cy', y);
         };
         if (animate) {
             st.svg.classList.add('animating');
@@ -647,7 +622,7 @@
         const rank = rankIdeologies(st.pos).findIndex(i => i.name === target.name) + 1;
         $('focus-label').textContent = isOwn ? 'Your closest match' : `Your #${rank} closest of ${IDEOLOGIES.length}`;
         $('focus-name').textContent = target.name;
-        $('focus-meta').textContent = `${target.broad}. ${d.toFixed(0)} points from you. Centralism ${target.c}, communalism ${target.m}, privatism ${target.p}, order ${target.a}.`;
+        $('focus-meta').innerHTML = `<i class="sw b${broadIndex(target.broad)}"></i>${target.broad}. ${d.toFixed(0)} points from you. Centralism ${target.c}, communalism ${target.m}, privatism ${target.p}, order ${target.a}.`;
         $('focus-summary').innerHTML = formatText(summaryFor(target));
         $('focus-reset').hidden = isOwn;
         st.dots.forEach((dd, n) => dd.g.classList.toggle('focused', !isOwn && n === target.name));
